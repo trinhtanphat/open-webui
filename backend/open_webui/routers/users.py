@@ -19,7 +19,7 @@ from open_webui.models.users import (
     UserModel,
     UserGroupIdsModel,
     UserGroupIdsListResponse,
-    UserInfoListResponse,
+    UserInfoResponse,
     UserInfoListResponse,
     UserRoleUpdateForm,
     UserStatus,
@@ -40,7 +40,6 @@ from open_webui.utils.auth import (
     validate_password,
 )
 from open_webui.utils.access_control import get_permissions, has_permission
-
 
 log = logging.getLogger(__name__)
 
@@ -173,6 +172,7 @@ class WorkspacePermissions(BaseModel):
     knowledge: bool = False
     prompts: bool = False
     tools: bool = False
+    skills: bool = False
     models_import: bool = False
     models_export: bool = False
     prompts_import: bool = False
@@ -190,6 +190,8 @@ class SharingPermissions(BaseModel):
     public_prompts: bool = False
     tools: bool = False
     public_tools: bool = True
+    skills: bool = False
+    public_skills: bool = False
     notes: bool = False
     public_notes: bool = True
 
@@ -200,6 +202,7 @@ class ChatPermissions(BaseModel):
     system_prompt: bool = True
     params: bool = True
     file_upload: bool = True
+    web_upload: bool = True
     delete: bool = True
     delete_message: bool = True
     continue_response: bool = True
@@ -446,7 +449,7 @@ class UserActiveResponse(UserStatus):
 
 @router.get("/{user_id}", response_model=UserActiveResponse)
 async def get_user_by_id(
-    user_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
+    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
 ):
     # Check if user_id is a shared chat
     # If it is, get the user_id from the chat
@@ -465,6 +468,27 @@ async def get_user_by_id(
     if user:
         groups = Groups.get_groups_by_member_id(user_id, db=db)
         return UserActiveResponse(
+            **{
+                **user.model_dump(),
+                "groups": [{"id": group.id, "name": group.name} for group in groups],
+                "is_active": Users.is_user_active(user_id, db=db),
+            }
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+
+@router.get("/{user_id}/info", response_model=UserInfoResponse)
+async def get_user_info_by_id(
+    user_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
+):
+    user = Users.get_user_by_id(user_id, db=db)
+    if user:
+        groups = Groups.get_groups_by_member_id(user_id, db=db)
+        return UserInfoResponse(
             **{
                 **user.model_dump(),
                 "groups": [{"id": group.id, "name": group.name} for group in groups],
@@ -498,10 +522,8 @@ async def get_user_oauth_sessions_by_id(
 
 
 @router.get("/{user_id}/profile/image")
-async def get_user_profile_image_by_id(
-    user_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    user = Users.get_user_by_id(user_id, db=db)
+def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
+    user = Users.get_user_by_id(user_id)
     if user:
         if user.profile_image_url:
             # check if it's url or base64
