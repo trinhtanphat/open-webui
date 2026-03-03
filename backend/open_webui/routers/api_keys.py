@@ -1,3 +1,4 @@
+import json
 import time
 from typing import Optional
 
@@ -145,6 +146,44 @@ class PaymentWebhookForm(BaseModel):
     note: Optional[str] = None
 
 
+# ---------------------------------------------------------------------------
+# Model Pricing forms
+# ---------------------------------------------------------------------------
+class ModelPricingForm(BaseModel):
+    model_id: str
+    display_name: Optional[str] = None
+    input_cost_per_1k_tokens: float = 0.0
+    output_cost_per_1k_tokens: float = 0.0
+    per_request_cost: float = 0.0
+    currency: str = "USD"
+
+
+class ModelPricingUpdateForm(BaseModel):
+    model_id: Optional[str] = None
+    display_name: Optional[str] = None
+    input_cost_per_1k_tokens: Optional[float] = None
+    output_cost_per_1k_tokens: Optional[float] = None
+    per_request_cost: Optional[float] = None
+    currency: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class UsageDailySummaryEntry(BaseModel):
+    date: str
+    requests: int
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    total_cost: float
+
+
+class UsageByModelEntry(BaseModel):
+    model: str
+    requests: int
+    total_tokens: int
+    total_cost: float
+
+
 API_KEY_PLANS: list[ApiKeyPlan] = [
     ApiKeyPlan(
         id="starter",
@@ -185,13 +224,14 @@ def _mask_key(key: str) -> str:
     return f"{key[:6]}...{key[-4:]}"
 
 
-def _build_console_payload(record) -> ApiKeyConsoleResponse:
+def _build_console_payload(record, full_key: str = None) -> ApiKeyConsoleResponse:
     metadata = record.data if isinstance(record.data, dict) else {}
+    display_key = full_key if full_key else record.key
     return ApiKeyConsoleResponse(
         id=record.id,
         user_id=record.user_id,
-        key=record.key,
-        key_masked=_mask_key(record.key),
+        key=display_key,
+        key_masked=_mask_key(display_key),
         status=metadata.get("status", "active"),
         plan_name=metadata.get("plan_name"),
         monthly_price_usd=metadata.get("monthly_price_usd"),
@@ -288,7 +328,7 @@ async def regenerate_my_api_key(
         )
         new_record = Users.get_user_api_key_record_by_id(user.id, db=db)
 
-    return _build_console_payload(new_record)
+    return _build_console_payload(new_record, full_key=new_key)
 
 
 @router.get("/admin/keys", response_model=list[ApiKeyConsoleResponse])
@@ -368,7 +408,7 @@ async def admin_create_api_key(
     if not updated:
         raise HTTPException(status_code=500, detail="Failed to initialize API key metadata")
 
-    return _build_console_payload(updated)
+    return _build_console_payload(updated, full_key=key)
 
 
 @router.post("/admin/keys/{key_id}/credits", response_model=ApiKeyConsoleResponse)
@@ -651,6 +691,177 @@ async def get_admin_audit_logs(
     return Billing.get_audit_logs(limit=limit, db=db)
 
 
+# ---------------------------------------------------------------------------
+# Admin – Model Pricing CRUD
+# ---------------------------------------------------------------------------
+@router.get("/admin/model-pricing")
+async def get_admin_model_pricings(
+    include_inactive: bool = False,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_model_pricings(include_inactive=include_inactive, db=db)
+
+
+@router.post("/admin/model-pricing")
+async def create_admin_model_pricing(
+    form_data: ModelPricingForm,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    row = Billing.create_model_pricing(
+        model_id=form_data.model_id,
+        display_name=form_data.display_name,
+        input_cost_per_1k_tokens=form_data.input_cost_per_1k_tokens,
+        output_cost_per_1k_tokens=form_data.output_cost_per_1k_tokens,
+        per_request_cost=form_data.per_request_cost,
+        currency=form_data.currency,
+        actor_id=user.id,
+        db=db,
+    )
+    if not row:
+        raise HTTPException(status_code=500, detail="Failed to create model pricing (model_id may already exist)")
+
+    Billing.log_audit(
+        actor_id=user.id,
+        action="model_pricing.create",
+        target_type="model_pricing",
+        target_id=row.id,
+        details={"model_id": row.model_id},
+        db=db,
+    )
+    return row
+
+
+@router.post("/admin/model-pricing/{pricing_id}")
+async def update_admin_model_pricing(
+    pricing_id: str,
+    form_data: ModelPricingUpdateForm,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    updated_data = form_data.model_dump(exclude_none=True)
+    if "is_active" in updated_data:
+        updated_data["is_active"] = "true" if updated_data["is_active"] else "false"
+
+    row = Billing.update_model_pricing(pricing_id, updated_data, actor_id=user.id, db=db)
+    if not row:
+        raise HTTPException(status_code=404, detail="Model pricing not found")
+
+    Billing.log_audit(
+        actor_id=user.id,
+        action="model_pricing.update",
+        target_type="model_pricing",
+        target_id=pricing_id,
+        details={"updated": updated_data},
+        db=db,
+    )
+    return row
+
+
+@router.delete("/admin/model-pricing/{pricing_id}")
+async def delete_admin_model_pricing(
+    pricing_id: str,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    success = Billing.delete_model_pricing(pricing_id, db=db)
+    if not success:
+        raise HTTPException(status_code=404, detail="Model pricing not found")
+
+    Billing.log_audit(
+        actor_id=user.id,
+        action="model_pricing.delete",
+        target_type="model_pricing",
+        target_id=pricing_id,
+        details=None,
+        db=db,
+    )
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Admin – Usage Logs
+# ---------------------------------------------------------------------------
+@router.get("/admin/usage-logs")
+async def get_admin_usage_logs(
+    user_id: Optional[str] = None,
+    model: Optional[str] = None,
+    days: int = 30,
+    limit: int = 200,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_logs(
+        user_id=user_id, model=model, days=days, limit=limit, db=db
+    )
+
+
+@router.get("/admin/usage-logs/daily", response_model=list[UsageDailySummaryEntry])
+async def get_admin_usage_daily_summary(
+    user_id: Optional[str] = None,
+    days: int = 30,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_daily_summary(user_id=user_id, days=days, db=db)
+
+
+@router.get("/admin/usage-logs/by-model", response_model=list[UsageByModelEntry])
+async def get_admin_usage_by_model(
+    user_id: Optional[str] = None,
+    days: int = 30,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_by_model_summary(user_id=user_id, days=days, db=db)
+
+
+# ---------------------------------------------------------------------------
+# Public – Model Pricing (read-only for users)
+# ---------------------------------------------------------------------------
+@router.get("/model-pricing")
+async def get_public_model_pricing(
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_model_pricings(include_inactive=False, db=db)
+
+
+# ---------------------------------------------------------------------------
+# User – My Usage Logs
+# ---------------------------------------------------------------------------
+@router.get("/me/usage-logs")
+async def get_my_usage_logs(
+    model: Optional[str] = None,
+    days: int = 30,
+    limit: int = 200,
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_logs(
+        user_id=user.id, model=model, days=days, limit=limit, db=db
+    )
+
+
+@router.get("/me/usage-logs/daily", response_model=list[UsageDailySummaryEntry])
+async def get_my_usage_daily(
+    days: int = 30,
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_daily_summary(user_id=user.id, days=days, db=db)
+
+
+@router.get("/me/usage-logs/by-model", response_model=list[UsageByModelEntry])
+async def get_my_usage_by_model(
+    days: int = 30,
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    return Billing.get_usage_by_model_summary(user_id=user.id, days=days, db=db)
+
+
 @router.get("/payment-accounts")
 async def get_public_payment_accounts(user=Depends(get_verified_user), db: Session = Depends(get_session)):
     return Billing.get_payment_accounts(include_inactive=False, db=db)
@@ -727,11 +938,61 @@ async def get_my_invoice_detail(
 @router.post("/webhooks/payment/{provider}")
 async def payment_webhook(
     provider: str,
-    form_data: PaymentWebhookForm,
     request: Request,
-    x_billing_webhook_secret: Optional[str] = Header(default=None),
     db: Session = Depends(get_session),
+    x_billing_webhook_secret: Optional[str] = Header(default=None),
 ):
+    from open_webui.utils.webhooks import (
+        verify_stripe,
+        verify_vnpay,
+        verify_momo,
+        verify_generic,
+        WebhookPayload,
+    )
+
+    body_bytes = await request.body()
+
+    # ---- Provider-specific verification ----
+    if provider == "stripe":
+        sig_header = request.headers.get("stripe-signature", "")
+        # Load Stripe secret from env or payment account metadata
+        stripe_secret = _get_provider_secret(provider, db)
+        wh = verify_stripe(body_bytes, sig_header, stripe_secret)
+        if not wh.verified:
+            raise HTTPException(status_code=403, detail=f"Stripe verification failed: {wh.error}")
+
+        # For Stripe, the tx_ref is the payment intent or session ID
+        # We need to find the topup by tx_ref
+        form_data = _stripe_to_form(wh)
+
+    elif provider == "vnpay":
+        params = dict(request.query_params)
+        vnpay_secret = _get_provider_secret(provider, db)
+        wh = verify_vnpay(params, vnpay_secret)
+        if not wh.verified:
+            raise HTTPException(status_code=403, detail=f"VNPay verification failed: {wh.error}")
+        form_data = _vnpay_to_form(wh)
+
+    elif provider == "momo":
+        body_json = json.loads(body_bytes) if body_bytes else {}
+        momo_secret = _get_provider_secret(provider, db)
+        wh = verify_momo(body_json, momo_secret)
+        if not wh.verified:
+            raise HTTPException(status_code=403, detail=f"MoMo verification failed: {wh.error}")
+        form_data = _momo_to_form(wh)
+
+    else:
+        # Generic webhook — use form body + header secret
+        try:
+            body_json = json.loads(body_bytes) if body_bytes else {}
+            form_data = PaymentWebhookForm(**body_json)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid webhook payload")
+
+        # Verify below using payment account secret (original behavior)
+        wh = None
+
+    # ---- Process the topup ----
     if form_data.status.lower() not in {"paid", "success", "approved"}:
         return {"ok": True, "skipped": True, "reason": "payment_not_finalized"}
 
@@ -746,17 +1007,17 @@ async def payment_webhook(
     if topup.status != "pending":
         raise HTTPException(status_code=400, detail="Top-up request is not pending")
 
-    account = Billing.get_payment_account_by_id(topup.payment_account_id, db=db)
-    if not account:
-        raise HTTPException(status_code=404, detail="Payment account not found")
+    # For generic provider, verify via payment account webhook_secret
+    if wh is None:
+        account = Billing.get_payment_account_by_id(topup.payment_account_id, db=db)
+        if not account:
+            raise HTTPException(status_code=404, detail="Payment account not found")
 
-    metadata = account.metadata if isinstance(account.metadata, dict) else {}
-    expected_secret = metadata.get("webhook_secret")
-    if expected_secret:
-        if not x_billing_webhook_secret or x_billing_webhook_secret != expected_secret:
-            raise HTTPException(status_code=403, detail="Invalid webhook secret")
-    else:
-        raise HTTPException(status_code=403, detail="Webhook secret not configured for payment account")
+        acct_metadata = account.metadata if isinstance(account.metadata, dict) else {}
+        expected_secret = acct_metadata.get("webhook_secret")
+        generic_result = verify_generic(x_billing_webhook_secret, expected_secret or "")
+        if not generic_result.verified:
+            raise HTTPException(status_code=403, detail=generic_result.error)
 
     api_key = Users.get_api_key_record_by_id(topup.api_key_id, db=db)
     if not api_key:
@@ -812,3 +1073,60 @@ async def payment_webhook(
         "invoice": invoice,
         "api_key": _build_console_payload(updated_key),
     }
+
+
+def _get_provider_secret(provider: str, db: Session) -> str:
+    """
+    Get the webhook/hash secret for a given payment provider.
+    Looks up payment accounts with matching provider name.
+    """
+    accounts = Billing.get_payment_accounts(db=db)
+    for acct in accounts:
+        if acct.provider.lower() == provider.lower():
+            meta = acct.metadata if isinstance(acct.metadata, dict) else {}
+            return meta.get("webhook_secret", meta.get("hash_secret", meta.get("secret_key", "")))
+    return ""
+
+
+def _stripe_to_form(wh) -> PaymentWebhookForm:
+    """Convert Stripe webhook payload to internal form."""
+    raw = wh.raw or {}
+    data_obj = raw.get("data", {}).get("object", {})
+    # Try to find topup_request_id in metadata
+    mdata = data_obj.get("metadata", {})
+    return PaymentWebhookForm(
+        topup_request_id=mdata.get("topup_request_id", data_obj.get("client_reference_id", "")),
+        status="paid" if wh.is_paid else wh.status,
+        tx_ref=wh.tx_ref,
+        amount=wh.amount,
+        currency=wh.currency,
+    )
+
+
+def _vnpay_to_form(wh) -> PaymentWebhookForm:
+    """Convert VNPay webhook payload to internal form."""
+    raw = wh.raw or {}
+    # VNPay uses vnp_OrderInfo or vnp_TxnRef as reference; topup_request_id expected in vnp_OrderInfo
+    order_info = raw.get("vnp_OrderInfo", "")
+    return PaymentWebhookForm(
+        topup_request_id=order_info if order_info else raw.get("vnp_TxnRef", ""),
+        status="paid" if wh.is_paid else wh.status,
+        tx_ref=wh.tx_ref,
+        amount=wh.amount,
+        currency=wh.currency,
+    )
+
+
+def _momo_to_form(wh) -> PaymentWebhookForm:
+    """Convert MoMo webhook payload to internal form."""
+    raw = wh.raw or {}
+    # MoMo: orderId is the topup_request_id, or in extraData
+    extra = raw.get("extraData", "")
+    order_id = raw.get("orderId", "")
+    return PaymentWebhookForm(
+        topup_request_id=order_id if order_id else extra,
+        status="paid" if wh.is_paid else wh.status,
+        tx_ref=wh.tx_ref,
+        amount=wh.amount,
+        currency=wh.currency,
+    )

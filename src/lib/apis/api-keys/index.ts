@@ -105,6 +105,57 @@ export type UserUsageSummary = {
 	avg_spend_per_1k_requests_usd: number;
 };
 
+// ---- Model Pricing types ----
+export type ModelPricing = {
+	id: string;
+	model_id: string;
+	display_name?: string;
+	input_cost_per_1k_tokens: number;
+	output_cost_per_1k_tokens: number;
+	per_request_cost: number;
+	currency: string;
+	is_active: string;
+	created_by?: string;
+	updated_by?: string;
+	created_at: number;
+	updated_at: number;
+};
+
+// ---- Usage Log types ----
+export type UsageLogEntry = {
+	id: string;
+	user_id: string;
+	api_key_id: string;
+	model: string;
+	endpoint?: string;
+	prompt_tokens: number;
+	completion_tokens: number;
+	total_tokens: number;
+	input_cost: number;
+	output_cost: number;
+	total_cost: number;
+	credits_deducted: number;
+	currency: string;
+	request_metadata?: Record<string, any>;
+	created_at: number;
+};
+
+export type UsageDailySummary = {
+	date: string;
+	requests: number;
+	prompt_tokens: number;
+	completion_tokens: number;
+	total_tokens: number;
+	total_cost: number;
+};
+
+export type UsageByModelSummary = {
+	model: string;
+	requests: number;
+	total_tokens: number;
+	total_cost: number;
+};
+
 const authHeaders = (token: string) => ({
 	'Content-Type': 'application/json',
 	Authorization: `Bearer ${token}`
@@ -481,7 +532,275 @@ export const getAdminInvoiceById = async (token: string, invoiceId: string): Pro
 	return res;
 };
 
-export const getAdminRevenueDaily = async (token: string, days = 30): Promise<RevenueDailyEntry[]> => {
+// ---------------------------------------------------------------------------
+// Admin – Model Pricing
+// ---------------------------------------------------------------------------
+export const getAdminModelPricings = async (
+	token: string,
+	includeInactive = false
+): Promise<ModelPricing[]> => {
+	let error = null;
+	const query = includeInactive ? '?include_inactive=true' : '';
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/model-pricing${query}`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch model pricings';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const createAdminModelPricing = async (
+	token: string,
+	formData: {
+		model_id: string;
+		display_name?: string;
+		input_cost_per_1k_tokens: number;
+		output_cost_per_1k_tokens: number;
+		per_request_cost: number;
+		currency: string;
+	}
+): Promise<ModelPricing> => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/model-pricing`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify(formData)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to create model pricing';
+			return null;
+		});
+	if (error) throw error;
+	return res;
+};
+
+export const updateAdminModelPricing = async (
+	token: string,
+	pricingId: string,
+	formData: Record<string, any>
+): Promise<ModelPricing> => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/model-pricing/${pricingId}`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify(formData)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to update model pricing';
+			return null;
+		});
+	if (error) throw error;
+	return res;
+};
+
+export const deleteAdminModelPricing = async (
+	token: string,
+	pricingId: string
+): Promise<{ ok: boolean }> => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/model-pricing/${pricingId}`, {
+		method: 'DELETE',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to delete model pricing';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? { ok: false };
+};
+
+// ---------------------------------------------------------------------------
+// Admin – Usage Logs
+// ---------------------------------------------------------------------------
+export const getAdminUsageLogs = async (
+	token: string,
+	params?: { user_id?: string; model?: string; days?: number; limit?: number }
+): Promise<UsageLogEntry[]> => {
+	let error = null;
+	const qs = new URLSearchParams();
+	if (params?.user_id) qs.set('user_id', params.user_id);
+	if (params?.model) qs.set('model', params.model);
+	if (params?.days) qs.set('days', String(params.days));
+	if (params?.limit) qs.set('limit', String(params.limit));
+	const query = qs.toString() ? `?${qs.toString()}` : '';
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/usage-logs${query}`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch usage logs';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getAdminUsageDaily = async (
+	token: string,
+	params?: { user_id?: string; days?: number }
+): Promise<UsageDailySummary[]> => {
+	let error = null;
+	const qs = new URLSearchParams();
+	if (params?.user_id) qs.set('user_id', params.user_id);
+	if (params?.days) qs.set('days', String(params.days));
+	const query = qs.toString() ? `?${qs.toString()}` : '';
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/usage-logs/daily${query}`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch daily usage';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getAdminUsageByModel = async (
+	token: string,
+	params?: { user_id?: string; days?: number }
+): Promise<UsageByModelSummary[]> => {
+	let error = null;
+	const qs = new URLSearchParams();
+	if (params?.user_id) qs.set('user_id', params.user_id);
+	if (params?.days) qs.set('days', String(params.days));
+	const query = qs.toString() ? `?${qs.toString()}` : '';
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/usage-logs/by-model${query}`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch usage by model';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+// ---------------------------------------------------------------------------
+// Public – Model Pricing (read-only)
+// ---------------------------------------------------------------------------
+export const getPublicModelPricing = async (token: string): Promise<ModelPricing[]> => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/model-pricing`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch model pricing';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+// ---------------------------------------------------------------------------
+// User – My Usage Logs
+// ---------------------------------------------------------------------------
+export const getMyUsageLogs = async (
+	token: string,
+	params?: { model?: string; days?: number; limit?: number }
+): Promise<UsageLogEntry[]> => {
+	let error = null;
+	const qs = new URLSearchParams();
+	if (params?.model) qs.set('model', params.model);
+	if (params?.days) qs.set('days', String(params.days));
+	if (params?.limit) qs.set('limit', String(params.limit));
+	const query = qs.toString() ? `?${qs.toString()}` : '';
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/usage-logs${query}`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch my usage logs';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getMyUsageDaily = async (
+	token: string,
+	days = 30
+): Promise<UsageDailySummary[]> => {
+	let error = null;
+	const res = await fetch(
+		`${WEBUI_API_BASE_URL}/api-keys/me/usage-logs/daily?days=${days}`,
+		{ method: 'GET', headers: authHeaders(token) }
+	)
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch my daily usage';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getMyUsageByModel = async (
+	token: string,
+	days = 30
+): Promise<UsageByModelSummary[]> => {
+	let error = null;
+	const res = await fetch(
+		`${WEBUI_API_BASE_URL}/api-keys/me/usage-logs/by-model?days=${days}`,
+		{ method: 'GET', headers: authHeaders(token) }
+	)
+		.then(async (r) => {
+			if (!r.ok) throw await r.json();
+			return r.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Failed to fetch my usage by model';
+			return null;
+		});
+	if (error) throw error;
+	return res ?? [];
+};export const getAdminRevenueDaily = async (token: string, days = 30): Promise<RevenueDailyEntry[]> => {
 	let error = null;
 
 	const res = await fetch(

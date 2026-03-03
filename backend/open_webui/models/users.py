@@ -1,3 +1,4 @@
+import hashlib
 import time
 from typing import Optional, Any
 
@@ -125,12 +126,23 @@ class UserStatusModel(UserModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+def _hash_api_key(key: str) -> str:
+    """SHA-256 hash of an API key for secure storage."""
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
+def _key_prefix(key: str) -> str:
+    """First 10 chars of the key for display (e.g. sk-a1b2c3...)."""
+    return key[:10] if len(key) > 10 else key
+
+
 class ApiKey(Base):
     __tablename__ = "api_key"
 
     id = Column(Text, primary_key=True, unique=True)
     user_id = Column(Text, nullable=False)
-    key = Column(Text, unique=True, nullable=False)
+    key = Column(Text, unique=True, nullable=False)  # after migration: stores prefix only
+    key_hash = Column(Text, unique=True, nullable=True)  # SHA-256 hash for lookup
     data = Column(JSON, nullable=True)
     expires_at = Column(BigInteger, nullable=True)
     last_used_at = Column(BigInteger, nullable=True)
@@ -142,6 +154,7 @@ class ApiKeyModel(BaseModel):
     id: str
     user_id: str
     key: str
+    key_hash: Optional[str] = None
     data: Optional[dict] = None
     expires_at: Optional[int] = None
     last_used_at: Optional[int] = None
@@ -308,10 +321,11 @@ class UsersTable:
     ) -> Optional[UserModel]:
         try:
             with get_db_context(db) as db:
+                key_hash = _hash_api_key(api_key)
                 user = (
                     db.query(User)
                     .join(ApiKey, User.id == ApiKey.user_id)
-                    .filter(ApiKey.key == api_key)
+                    .filter(ApiKey.key_hash == key_hash)
                     .first()
                 )
                 return UserModel.model_validate(user) if user else None
@@ -793,7 +807,8 @@ class UsersTable:
     ) -> Optional[ApiKeyModel]:
         try:
             with get_db_context(db) as db:
-                api_key = db.query(ApiKey).filter_by(key=key).first()
+                key_hash = _hash_api_key(key)
+                api_key = db.query(ApiKey).filter_by(key_hash=key_hash).first()
                 return ApiKeyModel.model_validate(api_key) if api_key else None
         except Exception:
             return None
@@ -828,7 +843,8 @@ class UsersTable:
                 new_api_key = ApiKey(
                     id=f"key_{id}",
                     user_id=id,
-                    key=api_key,
+                    key=_key_prefix(api_key),
+                    key_hash=_hash_api_key(api_key),
                     created_at=now,
                     updated_at=now,
                 )
@@ -870,7 +886,8 @@ class UsersTable:
     ) -> tuple[bool, str, Optional[ApiKeyModel]]:
         try:
             with get_db_context(db) as db:
-                record = db.query(ApiKey).filter_by(key=api_key).first()
+                key_hash = _hash_api_key(api_key)
+                record = db.query(ApiKey).filter_by(key_hash=key_hash).first()
 
                 if not record:
                     return (False, "not_found", None)

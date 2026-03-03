@@ -4,6 +4,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { copyToClipboard } from '$lib/utils';
+	import BarChart from '$lib/components/billing/BarChart.svelte';
 	import {
 		getApiKeyPlans,
 		createMyTopupRequest,
@@ -14,12 +15,16 @@
 		getMyUsageSummary,
 		getPublicPaymentAccounts,
 		regenerateMyApiKey,
+		getMyUsageDaily,
+		getMyUsageByModel,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
 		type BillingInvoice,
 		type PaymentAccount,
 		type TopupRequest,
-		type UserUsageSummary
+		type UserUsageSummary,
+		type UsageDailySummary,
+		type UsageByModelSummary
 	} from '$lib/apis/api-keys';
 
 	const i18n = getContext<any>('i18n');
@@ -27,6 +32,7 @@
 	let loading = true;
 	let apiKey: ApiKeyConsole | null = null;
 	let copied = false;
+	let showFullKey = false; // true right after regeneration — one-time display
 	let paymentAccounts: PaymentAccount[] = [];
 	let topups: TopupRequest[] = [];
 	let invoices: BillingInvoice[] = [];
@@ -40,6 +46,9 @@
 	let topupTxRef = '';
 	let topupNote = '';
 
+	let myUsageDaily: UsageDailySummary[] = [];
+	let myUsageByModel: UsageByModelSummary[] = [];
+
 	const loadConsole = async () => {
 		apiKey = await getMyApiKeyConsole(localStorage.token).catch((error) => {
 			toast.error(`${error}`);
@@ -51,6 +60,8 @@
 		invoices = await getMyInvoices(localStorage.token).catch(() => []);
 		plans = await getApiKeyPlans(localStorage.token).catch(() => []);
 		usage = await getMyUsageSummary(localStorage.token).catch(() => null);
+		myUsageDaily = await getMyUsageDaily(localStorage.token).catch(() => []);
+		myUsageByModel = await getMyUsageByModel(localStorage.token).catch(() => []);
 
 		if (!selectedPaymentAccountId && paymentAccounts.length > 0) {
 			selectedPaymentAccountId = paymentAccounts[0].id;
@@ -78,7 +89,8 @@
 			return apiKey;
 		});
 
-		toast.success($i18n.t('API key regenerated'));
+		showFullKey = true;
+		toast.success($i18n.t('API key regenerated. Copy it now — it will not be shown again.'));
 	};
 
 	const submitTopup = async () => {
@@ -189,6 +201,12 @@
 				<div class="text-xs text-gray-500">{apiKey.key_masked}</div>
 			</div>
 
+			{#if showFullKey}
+				<div class="rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-3 text-xs text-amber-800 dark:text-amber-200">
+					<strong>Important:</strong> Copy your API key now. For security, you will not be able to see the full key again after leaving this page.
+				</div>
+			{/if}
+
 			<div class="flex gap-2">
 				<input
 					class="w-full rounded-lg px-3 py-2 text-xs bg-transparent border border-gray-200 dark:border-gray-700"
@@ -243,6 +261,34 @@
 					<div class="rounded-lg border border-gray-100 dark:border-gray-800 p-3"><div class="text-xs text-gray-500">Spend</div><div class="font-semibold mt-1">${usage.total_spend_usd.toFixed(2)}</div></div>
 				</div>
 				<div class="text-xs text-gray-500">Avg spend / 1k requests: ${usage.avg_spend_per_1k_requests_usd.toFixed(4)} • Usage month: {usage.usage_month ?? '-'}</div>
+			</div>
+		{/if}
+
+		<!-- Usage Charts -->
+		{#if myUsageDaily.length > 0 || myUsageByModel.length > 0}
+			<div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+				<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+					<div class="text-sm font-medium mb-2">Daily Usage</div>
+					<BarChart
+						data={myUsageDaily.map((d) => ({ label: d.date, value: d.requests, secondary: d.total_cost }))}
+						valueLabel="Requests"
+						secondaryLabel="Cost ($)"
+						barColor="#3b82f6"
+						secondaryColor="#f59e0b"
+						height={200}
+					/>
+				</div>
+				<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+					<div class="text-sm font-medium mb-2">By Model</div>
+					<BarChart
+						data={myUsageByModel.map((m) => ({ label: m.model.length > 18 ? m.model.slice(0, 16) + '..' : m.model, value: m.requests, secondary: m.total_tokens }))}
+						valueLabel="Requests"
+						secondaryLabel="Tokens"
+						barColor="#8b5cf6"
+						secondaryColor="#10b981"
+						height={200}
+					/>
+				</div>
 			</div>
 		{/if}
 

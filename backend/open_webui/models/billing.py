@@ -1,14 +1,58 @@
+import fnmatch
 import time
 import uuid
-from typing import Optional
+from typing import Any, Optional
 from collections import defaultdict
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, Float, JSON, Text
+from sqlalchemy import BigInteger, Boolean, Column, Float, JSON, Text
 from sqlalchemy.orm import Session
 
 from open_webui.internal.db import Base, get_db_context
+
+
+# ---------------------------------------------------------------------------
+# Model Pricing – admin-configurable per-model cost
+# ---------------------------------------------------------------------------
+class ModelPricing(Base):
+    __tablename__ = "model_pricing"
+
+    id = Column(Text, primary_key=True, unique=True)
+    model_id = Column(Text, nullable=False, unique=True)  # exact name or glob "gpt-4*"
+    display_name = Column(Text, nullable=True)
+    input_cost_per_1k_tokens = Column(Float, nullable=False, default=0.0)
+    output_cost_per_1k_tokens = Column(Float, nullable=False, default=0.0)
+    per_request_cost = Column(Float, nullable=False, default=0.0)
+    currency = Column(Text, nullable=False, default="USD")
+    is_active = Column(Text, nullable=False, default="true")
+    created_by = Column(Text, nullable=True)
+    updated_by = Column(Text, nullable=True)
+    created_at = Column(BigInteger, nullable=False)
+    updated_at = Column(BigInteger, nullable=False)
+
+
+# ---------------------------------------------------------------------------
+# Usage Log – one row per API request with token + cost breakdown
+# ---------------------------------------------------------------------------
+class UsageLog(Base):
+    __tablename__ = "usage_log"
+
+    id = Column(Text, primary_key=True, unique=True)
+    user_id = Column(Text, nullable=False)
+    api_key_id = Column(Text, nullable=False)
+    model = Column(Text, nullable=False)
+    endpoint = Column(Text, nullable=True)
+    prompt_tokens = Column(BigInteger, nullable=False, default=0)
+    completion_tokens = Column(BigInteger, nullable=False, default=0)
+    total_tokens = Column(BigInteger, nullable=False, default=0)
+    input_cost = Column(Float, nullable=False, default=0.0)
+    output_cost = Column(Float, nullable=False, default=0.0)
+    total_cost = Column(Float, nullable=False, default=0.0)
+    credits_deducted = Column(BigInteger, nullable=False, default=0)
+    currency = Column(Text, nullable=False, default="USD")
+    request_metadata = Column(JSON, nullable=True)
+    created_at = Column(BigInteger, nullable=False)
 
 
 class BillingPaymentAccount(Base):
@@ -140,6 +184,46 @@ class BillingAuditLogModel(BaseModel):
     target_type: str
     target_id: str
     details: Optional[dict] = None
+    created_at: int
+
+
+# ---------------------------------------------------------------------------
+# Pydantic models for new tables
+# ---------------------------------------------------------------------------
+class ModelPricingModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    model_id: str
+    display_name: Optional[str] = None
+    input_cost_per_1k_tokens: float = 0.0
+    output_cost_per_1k_tokens: float = 0.0
+    per_request_cost: float = 0.0
+    currency: str = "USD"
+    is_active: str = "true"
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+    created_at: int
+    updated_at: int
+
+
+class UsageLogModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    api_key_id: str
+    model: str
+    endpoint: Optional[str] = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    input_cost: float = 0.0
+    output_cost: float = 0.0
+    total_cost: float = 0.0
+    credits_deducted: int = 0
+    currency: str = "USD"
+    request_metadata: Optional[dict] = None
     created_at: int
 
 
@@ -445,6 +529,266 @@ class BillingTable:
                 .all()
             )
             return [BillingAuditLogModel.model_validate(row) for row in rows]
+
+    # -----------------------------------------------------------------------
+    # Model Pricing CRUD
+    # -----------------------------------------------------------------------
+    def create_model_pricing(
+        self,
+        model_id: str,
+        display_name: Optional[str],
+        input_cost_per_1k_tokens: float,
+        output_cost_per_1k_tokens: float,
+        per_request_cost: float,
+        currency: str,
+        actor_id: str,
+        db: Optional[Session] = None,
+    ) -> Optional[ModelPricingModel]:
+        try:
+            with get_db_context(db) as db:
+                now = int(time.time())
+                row = ModelPricing(
+                    id=str(uuid.uuid4()),
+                    model_id=model_id,
+                    display_name=display_name or model_id,
+                    input_cost_per_1k_tokens=input_cost_per_1k_tokens,
+                    output_cost_per_1k_tokens=output_cost_per_1k_tokens,
+                    per_request_cost=per_request_cost,
+                    currency=currency,
+                    is_active="true",
+                    created_by=actor_id,
+                    updated_by=actor_id,
+                    created_at=now,
+                    updated_at=now,
+                )
+                db.add(row)
+                db.commit()
+                db.refresh(row)
+                return ModelPricingModel.model_validate(row)
+        except Exception:
+            return None
+
+    def get_model_pricings(
+        self,
+        include_inactive: bool = False,
+        db: Optional[Session] = None,
+    ) -> list[ModelPricingModel]:
+        with get_db_context(db) as db:
+            query = db.query(ModelPricing)
+            if not include_inactive:
+                query = query.filter(ModelPricing.is_active == "true")
+            rows = query.order_by(ModelPricing.model_id.asc()).all()
+            return [ModelPricingModel.model_validate(row) for row in rows]
+
+    def get_model_pricing_by_id(
+        self, pricing_id: str, db: Optional[Session] = None
+    ) -> Optional[ModelPricingModel]:
+        try:
+            with get_db_context(db) as db:
+                row = db.query(ModelPricing).filter_by(id=pricing_id).first()
+                return ModelPricingModel.model_validate(row) if row else None
+        except Exception:
+            return None
+
+    def update_model_pricing(
+        self,
+        pricing_id: str,
+        updated: dict,
+        actor_id: str,
+        db: Optional[Session] = None,
+    ) -> Optional[ModelPricingModel]:
+        try:
+            with get_db_context(db) as db:
+                row = db.query(ModelPricing).filter_by(id=pricing_id).first()
+                if not row:
+                    return None
+                for key, value in updated.items():
+                    setattr(row, key, value)
+                row.updated_by = actor_id
+                row.updated_at = int(time.time())
+                db.commit()
+                db.refresh(row)
+                return ModelPricingModel.model_validate(row)
+        except Exception:
+            return None
+
+    def delete_model_pricing(
+        self, pricing_id: str, db: Optional[Session] = None
+    ) -> bool:
+        try:
+            with get_db_context(db) as db:
+                row = db.query(ModelPricing).filter_by(id=pricing_id).first()
+                if not row:
+                    return False
+                db.delete(row)
+                db.commit()
+                return True
+        except Exception:
+            return False
+
+    def resolve_model_pricing(
+        self, model_name: str, db: Optional[Session] = None
+    ) -> Optional[ModelPricingModel]:
+        """Find best-matching pricing for a model.
+        Tries exact match first, then glob patterns (e.g. 'gpt-4*')."""
+        with get_db_context(db) as db:
+            rows = (
+                db.query(ModelPricing)
+                .filter(ModelPricing.is_active == "true")
+                .all()
+            )
+            # exact match first
+            for row in rows:
+                if row.model_id == model_name:
+                    return ModelPricingModel.model_validate(row)
+            # glob / fnmatch
+            for row in rows:
+                if fnmatch.fnmatch(model_name.lower(), row.model_id.lower()):
+                    return ModelPricingModel.model_validate(row)
+            return None
+
+    # -----------------------------------------------------------------------
+    # Usage Log CRUD
+    # -----------------------------------------------------------------------
+    def create_usage_log(
+        self,
+        user_id: str,
+        api_key_id: str,
+        model: str,
+        endpoint: Optional[str],
+        prompt_tokens: int,
+        completion_tokens: int,
+        total_tokens: int,
+        input_cost: float,
+        output_cost: float,
+        total_cost: float,
+        credits_deducted: int,
+        currency: str = "USD",
+        request_metadata: Optional[dict] = None,
+        db: Optional[Session] = None,
+    ) -> Optional[UsageLogModel]:
+        try:
+            with get_db_context(db) as db:
+                row = UsageLog(
+                    id=str(uuid.uuid4()),
+                    user_id=user_id,
+                    api_key_id=api_key_id,
+                    model=model,
+                    endpoint=endpoint,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                    input_cost=input_cost,
+                    output_cost=output_cost,
+                    total_cost=total_cost,
+                    credits_deducted=credits_deducted,
+                    currency=currency,
+                    request_metadata=request_metadata,
+                    created_at=int(time.time()),
+                )
+                db.add(row)
+                db.commit()
+                db.refresh(row)
+                return UsageLogModel.model_validate(row)
+        except Exception:
+            return None
+
+    def get_usage_logs(
+        self,
+        user_id: Optional[str] = None,
+        api_key_id: Optional[str] = None,
+        model: Optional[str] = None,
+        days: int = 30,
+        limit: int = 500,
+        db: Optional[Session] = None,
+    ) -> list[UsageLogModel]:
+        with get_db_context(db) as db:
+            query = db.query(UsageLog)
+            if user_id:
+                query = query.filter(UsageLog.user_id == user_id)
+            if api_key_id:
+                query = query.filter(UsageLog.api_key_id == api_key_id)
+            if model:
+                query = query.filter(UsageLog.model == model)
+
+            start_ts = int(time.time()) - max(1, days) * 86400
+            query = query.filter(UsageLog.created_at >= start_ts)
+            rows = (
+                query.order_by(UsageLog.created_at.desc())
+                .limit(max(1, min(limit, 5000)))
+                .all()
+            )
+            return [UsageLogModel.model_validate(row) for row in rows]
+
+    def get_usage_daily_summary(
+        self,
+        user_id: Optional[str] = None,
+        api_key_id: Optional[str] = None,
+        days: int = 30,
+        db: Optional[Session] = None,
+    ) -> list[dict]:
+        """Aggregate usage by day → {date, requests, prompt_tokens, completion_tokens, total_tokens, total_cost}"""
+        with get_db_context(db) as db:
+            query = db.query(UsageLog)
+            if user_id:
+                query = query.filter(UsageLog.user_id == user_id)
+            if api_key_id:
+                query = query.filter(UsageLog.api_key_id == api_key_id)
+
+            start_ts = int(time.time()) - max(1, days) * 86400
+            query = query.filter(UsageLog.created_at >= start_ts)
+            rows = query.all()
+
+            day_totals: dict[str, dict[str, Any]] = defaultdict(
+                lambda: {
+                    "requests": 0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "total_cost": 0.0,
+                }
+            )
+            for row in rows:
+                day = datetime.datetime.utcfromtimestamp(row.created_at).strftime("%Y-%m-%d")
+                day_totals[day]["requests"] += 1
+                day_totals[day]["prompt_tokens"] += int(row.prompt_tokens)
+                day_totals[day]["completion_tokens"] += int(row.completion_tokens)
+                day_totals[day]["total_tokens"] += int(row.total_tokens)
+                day_totals[day]["total_cost"] += float(row.total_cost)
+
+            result = []
+            for day in sorted(day_totals.keys()):
+                result.append({"date": day, **day_totals[day]})
+            return result
+
+    def get_usage_by_model_summary(
+        self,
+        user_id: Optional[str] = None,
+        days: int = 30,
+        db: Optional[Session] = None,
+    ) -> list[dict]:
+        """Aggregate usage by model → {model, requests, total_tokens, total_cost}"""
+        with get_db_context(db) as db:
+            query = db.query(UsageLog)
+            if user_id:
+                query = query.filter(UsageLog.user_id == user_id)
+
+            start_ts = int(time.time()) - max(1, days) * 86400
+            query = query.filter(UsageLog.created_at >= start_ts)
+            rows = query.all()
+
+            model_totals: dict[str, dict[str, Any]] = defaultdict(
+                lambda: {"requests": 0, "total_tokens": 0, "total_cost": 0.0}
+            )
+            for row in rows:
+                model_totals[row.model]["requests"] += 1
+                model_totals[row.model]["total_tokens"] += int(row.total_tokens)
+                model_totals[row.model]["total_cost"] += float(row.total_cost)
+
+            result = []
+            for model_name in sorted(model_totals.keys()):
+                result.append({"model": model_name, **model_totals[model_name]})
+            return result
 
 
 Billing = BillingTable()

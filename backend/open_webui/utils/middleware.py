@@ -111,6 +111,7 @@ from open_webui.utils.filter import (
 from open_webui.utils.code_interpreter import execute_code_jupyter
 from open_webui.utils.payload import apply_system_prompt_to_body
 from open_webui.utils.response import normalize_usage
+from open_webui.utils.billing import finalize_billing
 from open_webui.utils.mcp.client import MCPClient
 
 
@@ -3111,6 +3112,22 @@ async def non_streaming_chat_response_handler(response, ctx):
 
                     await background_tasks_handler(ctx)
 
+                    # --- Billing: post-response token-based billing ---
+                    try:
+                        auth_header = request.headers.get("Authorization", "")
+                        token_str = auth_header.split(" ", 1)[-1] if auth_header else ""
+                        if token_str.startswith("sk-"):
+                            ns_usage = response_data.get("usage") if isinstance(response_data, dict) else None
+                            finalize_billing(
+                                user_id=user.id,
+                                api_key=token_str,
+                                model=form_data.get("model", "") if isinstance(form_data, dict) else "",
+                                usage=ns_usage,
+                                endpoint=str(request.url.path),
+                            )
+                    except Exception as e:
+                        log.debug(f"[billing] non-streaming finalize error: {e}")
+
             response = build_response_object(
                 response, merge_events_into_response(response_data, events)
             )
@@ -4657,6 +4674,22 @@ async def streaming_chat_response_handler(response, ctx):
                 )
 
                 await background_tasks_handler(ctx)
+
+                # --- Billing: post-response token-based billing ---
+                try:
+                    auth_header = request.headers.get("Authorization", "")
+                    token_str = auth_header.split(" ", 1)[-1] if auth_header else ""
+                    if token_str.startswith("sk-"):
+                        finalize_billing(
+                            user_id=user.id,
+                            api_key=token_str,
+                            model=form_data.get("model", ""),
+                            usage=usage,
+                            endpoint=str(request.url.path),
+                        )
+                except Exception as e:
+                    log.debug(f"[billing] streaming finalize error: {e}")
+
             except asyncio.CancelledError:
                 log.warning("Task was cancelled!")
                 await event_emitter({"type": "chat:tasks:cancel"})
