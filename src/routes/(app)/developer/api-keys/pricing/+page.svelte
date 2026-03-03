@@ -211,8 +211,7 @@
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.output_cost_per_1k_tokens.toFixed(4)}</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.per_request_cost.toFixed(4)}</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">
-										{@const creditsEstimate = Math.max(1, Math.round(((m.input_cost_per_1k_tokens + m.output_cost_per_1k_tokens) / 2 + m.per_request_cost) / 0.001))}
-										~{creditsEstimate}
+										~{Math.max(1, Math.round(((m.input_cost_per_1k_tokens + m.output_cost_per_1k_tokens) / 2 + m.per_request_cost) / 0.001))}
 									</td>
 								</tr>
 							{/each}

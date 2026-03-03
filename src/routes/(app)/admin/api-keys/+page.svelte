@@ -492,8 +492,8 @@
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Provider')}</label>
-							<select class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={provider}>
+							<label for="billing-provider" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Provider')}</label>
+							<select id="billing-provider" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={provider}>
 								<option value="generic">Generic</option>
 								<option value="stripe">Stripe</option>
 								<option value="vnpay">VNPay</option>
@@ -501,20 +501,20 @@
 							</select>
 						</div>
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Account Name')}</label>
-							<input class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={accountName} />
+							<label for="billing-account-name" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Account Name')}</label>
+							<input id="billing-account-name" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={accountName} />
 						</div>
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Account Number')}</label>
-							<input class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={accountNumber} />
+							<label for="billing-account-number" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Account Number')}</label>
+							<input id="billing-account-number" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={accountNumber} />
 						</div>
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('QR Code URL')}</label>
-							<input class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={qrCodeUrl} />
+							<label for="billing-qr-url" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('QR Code URL')}</label>
+							<input id="billing-qr-url" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={qrCodeUrl} />
 						</div>
 						<div class="sm:col-span-2">
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Webhook Secret')}</label>
-							<input class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm font-mono" bind:value={webhookSecret}
+							<label for="billing-webhook-secret" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Webhook Secret')}</label>
+							<input id="billing-webhook-secret" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm font-mono" bind:value={webhookSecret}
 								placeholder={provider === 'stripe' ? 'whsec_...' : provider === 'vnpay' ? 'VNPay hash secret' : provider === 'momo' ? 'MoMo secret key' : 'webhook secret'} />
 						</div>
 					</div>
@@ -537,8 +537,8 @@
 					{/if}
 
 					<div>
-						<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Instructions')}</label>
-						<textarea class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" rows="2" bind:value={instructions} placeholder={$i18n.t('Payment instructions for users')}></textarea>
+						<label for="billing-instructions" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Instructions')}</label>
+						<textarea id="billing-instructions" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" rows="2" bind:value={instructions} placeholder={$i18n.t('Payment instructions for users')}></textarea>
 					</div>
 
 					<button class="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5" on:click={createPaymentAccount}>
