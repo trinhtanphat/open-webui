@@ -66,6 +66,7 @@
 	import PinnedModelList from './Sidebar/PinnedModelList.svelte';
 	import Note from '../icons/Note.svelte';
 	import Bolt from '../icons/Bolt.svelte';
+	import Sparkles from '../icons/Sparkles.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
@@ -847,6 +848,19 @@
 
 		<div>
 			<div>
+				<!-- Upgrade Plan Button (collapsed sidebar) -->
+				<div class="flex justify-center py-1">
+					<Tooltip content={$i18n.t('Upgrade plan')} placement="right">
+						<a
+							href="/developer/api-keys/pricing"
+							draggable="false"
+							class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
+						>
+							<Sparkles className="size-4" />
+						</a>
+					</Tooltip>
+				</div>
+
 				<div class=" py-2 flex justify-center items-center">
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
@@ -1416,6 +1430,21 @@
 					class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
 				></div>
 				<div class="flex flex-col font-primary">
+					<!-- Upgrade Plan Button (full sidebar) -->
+					<a
+						href="/developer/api-keys/pricing"
+						draggable="false"
+						class="flex items-center gap-2.5 rounded-2xl py-2 px-3 mb-1 w-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 dark:from-violet-500/15 dark:to-fuchsia-500/15 hover:from-violet-500/20 hover:to-fuchsia-500/20 dark:hover:from-violet-500/25 dark:hover:to-fuchsia-500/25 border border-violet-200/50 dark:border-violet-500/20 transition-all duration-200 group"
+					>
+						<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white flex-shrink-0 shadow-sm">
+							<Sparkles className="size-3.5" />
+						</div>
+						<div class="flex flex-col flex-1 min-w-0">
+							<span class="text-sm font-medium text-violet-700 dark:text-violet-300 truncate">{$i18n.t('Upgrade plan')}</span>
+							<span class="text-[10px] text-violet-500/70 dark:text-violet-400/50 truncate">{$i18n.t('Get more with Pro')}</span>
+						</div>
+					</a>
+
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							role={$user?.role}
