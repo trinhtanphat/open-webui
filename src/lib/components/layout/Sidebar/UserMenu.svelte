@@ -22,6 +22,7 @@
 	import Settings from '$lib/components/icons/Settings.svelte';
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
+	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import SignOut from '$lib/components/icons/SignOut.svelte';
 	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
 	import UserStatusModal from './UserStatusModal.svelte';
@@ -239,6 +240,27 @@
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Archived Chats')}</div>
 			</DropdownMenu.Item>
+
+			{#if ($config?.features?.enable_api_keys ?? true) && (role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
+				<DropdownMenu.Item
+					as="a"
+					href="/developer/api-keys/landing"
+					draggable="false"
+					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+					on:click={async () => {
+						show = false;
+						if ($mobile) {
+							await tick();
+							showSidebar.set(false);
+						}
+					}}
+				>
+					<div class=" self-center mr-3">
+						<Bolt className="size-5" />
+					</div>
+					<div class=" self-center truncate">{$i18n.t('API Platform')}</div>
+				</DropdownMenu.Item>
+			{/if}
 
 			{#if role === 'admin'}
 				<DropdownMenu.Item

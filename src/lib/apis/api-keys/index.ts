@@ -161,6 +161,31 @@ const authHeaders = (token: string) => ({
 	Authorization: `Bearer ${token}`
 });
 
+export const activateMyApiKey = async (
+	token: string,
+	planId: string = 'starter'
+): Promise<ApiKeyConsole> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/activate`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify({ plan_id: planId })
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to activate API key';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
 export const getMyApiKeyConsole = async (token: string): Promise<ApiKeyConsole> => {
 	let error = null;
 

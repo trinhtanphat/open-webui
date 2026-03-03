@@ -269,14 +269,23 @@
 
 			{#if showAPIKeys}
 				<div class="flex flex-col">
-					<div class="mb-2">
+					<div class="mb-2 flex flex-wrap gap-1.5">
 						<button
-							class="text-xs px-2.5 py-1.5 mr-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800"
+							class="text-xs px-2.5 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity font-medium"
+							on:click={async () => {
+								await goto('/developer/api-keys/landing');
+							}}
+						>
+							{$i18n.t('API Platform')}
+						</button>
+
+						<button
+							class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800"
 							on:click={async () => {
 								await goto('/developer/api-keys/pricing');
 							}}
 						>
-							{$i18n.t('Open API Pricing')}
+							{$i18n.t('Pricing')}
 						</button>
 
 						<button
@@ -285,7 +294,7 @@
 								await goto('/developer/api-keys');
 							}}
 						>
-							{$i18n.t('Open Developer API Console')}
+							{$i18n.t('Console')}
 						</button>
 					</div>
 

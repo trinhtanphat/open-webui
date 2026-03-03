@@ -64,6 +64,7 @@
 	import Sidebar from '../icons/Sidebar.svelte';
 	import PinnedModelList from './Sidebar/PinnedModelList.svelte';
 	import Note from '../icons/Note.svelte';
+	import Bolt from '../icons/Bolt.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
@@ -774,6 +775,30 @@
 							>
 								<div class=" self-center flex items-center justify-center size-9">
 									<Note className="size-4.5" />
+								</div>
+							</a>
+						</Tooltip>
+					</div>
+				{/if}
+
+				{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
+					<div class="">
+						<Tooltip content={$i18n.t('API Platform')} placement="right">
+							<a
+								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
+								href="/developer/api-keys/landing"
+								on:click={async (e) => {
+									e.stopImmediatePropagation();
+									e.preventDefault();
+
+									goto('/developer/api-keys/landing');
+									itemClickHandler();
+								}}
+								aria-label={$i18n.t('API Platform')}
+								draggable="false"
+							>
+								<div class=" self-center flex items-center justify-center size-9">
+									<Bolt className="size-4.5" />
 								</div>
 							</a>
 						</Tooltip>

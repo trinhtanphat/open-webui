@@ -17,6 +17,7 @@
 		regenerateMyApiKey,
 		getMyUsageDaily,
 		getMyUsageByModel,
+		activateMyApiKey,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
 		type BillingInvoice,
@@ -61,6 +62,8 @@
 
 	let myUsageDaily: UsageDailySummary[] = [];
 	let myUsageByModel: UsageByModelSummary[] = [];
+	let activating = false;
+	let selectedActivationPlan = 'starter';
 
 	const planIcons = [Bolt, Sparkles, Star];
 	const planColors = [
@@ -70,8 +73,7 @@
 	];
 
 	const loadConsole = async () => {
-		apiKey = await getMyApiKeyConsole(localStorage.token).catch((error) => {
-			toast.error(`${error}`);
+		apiKey = await getMyApiKeyConsole(localStorage.token).catch(() => {
 			return null;
 		});
 
@@ -89,6 +91,20 @@
 
 		if (apiKey?.plan_name) {
 			selectedPlanId = apiKey.plan_name;
+		}
+	};
+
+	const activateKey = async () => {
+		activating = true;
+		try {
+			apiKey = await activateMyApiKey(localStorage.token, selectedActivationPlan);
+			showFullKey = true;
+			toast.success($i18n.t('API key activated! Copy it now — it will not be shown again.'));
+			await loadConsole();
+		} catch (error) {
+			toast.error(`${error}`);
+		} finally {
+			activating = false;
 		}
 	};
 
@@ -219,12 +235,70 @@
 			{$i18n.t('Loading console...')}
 		</div>
 	{:else if !apiKey}
-		<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-8 text-center space-y-3">
-			<div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto">
-				<LockClosed className="size-6 text-gray-400" />
+		<!-- Self-service Activation Flow -->
+		<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-8 space-y-6">
+			<div class="text-center space-y-3">
+				<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg">
+					<Bolt className="size-7 text-white" />
+				</div>
+				<h2 class="text-xl font-bold">{$i18n.t('Activate your API Key')}</h2>
+				<p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">{$i18n.t('Get instant access to the OpenAI-compatible API. Choose a plan and start building — no admin approval needed.')}</p>
 			</div>
-			<h2 class="text-lg font-medium">{$i18n.t('No API key found')}</h2>
-			<p class="text-sm text-gray-500">{$i18n.t('Generate an API key in your account settings to get started.')}</p>
+
+			<!-- Plan Selector -->
+			{#if plans.length > 0}
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+					{#each plans as plan, i}
+						<button
+							class="text-left rounded-xl border-2 p-4 transition-all {selectedActivationPlan === plan.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm' : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600'}"
+							on:click={() => selectedActivationPlan = plan.id}
+						>
+							<div class="flex items-center gap-2 mb-2">
+								<div class="w-7 h-7 rounded-lg bg-gradient-to-br {planColors[i] ?? planColors[0]} flex items-center justify-center">
+									<svelte:component this={planIcons[i] ?? planIcons[0]} className="size-3.5 text-white" />
+								</div>
+								<span class="font-semibold text-sm">{plan.name}</span>
+								{#if i === 1}
+									<span class="ml-auto px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold">Popular</span>
+								{/if}
+							</div>
+							<div class="text-lg font-bold">${plan.monthly_price_usd}<span class="text-xs font-normal text-gray-500">/mo</span></div>
+							<div class="text-xs text-gray-500 mt-1">{plan.included_credits.toLocaleString()} credits • {plan.rpm_limit} RPM</div>
+						</button>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Activate Button -->
+			<div class="text-center space-y-3">
+				<button
+					class="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+					on:click={activateKey}
+					disabled={activating}
+				>
+					{#if activating}
+						<div class="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div>
+						{$i18n.t('Activating...')}
+					{:else}
+						<Bolt className="size-4" />
+						{$i18n.t('Activate API Key')}
+					{/if}
+				</button>
+				<div class="text-xs text-gray-400">{$i18n.t('You can upgrade your plan or top up credits at any time')}</div>
+			</div>
+
+			<!-- What you get -->
+			<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-4 space-y-2">
+				<h3 class="text-sm font-semibold">{$i18n.t('What you get')}</h3>
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('OpenAI-compatible API endpoint')}</div>
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Access to all enabled models')}</div>
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Usage tracking & analytics')}</div>
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Top-up with multiple payment methods')}</div>
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Per-model token-based billing')}</div>
+					<div class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Web chat is NOT affected')}</div>
+				</div>
+			</div>
 		</div>
 	{:else}
 		<!-- Secret Key Card -->

@@ -285,6 +285,62 @@ async def get_api_key_plans(user=Depends(get_verified_user)):
     return API_KEY_PLANS
 
 
+class SelfActivateForm(BaseModel):
+    plan_id: Optional[str] = "starter"
+
+
+@router.post("/me/activate", response_model=ApiKeyConsoleResponse)
+async def self_activate_api_key(
+    form_data: SelfActivateForm = SelfActivateForm(),
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    """Self-service API key activation.
+    
+    Users can activate their own API key without admin approval.
+    They get the default (starter) plan with included credits.
+    No admin gate — any verified user can activate.
+    """
+    existing = Users.get_user_api_key_record_by_id(user.id, db=db)
+    if existing:
+        raise HTTPException(status_code=400, detail="API key already exists. Use regenerate instead.")
+
+    plan = next((p for p in API_KEY_PLANS if p.id == form_data.plan_id), API_KEY_PLANS[0])
+
+    key = create_api_key()
+    success = Users.update_user_api_key_by_id(user.id, key, db=db)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to create API key")
+
+    record = Users.get_user_api_key_record_by_id(user.id, db=db)
+    if not record:
+        raise HTTPException(status_code=500, detail="Failed to load API key")
+
+    metadata = {
+        "status": "active",
+        "plan_name": plan.id,
+        "monthly_price_usd": plan.monthly_price_usd,
+        "credits_remaining": max(0, plan.included_credits),
+        "rpm_limit": plan.rpm_limit,
+        "total_requests": 0,
+        "monthly_requests": 0,
+        "usage_month": time.strftime("%Y-%m", time.gmtime()),
+        "activated_by": "self",
+    }
+
+    updated = Users.update_api_key_by_id(
+        record.id,
+        {
+            "data": metadata,
+        },
+        db=db,
+    )
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to initialize API key")
+
+    return _build_console_payload(updated, full_key=key)
+
+
 @router.get("/me", response_model=ApiKeyConsoleResponse)
 async def get_my_api_key_console(user=Depends(get_verified_user), db: Session = Depends(get_session)):
     record = Users.get_user_api_key_record_by_id(user.id, db=db)

@@ -131,32 +131,71 @@
 			{/each}
 		</div>
 
-		<!-- Model Pricing Table -->
+		<!-- Model Pricing Table with Tiers -->
 		{#if models.length > 0}
-			<div class="space-y-4">
+			{@const budgetModels = models.filter(m => m.per_request_cost === 0 && m.input_cost_per_1k_tokens < 0.01)}
+			{@const standardModels = models.filter(m => m.per_request_cost > 0 || (m.input_cost_per_1k_tokens >= 0.01 && m.input_cost_per_1k_tokens < 0.05))}
+			{@const premiumModels = models.filter(m => m.input_cost_per_1k_tokens >= 0.05)}
+			{@const allCategorized = budgetModels.length + standardModels.length + premiumModels.length}
+
+			<div class="space-y-6">
 				<div class="text-center space-y-2">
-					<h2 class="text-xl font-bold">{$i18n.t('Token-based model pricing')}</h2>
+					<h2 class="text-xl font-bold">{$i18n.t('Per-model token pricing')}</h2>
 					<p class="text-sm text-gray-500 dark:text-gray-400">
-						{$i18n.t('Credits are consumed based on actual token usage. 1 credit ≈ $0.001.')}
+						{$i18n.t('Credits are consumed based on actual token usage. Expensive models cost more credits per token.')}
 					</p>
 				</div>
 
+				<!-- Model Tier Summary -->
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+					<div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 text-center">
+						<div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-2">
+							<CheckCircle className="size-4 text-emerald-600" />
+						</div>
+						<div class="font-semibold text-sm text-emerald-700 dark:text-emerald-400">{$i18n.t('Budget')}</div>
+						<div class="text-xs text-gray-500 mt-0.5">{$i18n.t('Low cost, great for testing')}</div>
+						<div class="text-lg font-bold mt-1">{budgetModels.length} {$i18n.t('models')}</div>
+					</div>
+					<div class="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10 p-4 text-center">
+						<div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
+							<Sparkles className="size-4 text-blue-600" />
+						</div>
+						<div class="font-semibold text-sm text-blue-700 dark:text-blue-400">{$i18n.t('Standard')}</div>
+						<div class="text-xs text-gray-500 mt-0.5">{$i18n.t('Balanced price/performance')}</div>
+						<div class="text-lg font-bold mt-1">{standardModels.length} {$i18n.t('models')}</div>
+					</div>
+					<div class="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-900/10 p-4 text-center">
+						<div class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mx-auto mb-2">
+							<Star className="size-4 text-violet-600" />
+						</div>
+						<div class="font-semibold text-sm text-violet-700 dark:text-violet-400">{$i18n.t('Premium')}</div>
+						<div class="text-xs text-gray-500 mt-0.5">{$i18n.t('Most capable, higher cost')}</div>
+						<div class="text-lg font-bold mt-1">{premiumModels.length} {$i18n.t('models')}</div>
+					</div>
+				</div>
+
+				<!-- Full Model Table -->
 				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-x-auto">
 					<table class="w-full text-sm">
 						<thead>
 							<tr class="bg-gray-50 dark:bg-gray-900/40">
 								<th class="px-5 py-3 text-left font-medium text-gray-500">{$i18n.t('Model')}</th>
+								<th class="px-5 py-3 text-left font-medium text-gray-500">{$i18n.t('Tier')}</th>
 								<th class="px-5 py-3 text-right font-medium text-gray-500">{$i18n.t('Input / 1K tok')}</th>
 								<th class="px-5 py-3 text-right font-medium text-gray-500">{$i18n.t('Output / 1K tok')}</th>
 								<th class="px-5 py-3 text-right font-medium text-gray-500">{$i18n.t('Per Request')}</th>
+								<th class="px-5 py-3 text-right font-medium text-gray-500">{$i18n.t('≈ Credits/1K tok')}</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#each models as m}
+								{@const tier = m.input_cost_per_1k_tokens >= 0.05 ? 'premium' : (m.per_request_cost > 0 || m.input_cost_per_1k_tokens >= 0.01) ? 'standard' : 'budget'}
+								{@const tierColor = tier === 'premium' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' : tier === 'standard' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}
+								{@const dotColor = tier === 'premium' ? 'bg-violet-500' : tier === 'standard' ? 'bg-blue-500' : 'bg-emerald-500'}
 								<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
 									<td class="px-5 py-3">
 										<div class="flex items-center gap-2">
-											<span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
+											<span class="w-2 h-2 rounded-full {dotColor} flex-shrink-0"></span>
 											<div>
 												<div class="font-medium">{m.display_name || m.model_id}</div>
 												{#if m.display_name && m.display_name !== m.model_id}
@@ -165,14 +204,33 @@
 											</div>
 										</div>
 									</td>
+									<td class="px-5 py-3">
+										<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase {tierColor}">{tier}</span>
+									</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.input_cost_per_1k_tokens.toFixed(4)}</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.output_cost_per_1k_tokens.toFixed(4)}</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.per_request_cost.toFixed(4)}</td>
+									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">
+										{@const creditsEstimate = Math.max(1, Math.round(((m.input_cost_per_1k_tokens + m.output_cost_per_1k_tokens) / 2 + m.per_request_cost) / 0.001))}
+										~{creditsEstimate}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
 				</div>
+
+				{#if allCategorized === 0}
+					<div class="text-center text-sm text-gray-400 py-6">
+						{$i18n.t('No model pricing configured yet. Admin will set up per-model costs.')}
+					</div>
+				{/if}
+			</div>
+		{:else}
+			<div class="rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center space-y-2">
+				<Bolt className="size-8 text-gray-300 mx-auto" />
+				<h3 class="font-medium">{$i18n.t('Model pricing coming soon')}</h3>
+				<p class="text-sm text-gray-500">{$i18n.t('Admin will configure per-model token costs. Meanwhile, flat 1 credit per request applies.')}</p>
 			</div>
 		{/if}
 
