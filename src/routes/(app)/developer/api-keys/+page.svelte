@@ -538,8 +538,8 @@
 
 					<div class="space-y-3">
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Payment Account')}</label>
-							<select class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={selectedPaymentAccountId}>
+						<label for="topup-payment-account" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Payment Account')}</label>
+						<select id="topup-payment-account" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={selectedPaymentAccountId}>
 								{#if paymentAccounts.length === 0}
 									<option value="">{$i18n.t('No payment accounts available')}</option>
 								{:else}
@@ -552,23 +552,23 @@
 
 						<div class="grid grid-cols-2 gap-3">
 							<div>
-								<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Amount')}</label>
-								<input type="number" min="1" step="1" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupAmount} />
+								<label for="topup-amount" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Amount')}</label>
+								<input id="topup-amount" type="number" min="1" step="1" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupAmount} />
 							</div>
 							<div>
-								<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
-								<input class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency} />
+								<label for="topup-currency" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
+								<input id="topup-currency" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency} />
 							</div>
 						</div>
 
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Transaction Reference')}</label>
-							<input class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupTxRef} placeholder={$i18n.t('e.g. bank transfer ref or receipt ID')} />
+							<label for="topup-tx-ref" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Transaction Reference')}</label>
+							<input id="topup-tx-ref" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupTxRef} placeholder={$i18n.t('e.g. bank transfer ref or receipt ID')} />
 						</div>
 
 						<div>
-							<label class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Note')}</label>
-							<textarea rows="2" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupNote} placeholder={$i18n.t('Optional note about this payment')}></textarea>
+							<label for="topup-note" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Note')}</label>
+							<textarea id="topup-note" rows="2" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupNote} placeholder={$i18n.t('Optional note about this payment')}></textarea>
 						</div>
 
 						<button class="w-full px-4 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2" on:click={submitTopup}>

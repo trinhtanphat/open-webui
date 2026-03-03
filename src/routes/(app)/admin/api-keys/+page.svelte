@@ -323,7 +323,7 @@
 				<button
 					class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5
 						{adminTab === tab.id ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}"
-					on:click={() => (adminTab = tab.id)}
+					on:click={() => (adminTab = tab.id as typeof adminTab)}
 				>
 					{#if tab.icon === 'key'}<LockClosed className="size-3.5" />
 					{:else if tab.icon === 'tag'}<Sparkles className="size-3.5" />
