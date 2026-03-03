@@ -4,7 +4,7 @@ from typing import Optional
 from collections import defaultdict
 import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, Float, JSON, Text
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,7 @@ class BillingPaymentAccount(Base):
     account_number = Column(Text, nullable=False)
     qr_code_url = Column(Text, nullable=True)
     instructions = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    billing_metadata = Column("metadata", JSON, nullable=True)
     is_active = Column(Text, nullable=False, default="true")
     created_by = Column(Text, nullable=True)
     updated_by = Column(Text, nullable=True)
@@ -76,7 +76,7 @@ class BillingAuditLog(Base):
 
 
 class BillingPaymentAccountModel(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: str
     provider: str
@@ -84,7 +84,11 @@ class BillingPaymentAccountModel(BaseModel):
     account_number: str
     qr_code_url: Optional[str] = None
     instructions: Optional[str] = None
-    metadata: Optional[dict] = None
+    metadata: Optional[dict] = Field(
+        default=None,
+        validation_alias="billing_metadata",
+        serialization_alias="metadata",
+    )
     is_active: str = "true"
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
@@ -161,7 +165,7 @@ class BillingTable:
                     account_number=account_number,
                     qr_code_url=qr_code_url,
                     instructions=instructions,
-                    metadata=metadata,
+                    billing_metadata=metadata,
                     is_active="true",
                     created_by=actor_id,
                     updated_by=actor_id,
@@ -212,6 +216,8 @@ class BillingTable:
                 if not row:
                     return None
                 for key, value in updated.items():
+                    if key == "metadata":
+                        key = "billing_metadata"
                     setattr(row, key, value)
                 row.updated_by = actor_id
                 row.updated_at = int(time.time())
