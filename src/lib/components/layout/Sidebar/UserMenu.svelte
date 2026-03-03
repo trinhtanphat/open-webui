@@ -31,7 +31,7 @@
 	import { updateUserStatus } from '$lib/apis/users';
 	import { toast } from 'svelte-sonner';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	export let show = false;
 	export let role = '';
@@ -40,7 +40,7 @@
 	export let help = false;
 
 	export let className = 'max-w-[240px]';
-	export let align = 'end';
+	export let align: any = 'end';
 
 	export let showActiveUsers = true;
 
@@ -48,7 +48,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	let usage = null;
+	let usage: any = null;
 	const getUsageInfo = async () => {
 		const res = await getUsage(localStorage.token).catch((error) => {
 			console.error('Error fetching usage info:', error);
@@ -105,14 +105,14 @@
 
 					<div class=" flex flex-col w-full flex-1">
 						<div class="font-medium line-clamp-1 pr-2">
-							{$user.name}
+							{$user?.name}
 						</div>
 
 						<div class=" flex items-center gap-2">
 							{#if $user?.is_active ?? true}
 								<div>
 									<span class="relative flex size-2">
-										<span class="relative inline-flex rounded-full size-2 bg-green-500" />
+										<span class="relative inline-flex rounded-full size-2 bg-green-500"></span>
 									</span>
 								</div>
 
@@ -120,7 +120,7 @@
 							{:else}
 								<div>
 									<span class="relative flex size-2">
-										<span class="relative inline-flex rounded-full size-2 bg-gray-500" />
+										<span class="relative inline-flex rounded-full size-2 bg-gray-500"></span>
 									</span>
 								</div>
 
@@ -243,7 +243,7 @@
 
 			{#if ($config?.features?.enable_api_keys ?? true) && (role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
 				<DropdownMenu.Item
-					as="a"
+					{...({as: 'a'} as any)}
 					href="/developer/api-keys/landing"
 					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
@@ -264,7 +264,7 @@
 
 			{#if role === 'admin'}
 				<DropdownMenu.Item
-					as="a"
+					{...({as: 'a'} as any)}
 					href="/playground"
 					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
@@ -282,7 +282,7 @@
 					<div class=" self-center truncate">{$i18n.t('Playground')}</div>
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
-					as="a"
+					{...({as: 'a'} as any)}
 					href="/admin"
 					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
@@ -308,7 +308,7 @@
 
 				{#if $user?.role === 'admin'}
 					<DropdownMenu.Item
-						as="a"
+						{...({as: 'a'} as any)}
 						href="https://docs.openwebui.com"
 						target="_blank"
 						draggable="false"
@@ -326,7 +326,7 @@
 
 					<!-- Releases -->
 					<DropdownMenu.Item
-						as="a"
+						{...({as: 'a'} as any)}
 						href="https://github.com/open-webui/open-webui/releases"
 						target="_blank"
 						draggable="false"
@@ -369,7 +369,7 @@
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 				on:click={async () => {
 					const res = await userSignOut();
-					user.set(null);
+					user.set(undefined);
 					localStorage.removeItem('token');
 
 					location.href = res?.redirect_url ?? '/auth';
@@ -401,7 +401,7 @@
 						>
 							<div class=" flex items-center">
 								<span class="relative flex size-2">
-									<span class="relative inline-flex rounded-full size-2 bg-green-500" />
+								<span class="relative inline-flex rounded-full size-2 bg-green-500"></span>
 								</span>
 							</div>
 

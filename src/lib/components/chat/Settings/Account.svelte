@@ -139,7 +139,7 @@
 			<!-- <div class=" text-sm font-medium">{$i18n.t('Account')}</div> -->
 
 			<div class="flex space-x-5 my-4">
-				<UserProfileImage bind:profileImageUrl user={$user} />
+				<UserProfileImage bind:profileImageUrl user={$user as any} />
 
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">
@@ -164,7 +164,7 @@
 							<div class="flex-1">
 								<Textarea
 									className="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
-									minSize={60}
+									minSize={60 as any}
 									bind:value={bio}
 									ariaLabel={$i18n.t('Bio')}
 									placeholder={$i18n.t('Share your background and interests')}
@@ -228,7 +228,7 @@
 			</div>
 		</div>
 
-		{#if $config?.features?.enable_user_webhooks}
+		{#if ($config?.features as any)?.enable_user_webhooks}
 			<div class="mt-2">
 				<div class="flex flex-col w-full">
 					<div class=" mb-1 text-xs font-medium">{$i18n.t('Notification Webhook')}</div>

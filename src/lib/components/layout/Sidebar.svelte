@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
+	// @ts-ignore
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { goto } from '$app/navigation';
@@ -31,7 +32,7 @@
 	} from '$lib/stores';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	import {
 		getChatList,
@@ -75,7 +76,7 @@
 	let navElement;
 	let shiftKey = false;
 
-	let selectedChatId = null;
+	let selectedChatId: string | null = null;
 	let showCreateChannel = false;
 
 	// Pagination variables
@@ -84,30 +85,30 @@
 
 	let showCreateFolderModal = false;
 
-	let pinnedModels = [];
+	let pinnedModels: string[] = [];
 
 	let showPinnedModels = false;
 	let showChannels = false;
 	let showFolders = false;
 
-	let folders = {};
-	let folderRegistry = {};
+	let folders: Record<string, any> = {};
+	let folderRegistry: Record<string, any> = {};
 
-	let newFolderId = null;
+	let newFolderId: string | null = null;
 
 	$: if ($selectedFolder) {
 		initFolders();
 	}
 
 	const initFolders = async () => {
-		if ($config?.features?.enable_folders === false) {
+		if (($config?.features as any)?.enable_folders === false) {
 			return;
 		}
 
 		const folderList = await getFolders(localStorage.token).catch((error) => {
 			return [];
 		});
-		_folders.set(folderList.sort((a, b) => b.updated_at - a.updated_at));
+		_folders.set(folderList.sort((a: any, b: any) => b.updated_at - a.updated_at));
 
 		folders = {};
 
@@ -136,26 +137,26 @@
 					: [folder.id];
 
 				// Sort the children by updated_at field
-				folders[folder.parent_id].childrenIds.sort((a, b) => {
+				folders[folder.parent_id].childrenIds.sort((a: any, b: any) => {
 					return folders[b].updated_at - folders[a].updated_at;
 				});
 			}
 		}
 	};
 
-	const createFolder = async ({ name, data }) => {
+	const createFolder = async ({ name, data }: { name: string; data?: any }) => {
 		name = name?.trim();
 		if (!name) {
 			toast.error($i18n.t('Folder name cannot be empty.'));
 			return;
 		}
 
-		const rootFolders = Object.values(folders).filter((folder) => folder.parent_id === null);
-		if (rootFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
+		const rootFolders = Object.values(folders).filter((folder: any) => folder.parent_id === null);
+		if (rootFolders.find((folder: any) => folder.name.toLowerCase() === name.toLowerCase())) {
 			// If a folder with the same name already exists, append a number to the name
 			let i = 1;
 			while (
-				rootFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
+				rootFolders.find((folder: any) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
 			) {
 				i++;
 			}
@@ -199,7 +200,7 @@
 		if (res) {
 			await channels.set(
 				res.sort(
-					(a, b) =>
+					(a: any, b: any) =>
 						['', null, 'group', 'dm'].indexOf(a.type) - ['', null, 'group', 'dm'].indexOf(b.type)
 				)
 			);
@@ -247,12 +248,12 @@
 
 		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
-		await chats.set([...($chats ? $chats : []), ...newChatList]);
+		await chats.set([...($chats ? $chats : []), ...newChatList] as any);
 
 		chatListLoading = false;
 	};
 
-	const importChatHandler = async (items, pinned = false, folderId = null) => {
+	const importChatHandler = async (items: any[], pinned = false, folderId: string | null = null) => {
 		console.log('importChatHandler', items, pinned, folderId);
 		for (const item of items) {
 			console.log(item);
@@ -273,13 +274,13 @@
 		initChatList();
 	};
 
-	const inputFilesHandler = async (files) => {
+	const inputFilesHandler = async (files: any[]) => {
 		console.log(files);
 
 		for (const file of files) {
 			const reader = new FileReader();
 			reader.onload = async (e) => {
-				const content = e.target.result;
+				const content = e.target?.result as string;
 
 				try {
 					const chatItems = JSON.parse(content);
@@ -293,7 +294,7 @@
 		}
 	};
 
-	const tagEventHandler = async (type, tagName, chatId) => {
+	const tagEventHandler = async (type: string, tagName: string, chatId: string) => {
 		console.log(type, tagName, chatId);
 		if (type === 'delete') {
 			initChatList();
@@ -304,7 +305,7 @@
 
 	let draggedOver = false;
 
-	const onDragOver = (e) => {
+	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 
 		// Check if a file is being draggedOver.
@@ -319,7 +320,7 @@
 		draggedOver = false;
 	};
 
-	const onDrop = async (e) => {
+	const onDrop = async (e: DragEvent) => {
 		e.preventDefault();
 		console.log(e); // Log the drop event
 
@@ -336,8 +337,8 @@
 		draggedOver = false; // Reset draggedOver status after drop
 	};
 
-	let touchstart;
-	let touchend;
+	let touchstart: any;
+	let touchend: any;
 
 	function checkDirection() {
 		const screenWidth = window.innerWidth;
@@ -352,23 +353,23 @@
 		}
 	}
 
-	const onTouchStart = (e) => {
+	const onTouchStart = (e: TouchEvent) => {
 		touchstart = e.changedTouches[0];
 		console.log(touchstart.clientX);
 	};
 
-	const onTouchEnd = (e) => {
+	const onTouchEnd = (e: TouchEvent) => {
 		touchend = e.changedTouches[0];
 		checkDirection();
 	};
 
-	const onKeyDown = (e) => {
+	const onKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = true;
 		}
 	};
 
-	const onKeyUp = (e) => {
+	const onKeyUp = (e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			shiftKey = false;
 		}
@@ -407,7 +408,7 @@
 		localStorage.setItem('sidebarWidth', String($sidebarWidth));
 	};
 
-	const resizeSidebarHandler = (endClientX) => {
+	const resizeSidebarHandler = (endClientX: number) => {
 		const dx = endClientX - startClientX;
 		const newSidebarWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + dx));
 
@@ -437,7 +438,7 @@
 				}
 
 				if ($showSidebar && !value) {
-					const navElement = document.getElementsByTagName('nav')[0];
+					const navElement: any = document.getElementsByTagName('nav')[0];
 					if (navElement) {
 						navElement.style['-webkit-app-region'] = 'drag';
 					}
@@ -446,8 +447,7 @@
 			showSidebar.subscribe(async (value) => {
 				localStorage.sidebar = value;
 
-				// nav element is not available on the first render
-				const navElement = document.getElementsByTagName('nav')[0];
+				const navElement: any = document.getElementsByTagName('nav')[0];
 
 				if (navElement) {
 					if ($mobile) {
@@ -472,7 +472,7 @@
 					await initChatList();
 
 					// Check which chats have active tasks
-					const allChatIds = [...$chats.map((c) => c.id), ...$pinnedChats.map((c) => c.id)];
+					const allChatIds = [...($chats ?? []).map((c: any) => c.id), ...$pinnedChats.map((c: any) => c.id)];
 					if (allChatIds.length > 0) {
 						try {
 							const res = await checkActiveChats(localStorage.token, allChatIds);
@@ -484,7 +484,7 @@
 				}
 			}),
 			settings.subscribe((value) => {
-				if (pinnedModels != value?.pinnedModels ?? []) {
+				if (pinnedModels != (value?.pinnedModels ?? [])) {
 					pinnedModels = value?.pinnedModels ?? [];
 					showPinnedModels = pinnedModels.length > 0;
 				}
@@ -621,7 +621,7 @@
 		});
 
 		if (res) {
-			$socket.emit('join-channels', { auth: { token: $user?.token } });
+			$socket?.emit('join-channels', { auth: { token: $user?.token } });
 			await initChannels();
 			showCreateChannel = false;
 			showChannels = true;
@@ -632,7 +632,7 @@
 
 <FolderModal
 	bind:show={showCreateFolderModal}
-	onSubmit={async (folder) => {
+	onSubmit={async (folder: any) => {
 		await createFolder(folder);
 		showCreateFolderModal = false;
 	}}
@@ -648,7 +648,7 @@
 		on:mousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
-	/>
+	></div>
 {/if}
 
 <SearchModal
@@ -663,11 +663,12 @@
 <button
 	id="sidebar-new-chat-button"
 	class="hidden"
+	aria-label="New Chat"
 	on:click={() => {
 		goto('/');
 		newChatHandler();
 	}}
-/>
+></button>
 
 <svelte:window
 	on:mousemove={(e) => {
@@ -965,10 +966,10 @@
 			<div
 				class="relative flex flex-col flex-1 overflow-y-auto scrollbar-hidden pt-3 pb-3"
 				on:scroll={(e) => {
-					if (e.target.scrollTop === 0) {
+					if ((e.target as HTMLElement).scrollTop === 0) {
 						scrollTop = 0;
 					} else {
-						scrollTop = e.target.scrollTop;
+						scrollTop = (e.target as HTMLElement).scrollTop;
 					}
 				}}
 			>
@@ -1080,7 +1081,7 @@
 						chevron={false}
 						dragAndDrop={false}
 					>
-						<PinnedModelList bind:selectedChatId {shiftKey} />
+						<PinnedModelList bind:selectedChatId={selectedChatId as any} {shiftKey} />
 					</Folder>
 				{/if}
 
@@ -1138,7 +1139,7 @@
 									return;
 								}
 
-								const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
+								const res = await updateFolderParentIdById(localStorage.token, id, null as any).catch(
 									(error) => {
 										toast.error(`${error}`);
 										return null;
@@ -1207,7 +1208,7 @@
 							if (chat) {
 								console.log(chat);
 								if (chat.folder_id) {
-									const res = await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
+									const res = await updateChatFolderIdById(localStorage.token, chat.id, null as any).catch(
 										(error) => {
 											toast.error(`${error}`);
 											return null;
@@ -1228,7 +1229,7 @@
 								return;
 							}
 
-							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
+							const res = await updateFolderParentIdById(localStorage.token, id, null as any).catch(
 								(error) => {
 									toast.error(`${error}`);
 									return null;
@@ -1276,7 +1277,7 @@
 													const res = await updateChatFolderIdById(
 														localStorage.token,
 														chat.id,
-														null
+														null as any
 													).catch((error) => {
 														toast.error(`${error}`);
 														return null;
@@ -1460,15 +1461,17 @@
 	</div>
 
 	{#if !$mobile}
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800 transition z-20"
 			id="sidebar-resizer"
 			on:mousedown={resizeStartHandler}
 			role="separator"
+			aria-label="Resize sidebar"
 		>
 			<div
 				class=" absolute -left-1.5 -right-1.5 -top-0 -bottom-0 z-20 cursor-col-resize bg-transparent"
-			/>
+			></div>
 		</div>
 	{/if}
 {/if}

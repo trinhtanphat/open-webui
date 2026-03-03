@@ -92,17 +92,21 @@
 	const bc = new BroadcastChannel('active-tab-channel');
 
 	let loaded = false;
+	/** @type {ReturnType<typeof setInterval> | null} */
 	let tokenTimer = null;
 
 	let showRefresh = false;
 
 	let showSyncStatsModal = false;
+	/** @type {any} */
 	let syncStatsEventData = null;
 
+	/** @type {ReturnType<typeof setInterval> | null} */
 	let heartbeatInterval = null;
 
 	const BREAKPOINT = 768;
 
+	/** @param {boolean} enableWebsocket */
 	const setupSocket = async (enableWebsocket) => {
 		const _socket = io(`${WEBUI_BASE_URL}` || undefined, {
 			reconnection: true,
@@ -185,9 +189,17 @@
 		});
 	};
 
+	/**
+	 * @param {any} id
+	 * @param {string} code
+	 * @param {Function} cb
+	 */
 	const executePythonAsWorker = async (id, code, cb) => {
+		/** @type {any} */
 		let result = null;
+		/** @type {any} */
 		let stdout = null;
+		/** @type {any} */
 		let stderr = null;
 
 		let executing = true;
@@ -287,6 +299,7 @@
 		};
 	};
 
+	/** @param {string} serverUrl */
 	const resolveToolServer = (serverUrl) => {
 		let toolServer = $settings?.toolServers?.find((server) => server.url === serverUrl);
 		if (!toolServer) {
@@ -317,12 +330,17 @@
 		return { toolServer, toolServerData, token };
 	};
 
+	/**
+	 * @param {any} data
+	 * @param {Function} cb
+	 */
 	const executeTool = async (data, cb) => {
 		const { toolServer, toolServerData, token } = resolveToolServer(data.server?.url);
 
 		console.log('executeTool', data, toolServer);
 
 		if (toolServer) {
+			/** @type {any} */
 			const res = await executeToolServer(
 				token,
 				toolServer.url,
@@ -353,6 +371,10 @@
 		}
 	};
 
+	/**
+	 * @param {any} event
+	 * @param {Function} cb
+	 */
 	const chatEventHandler = async (event, cb) => {
 		const chat = $page.url.pathname.includes(`/c/${event.chat_id}`);
 
@@ -403,6 +425,7 @@
 						}
 					}
 
+					// @ts-ignore
 					toast.custom(NotificationToast, {
 						componentProps: {
 							onClick: () => {
@@ -421,7 +444,7 @@
 			} else if (type === 'chat:tags') {
 				tags.set(await getAllTags(localStorage.token));
 			}
-		} else if (data?.session_id === $socket.id) {
+		} else if (data?.session_id === $socket?.id) {
 			if (type === 'execute:python') {
 				console.log('execute:python', data);
 				executePythonAsWorker(data.id, data.code, cb);
@@ -429,10 +452,11 @@
 				console.log('execute:tool', data);
 				executeTool(data, cb);
 			} else if (type === 'request:chat:completion') {
-				console.log(data, $socket.id);
+				console.log(data, $socket?.id);
 				const { session_id, channel, form_data, model } = data;
 
 				try {
+					/** @type {any} */
 					const directConnections = $settings?.directConnections ?? {};
 
 					if (directConnections) {
@@ -467,6 +491,7 @@
 									console.log({ status: true });
 
 									// res will either be SSE or JSON
+									// @ts-ignore
 									const reader = res.body.getReader();
 									const decoder = new TextDecoder();
 
@@ -486,8 +511,7 @@
 
 											for (const line of lines) {
 												console.log(line);
-												$socket?.emit(channel, line);
-											}
+												$socket?.emit(channel, line);											}
 										}
 									};
 
@@ -509,7 +533,8 @@
 					console.error('chatCompletion', error);
 					cb(error);
 				} finally {
-					$socket.emit(channel, {
+					// @ts-ignore
+				$socket.emit(channel, {
 						done: true
 					});
 				}
@@ -519,6 +544,7 @@
 		}
 	};
 
+	/** @param {any} event */
 	const channelEventHandler = async (event) => {
 		console.log('channelEventHandler', event);
 		if (event.data?.type === 'typing') {
@@ -531,10 +557,10 @@
 				return null;
 			});
 
-			if (res) {
+				if (res) {
 				await channels.set(
 					res.sort(
-						(a, b) =>
+						(/** @type {any} */ a, /** @type {any} */ b) =>
 							['', null, 'group', 'dm'].indexOf(a.type) - ['', null, 'group', 'dm'].indexOf(b.type)
 					)
 				);
@@ -585,7 +611,7 @@
 					if (res) {
 						await channels.set(
 							res.sort(
-								(a, b) =>
+								(/** @type {any} */ a, /** @type {any} */ b) =>
 									['', null, 'group', 'dm'].indexOf(a.type) -
 									['', null, 'group', 'dm'].indexOf(b.type)
 							)
@@ -606,6 +632,7 @@
 					}
 				}
 
+				// @ts-ignore
 				toast.custom(NotificationToast, {
 					componentProps: {
 						onClick: () => {
@@ -623,6 +650,7 @@
 
 	const TOKEN_EXPIRY_BUFFER = 60; // seconds
 	const checkTokenExpiry = async () => {
+		// @ts-ignore
 		const exp = $user?.expires_at; // token expiry time in unix timestamp
 		const now = Math.floor(Date.now() / 1000); // current time in unix timestamp
 
@@ -633,13 +661,14 @@
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			const res = await userSignOut();
-			user.set(null);
+			user.set(/** @type {any} */ (null));
 			localStorage.removeItem('token');
 
 			location.href = res?.redirect_url ?? '/auth';
 		}
 	};
 
+	/** @param {any} event */
 	const windowMessageEventHandler = async (event) => {
 		if (
 			!['https://openwebui.com', 'https://www.openwebui.com', 'http://localhost:9999'].includes(
@@ -655,22 +684,23 @@
 		}
 	};
 
+	// @ts-ignore
 	onMount(async () => {
 		window.addEventListener('message', windowMessageEventHandler);
 
 		let touchstartY = 0;
 
-		function isNavOrDescendant(el) {
+		function isNavOrDescendant(/** @type {any} */ el) {
 			const nav = document.querySelector('nav'); // change selector if needed
 			return nav && (el === nav || nav.contains(el));
 		}
 
-		const touchstartHandler = (e) => {
+		const touchstartHandler = (/** @type {any} */ e) => {
 			if (!isNavOrDescendant(e.target)) return;
 			touchstartY = e.touches[0].clientY;
 		};
 
-		const touchmoveHandler = (e) => {
+		const touchmoveHandler = (/** @type {any} */ e) => {
 			if (!isNavOrDescendant(e.target)) return;
 			const touchY = e.touches[0].clientY;
 			const touchDiff = touchY - touchstartY;
@@ -680,7 +710,7 @@
 			}
 		};
 
-		const touchendHandler = (e) => {
+		const touchendHandler = (/** @type {any} */ e) => {
 			if (!isNavOrDescendant(e.target)) return;
 			if (showRefresh) {
 				showRefresh = false;
@@ -796,6 +826,7 @@
 			const languages = await getLanguages();
 			const browserLanguages = navigator.languages
 				? navigator.languages
+				// @ts-ignore
 				: [navigator.language || navigator.userLanguage];
 			const lang = backendConfig?.default_locale
 				? backendConfig.default_locale
@@ -810,6 +841,7 @@
 			await WEBUI_NAME.set(backendConfig.name);
 
 			if ($config) {
+				// @ts-ignore
 				await setupSocket($config.features?.enable_websocket ?? true);
 
 				const currentUrl = `${window.location.pathname}${window.location.search}`;
