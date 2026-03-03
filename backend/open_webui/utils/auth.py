@@ -400,6 +400,31 @@ def get_current_user_by_api_key(request, api_key: str):
             status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED
         )
 
+    consumed, reason, _ = Users.consume_api_key_credit(api_key, request.url.path)
+    if not consumed:
+        if reason in {"inactive", "expired"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API key is not active or has expired.",
+            )
+
+        if reason == "no_credits":
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="API key credits exhausted. Please top up.",
+            )
+
+        if reason == "rate_limited":
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="API key rate limit exceeded for current plan.",
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ERROR_MESSAGES.INVALID_TOKEN,
+        )
+
     # Add user info to current span
     current_span = trace.get_current_span()
     if current_span:

@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, Any
 
 from sqlalchemy.orm import Session, defer
 from open_webui.internal.db import Base, JSONField, get_db, get_db_context
@@ -778,6 +778,44 @@ class UsersTable:
         except Exception:
             return None
 
+    def get_user_api_key_record_by_id(
+        self, id: str, db: Optional[Session] = None
+    ) -> Optional[ApiKeyModel]:
+        try:
+            with get_db_context(db) as db:
+                api_key = db.query(ApiKey).filter_by(user_id=id).first()
+                return ApiKeyModel.model_validate(api_key) if api_key else None
+        except Exception:
+            return None
+
+    def get_api_key_record_by_key(
+        self, key: str, db: Optional[Session] = None
+    ) -> Optional[ApiKeyModel]:
+        try:
+            with get_db_context(db) as db:
+                api_key = db.query(ApiKey).filter_by(key=key).first()
+                return ApiKeyModel.model_validate(api_key) if api_key else None
+        except Exception:
+            return None
+
+    def get_api_key_record_by_id(
+        self, id: str, db: Optional[Session] = None
+    ) -> Optional[ApiKeyModel]:
+        try:
+            with get_db_context(db) as db:
+                api_key = db.query(ApiKey).filter_by(id=id).first()
+                return ApiKeyModel.model_validate(api_key) if api_key else None
+        except Exception:
+            return None
+
+    def get_api_keys(self, db: Optional[Session] = None) -> list[ApiKeyModel]:
+        try:
+            with get_db_context(db) as db:
+                api_keys = db.query(ApiKey).order_by(ApiKey.created_at.desc()).all()
+                return [ApiKeyModel.model_validate(api_key) for api_key in api_keys]
+        except Exception:
+            return []
+
     def update_user_api_key_by_id(
         self, id: str, api_key: str, db: Optional[Session] = None
     ) -> bool:
@@ -801,6 +839,99 @@ class UsersTable:
 
         except Exception:
             return False
+
+    def update_api_key_by_id(
+        self,
+        key_id: str,
+        updated: dict,
+        db: Optional[Session] = None,
+    ) -> Optional[ApiKeyModel]:
+        try:
+            with get_db_context(db) as db:
+                api_key = db.query(ApiKey).filter_by(id=key_id).first()
+                if not api_key:
+                    return None
+
+                for field, value in updated.items():
+                    setattr(api_key, field, value)
+
+                api_key.updated_at = int(time.time())
+                db.commit()
+                db.refresh(api_key)
+                return ApiKeyModel.model_validate(api_key)
+        except Exception:
+            return None
+
+    def consume_api_key_credit(
+        self,
+        api_key: str,
+        endpoint: str,
+        db: Optional[Session] = None,
+    ) -> tuple[bool, str, Optional[ApiKeyModel]]:
+        try:
+            with get_db_context(db) as db:
+                record = db.query(ApiKey).filter_by(key=api_key).first()
+
+                if not record:
+                    return (False, "not_found", None)
+
+                now = int(time.time())
+                metadata: dict[str, Any] = record.data if isinstance(record.data, dict) else {}
+
+                status = metadata.get("status", "active")
+                if status != "active":
+                    return (False, "inactive", ApiKeyModel.model_validate(record))
+
+                if record.expires_at and now > record.expires_at:
+                    return (False, "expired", ApiKeyModel.model_validate(record))
+
+                current_month = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m")
+                metadata_month = metadata.get("usage_month")
+                if metadata_month != current_month:
+                    metadata["usage_month"] = current_month
+                    metadata["monthly_requests"] = 0
+
+                if endpoint.startswith("/openai"):
+                    rpm_limit = int(metadata.get("rpm_limit", 60))
+                    window = metadata.get("rate_limit_window", {})
+                    window_minute = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d %H:%M")
+                    if not isinstance(window, dict):
+                        window = {}
+
+                    if window.get("minute") != window_minute:
+                        window = {"minute": window_minute, "count": 0}
+
+                    if int(window.get("count", 0)) >= rpm_limit:
+                        return (False, "rate_limited", ApiKeyModel.model_validate(record))
+
+                    credits_remaining = int(metadata.get("credits_remaining", 0))
+                    if credits_remaining <= 0:
+                        return (False, "no_credits", ApiKeyModel.model_validate(record))
+
+                    window["count"] = int(window.get("count", 0)) + 1
+
+                    metadata["credits_remaining"] = credits_remaining - 1
+                    metadata["total_requests"] = int(metadata.get("total_requests", 0)) + 1
+                    metadata["monthly_requests"] = int(metadata.get("monthly_requests", 0)) + 1
+                    metadata["rate_limit_window"] = window
+
+                    day_key = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d")
+                    usage_daily = metadata.get("usage_daily", {})
+                    if not isinstance(usage_daily, dict):
+                        usage_daily = {}
+                    usage_daily[day_key] = int(usage_daily.get(day_key, 0)) + 1
+                    metadata["usage_daily"] = usage_daily
+
+                record.last_used_at = now
+                record.updated_at = now
+                record.data = metadata
+
+                db.commit()
+                db.refresh(record)
+
+                return (True, "ok", ApiKeyModel.model_validate(record))
+        except Exception:
+            return (False, "error", None)
 
     def delete_user_api_key_by_id(self, id: str, db: Optional[Session] = None) -> bool:
         try:

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
@@ -92,7 +92,7 @@
 	const bc = new BroadcastChannel('active-tab-channel');
 
 	let loaded = false;
-	let tokenTimer: number | null = null;
+	let tokenTimer = null;
 
 	let showRefresh = false;
 

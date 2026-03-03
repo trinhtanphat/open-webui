@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { onMount, getContext } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	import { user, config, settings } from '$lib/stores';
 	import { updateUserProfile, createAPIKey, getAPIKey, getSessionUser } from '$lib/apis/auths';
@@ -17,7 +18,7 @@
 	import User from '$lib/components/icons/User.svelte';
 	import UserProfileImage from './Account/UserProfileImage.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n = getContext<any>('i18n');
 
 	export let saveHandler: Function;
 	export let saveSettings: Function;
@@ -268,6 +269,17 @@
 
 			{#if showAPIKeys}
 				<div class="flex flex-col">
+					<div class="mb-2">
+						<button
+							class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800"
+							on:click={async () => {
+								await goto('/developer/api-keys');
+							}}
+						>
+							{$i18n.t('Open Developer API Console')}
+						</button>
+					</div>
+
 					{#if $user?.role === 'admin'}
 						<div class="justify-between w-full mt-2">
 							<div class="flex justify-between w-full">
