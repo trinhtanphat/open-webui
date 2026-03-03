@@ -1,5 +1,7 @@
 import logging
 import uuid
+import secrets
+import string
 import jwt
 import base64
 import hmac
@@ -258,7 +260,15 @@ def extract_token_from_auth_header(auth_header: str):
 
 
 def create_api_key():
-    key = str(uuid.uuid4()).replace("-", "")
+    """Generate a secure API key similar to OpenAI's format.
+
+    Format: sk-<48 alphanumeric chars>  (total ~51 chars)
+    Uses cryptographically secure random bytes encoded in base62
+    (uppercase + lowercase + digits), matching the entropy and style
+    of OpenAI's sk-proj-... keys.
+    """
+    alphabet = string.ascii_letters + string.digits  # a-zA-Z0-9 (62 chars)
+    key = "".join(secrets.choice(alphabet) for _ in range(48))
     return f"sk-{key}"
 
 
