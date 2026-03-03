@@ -5,17 +5,21 @@
 
 	import { copyToClipboard } from '$lib/utils';
 	import {
+		getApiKeyPlans,
 		createMyTopupRequest,
 		getMyApiKeyConsole,
 		getMyInvoiceById,
 		getMyInvoices,
 		getMyTopups,
+		getMyUsageSummary,
 		getPublicPaymentAccounts,
 		regenerateMyApiKey,
 		type ApiKeyConsole,
+		type ApiKeyPlan,
 		type BillingInvoice,
 		type PaymentAccount,
-		type TopupRequest
+		type TopupRequest,
+		type UserUsageSummary
 	} from '$lib/apis/api-keys';
 
 	const i18n = getContext<any>('i18n');
@@ -26,6 +30,9 @@
 	let paymentAccounts: PaymentAccount[] = [];
 	let topups: TopupRequest[] = [];
 	let invoices: BillingInvoice[] = [];
+	let plans: ApiKeyPlan[] = [];
+	let usage: UserUsageSummary | null = null;
+	let selectedPlanId = 'starter';
 
 	let selectedPaymentAccountId = '';
 	let topupAmount = 10;
@@ -42,10 +49,22 @@
 		paymentAccounts = await getPublicPaymentAccounts(localStorage.token).catch(() => []);
 		topups = await getMyTopups(localStorage.token).catch(() => []);
 		invoices = await getMyInvoices(localStorage.token).catch(() => []);
+		plans = await getApiKeyPlans(localStorage.token).catch(() => []);
+		usage = await getMyUsageSummary(localStorage.token).catch(() => null);
 
 		if (!selectedPaymentAccountId && paymentAccounts.length > 0) {
 			selectedPaymentAccountId = paymentAccounts[0].id;
 		}
+
+		if (apiKey?.plan_name) {
+			selectedPlanId = apiKey.plan_name;
+		}
+	};
+
+	const selectPlan = (plan: ApiKeyPlan) => {
+		selectedPlanId = plan.id;
+		topupAmount = plan.monthly_price_usd;
+		topupNote = `Subscribe plan ${plan.name}`;
 	};
 
 	onMount(async () => {
@@ -136,6 +155,7 @@
 		<div class="text-lg font-semibold">{$i18n.t('Developer API Console')}</div>
 		<div class="text-xs text-gray-500 flex items-center gap-2">
 			{$i18n.t('View your plan, credits and usage for API key access.')}
+			<button class="text-xs underline" on:click={() => goto('/developer/api-keys/pricing')}>Pricing</button>
 			<button class="text-xs underline" on:click={() => goto('/developer/api-keys/guide')}>Guide</button>
 		</div>
 	</div>
@@ -145,6 +165,24 @@
 	{:else if !apiKey}
 		<div class="text-sm text-gray-500">{$i18n.t('No API key found. Generate one in account settings first.')}</div>
 	{:else}
+		<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
+			<div class="text-sm font-medium">Plans & Pricing</div>
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+				{#each plans as plan}
+					<button
+						class="rounded-lg border text-left p-3 {selectedPlanId === plan.id
+							? 'border-black dark:border-white'
+							: 'border-gray-100 dark:border-gray-800'}"
+						on:click={() => selectPlan(plan)}
+					>
+						<div class="font-medium text-sm">{plan.name}</div>
+						<div class="text-xs text-gray-500 mt-1">${plan.monthly_price_usd}/month • {plan.included_credits} credits</div>
+						<div class="text-xs text-gray-500 mt-1">RPM {plan.rpm_limit} • {plan.support_tier} support</div>
+					</button>
+				{/each}
+			</div>
+		</div>
+
 		<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
 			<div class="flex items-center justify-between gap-2">
 				<div class="font-medium">{$i18n.t('Secret key')}</div>
@@ -195,8 +233,22 @@
 			</div>
 		</div>
 
+		{#if usage}
+			<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4 space-y-2">
+				<div class="text-sm font-medium">Usage & Billing Overview</div>
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+					<div class="rounded-lg border border-gray-100 dark:border-gray-800 p-3"><div class="text-xs text-gray-500">Monthly Requests</div><div class="font-semibold mt-1">{usage.monthly_requests}</div></div>
+					<div class="rounded-lg border border-gray-100 dark:border-gray-800 p-3"><div class="text-xs text-gray-500">Pending Topups</div><div class="font-semibold mt-1">{usage.pending_topups}</div></div>
+					<div class="rounded-lg border border-gray-100 dark:border-gray-800 p-3"><div class="text-xs text-gray-500">Paid Invoices</div><div class="font-semibold mt-1">{usage.paid_invoices}</div></div>
+					<div class="rounded-lg border border-gray-100 dark:border-gray-800 p-3"><div class="text-xs text-gray-500">Spend</div><div class="font-semibold mt-1">${usage.total_spend_usd.toFixed(2)}</div></div>
+				</div>
+				<div class="text-xs text-gray-500">Avg spend / 1k requests: ${usage.avg_spend_per_1k_requests_usd.toFixed(4)} • Usage month: {usage.usage_month ?? '-'}</div>
+			</div>
+		{/if}
+
 		<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
 			<div class="text-sm font-medium">Top-up credits</div>
+			<div class="text-xs text-gray-500">Workflow: Select plan → Submit payment request → Admin review → Credits auto/ manual approval.</div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
 				<select class="px-2.5 py-2 rounded-lg bg-transparent border border-gray-200 dark:border-gray-700" bind:value={selectedPaymentAccountId}>
 					{#if paymentAccounts.length === 0}

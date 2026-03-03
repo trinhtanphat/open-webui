@@ -78,6 +78,33 @@ export type RevenueDailyEntry = {
 	invoices: number;
 };
 
+export type ApiKeyPlan = {
+	id: string;
+	name: string;
+	monthly_price_usd: number;
+	included_credits: number;
+	rpm_limit: number;
+	overage_usd_per_1k_requests: number;
+	support_tier: string;
+	recommended_for: string;
+};
+
+export type UserUsageSummary = {
+	plan_name?: string;
+	monthly_price_usd?: number;
+	credits_remaining: number;
+	total_requests: number;
+	monthly_requests: number;
+	usage_month?: string;
+	last_used_at?: number;
+	pending_topups: number;
+	approved_topups: number;
+	rejected_topups: number;
+	paid_invoices: number;
+	total_spend_usd: number;
+	avg_spend_per_1k_requests_usd: number;
+};
+
 const authHeaders = (token: string) => ({
 	'Content-Type': 'application/json',
 	Authorization: `Bearer ${token}`
@@ -97,6 +124,48 @@ export const getMyApiKeyConsole = async (token: string): Promise<ApiKeyConsole> 
 		.catch((err) => {
 			console.error(err);
 			error = err.detail ?? 'Failed to fetch API key console';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const getApiKeyPlans = async (token: string): Promise<ApiKeyPlan[]> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/plans`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch plans';
+			return null;
+		});
+
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getMyUsageSummary = async (token: string): Promise<UserUsageSummary> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/usage`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch usage summary';
 			return null;
 		});
 
@@ -429,6 +498,30 @@ export const getAdminRevenueDaily = async (token: string, days = 30): Promise<Re
 		.catch((err) => {
 			console.error(err);
 			error = err.detail ?? 'Failed to fetch revenue analytics';
+			return null;
+		});
+
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const getAdminAuditLogs = async (token: string, limit = 100): Promise<any[]> => {
+	let error = null;
+
+	const res = await fetch(
+		`${WEBUI_API_BASE_URL}/api-keys/admin/audit-logs?limit=${encodeURIComponent(limit)}`,
+		{
+			method: 'GET',
+			headers: authHeaders(token)
+		}
+	)
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch audit logs';
 			return null;
 		});
 

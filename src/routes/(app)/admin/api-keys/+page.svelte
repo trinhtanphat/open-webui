@@ -7,6 +7,8 @@
 	import {
 		approveAdminTopup,
 		createAdminPaymentAccount,
+		getAdminAuditLogs,
+		getApiKeyPlans,
 		getAdminRevenueDaily,
 		getAdminBillingSummary,
 		getAdminInvoices,
@@ -17,6 +19,7 @@
 		updateAdminApiKeyCredits,
 		updateAdminApiKeyStatus,
 		type ApiKeyConsole,
+		type ApiKeyPlan,
 		type BillingInvoice,
 		type BillingSummary,
 		type PaymentAccount,
@@ -33,6 +36,8 @@
 	let topups: TopupRequest[] = [];
 	let invoices: BillingInvoice[] = [];
 	let revenueDaily: RevenueDailyEntry[] = [];
+	let auditLogs: any[] = [];
+	let plans: ApiKeyPlan[] = [];
 
 	let creditDelta = 100;
 	let approveCredits = 100;
@@ -55,6 +60,8 @@
 		topups = await getAdminTopups(localStorage.token).catch(() => []);
 		invoices = await getAdminInvoices(localStorage.token).catch(() => []);
 		revenueDaily = await getAdminRevenueDaily(localStorage.token, 30).catch(() => []);
+		auditLogs = await getAdminAuditLogs(localStorage.token, 30).catch(() => []);
+		plans = await getApiKeyPlans(localStorage.token).catch(() => []);
 	};
 
 	onMount(async () => {
@@ -157,6 +164,7 @@
 
 		<div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
 			<div class="px-3 py-2 text-sm font-medium border-b border-gray-100 dark:border-gray-800">API Keys</div>
+			<div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-100 dark:border-gray-800">Ops workflow: Payment received → Verify proof → Approve/Reject top-up → Invoice issued → Audit log retained.</div>
 			<table class="w-full text-sm">
 				<thead class="bg-gray-50 dark:bg-gray-900/40">
 					<tr class="text-left">
@@ -215,6 +223,22 @@
 		</div>
 
 		<div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+			<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-3 space-y-2">
+				<div class="text-sm font-medium">Published Plans</div>
+				<div class="max-h-52 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-lg">
+					{#if plans.length === 0}
+						<div class="px-3 py-2 text-xs text-gray-500">No plans configured</div>
+					{:else}
+						{#each plans as plan}
+							<div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0 text-xs">
+								<div class="font-medium">{plan.name} (${plan.monthly_price_usd}/mo)</div>
+								<div class="text-gray-500">{plan.included_credits} credits • RPM {plan.rpm_limit} • {plan.support_tier}</div>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</div>
+
 			<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-3 space-y-2">
 				<div class="text-sm font-medium">Payment Accounts</div>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -298,6 +322,29 @@
 					{:else}
 						{#each invoices as invoice}
 							<tr class="border-t border-gray-100 dark:border-gray-800"><td class="px-3 py-2">{invoice.user_id}</td><td class="px-3 py-2">{invoice.amount} {invoice.currency}</td><td class="px-3 py-2">{invoice.credits}</td><td class="px-3 py-2">{invoice.status}</td></tr>
+						{/each}
+					{/if}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="rounded-xl border border-gray-100 dark:border-gray-800 overflow-x-auto">
+			<div class="px-3 py-2 text-sm font-medium border-b border-gray-100 dark:border-gray-800">Audit Trail</div>
+			<table class="w-full text-xs">
+				<thead class="bg-gray-50 dark:bg-gray-900/40">
+					<tr><th class="px-3 py-2 text-left">When</th><th class="px-3 py-2 text-left">Actor</th><th class="px-3 py-2 text-left">Action</th><th class="px-3 py-2 text-left">Target</th></tr>
+				</thead>
+				<tbody>
+					{#if auditLogs.length === 0}
+						<tr><td class="px-3 py-2 text-gray-500" colspan="4">No audit events</td></tr>
+					{:else}
+						{#each auditLogs as log}
+							<tr class="border-t border-gray-100 dark:border-gray-800">
+								<td class="px-3 py-2">{new Date((log.created_at ?? 0) * 1000).toLocaleString()}</td>
+								<td class="px-3 py-2 font-mono">{log.actor_id}</td>
+								<td class="px-3 py-2">{log.action}</td>
+								<td class="px-3 py-2">{log.target_type}:{log.target_id}</td>
+							</tr>
 						{/each}
 					{/if}
 				</tbody>

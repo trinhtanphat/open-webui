@@ -107,6 +107,33 @@ class RevenueDailyEntry(BaseModel):
     invoices: int
 
 
+class ApiKeyPlan(BaseModel):
+    id: str
+    name: str
+    monthly_price_usd: float
+    included_credits: int
+    rpm_limit: int
+    overage_usd_per_1k_requests: float
+    support_tier: str
+    recommended_for: str
+
+
+class UserUsageSummary(BaseModel):
+    plan_name: Optional[str] = None
+    monthly_price_usd: Optional[float] = None
+    credits_remaining: int = 0
+    total_requests: int = 0
+    monthly_requests: int = 0
+    usage_month: Optional[str] = None
+    last_used_at: Optional[int] = None
+    pending_topups: int = 0
+    approved_topups: int = 0
+    rejected_topups: int = 0
+    paid_invoices: int = 0
+    total_spend_usd: float = 0
+    avg_spend_per_1k_requests_usd: float = 0
+
+
 class PaymentWebhookForm(BaseModel):
     topup_request_id: str
     status: str
@@ -116,6 +143,40 @@ class PaymentWebhookForm(BaseModel):
     currency: Optional[str] = None
     credits: Optional[int] = None
     note: Optional[str] = None
+
+
+API_KEY_PLANS: list[ApiKeyPlan] = [
+    ApiKeyPlan(
+        id="starter",
+        name="Starter",
+        monthly_price_usd=19,
+        included_credits=5000,
+        rpm_limit=30,
+        overage_usd_per_1k_requests=0.3,
+        support_tier="Community",
+        recommended_for="MVP and personal projects",
+    ),
+    ApiKeyPlan(
+        id="pro",
+        name="Pro",
+        monthly_price_usd=79,
+        included_credits=30000,
+        rpm_limit=120,
+        overage_usd_per_1k_requests=0.25,
+        support_tier="Priority",
+        recommended_for="Growing products and small teams",
+    ),
+    ApiKeyPlan(
+        id="business",
+        name="Business",
+        monthly_price_usd=249,
+        included_credits=120000,
+        rpm_limit=300,
+        overage_usd_per_1k_requests=0.2,
+        support_tier="Dedicated",
+        recommended_for="Production workloads and enterprise integrations",
+    ),
+]
 
 
 def _mask_key(key: str) -> str:
@@ -145,6 +206,45 @@ def _build_console_payload(record) -> ApiKeyConsoleResponse:
     )
 
 
+def _build_usage_summary(user_id: str, record, db: Session) -> UserUsageSummary:
+    metadata = record.data if record and isinstance(record.data, dict) else {}
+
+    topups = Billing.get_topup_requests(user_id=user_id, db=db)
+    pending_topups = len([item for item in topups if item.status == "pending"])
+    approved_topups = len([item for item in topups if item.status == "approved"])
+    rejected_topups = len([item for item in topups if item.status == "rejected"])
+
+    invoices = Billing.get_invoices(user_id=user_id, db=db)
+    paid = [item for item in invoices if item.status == "paid"]
+    total_spend = float(sum(item.amount for item in paid))
+
+    total_requests = int(metadata.get("total_requests", 0))
+    avg_spend_per_1k_requests = 0.0
+    if total_requests > 0:
+        avg_spend_per_1k_requests = round((total_spend / total_requests) * 1000, 4)
+
+    return UserUsageSummary(
+        plan_name=metadata.get("plan_name"),
+        monthly_price_usd=metadata.get("monthly_price_usd"),
+        credits_remaining=int(metadata.get("credits_remaining", 0)),
+        total_requests=total_requests,
+        monthly_requests=int(metadata.get("monthly_requests", 0)),
+        usage_month=metadata.get("usage_month"),
+        last_used_at=record.last_used_at if record else None,
+        pending_topups=pending_topups,
+        approved_topups=approved_topups,
+        rejected_topups=rejected_topups,
+        paid_invoices=len(paid),
+        total_spend_usd=round(total_spend, 4),
+        avg_spend_per_1k_requests_usd=avg_spend_per_1k_requests,
+    )
+
+
+@router.get("/plans", response_model=list[ApiKeyPlan])
+async def get_api_key_plans(user=Depends(get_verified_user)):
+    return API_KEY_PLANS
+
+
 @router.get("/me", response_model=ApiKeyConsoleResponse)
 async def get_my_api_key_console(user=Depends(get_verified_user), db: Session = Depends(get_session)):
     record = Users.get_user_api_key_record_by_id(user.id, db=db)
@@ -152,6 +252,12 @@ async def get_my_api_key_console(user=Depends(get_verified_user), db: Session = 
         raise HTTPException(status_code=404, detail="API key not found")
 
     return _build_console_payload(record)
+
+
+@router.get("/me/usage", response_model=UserUsageSummary)
+async def get_my_usage_summary(user=Depends(get_verified_user), db: Session = Depends(get_session)):
+    record = Users.get_user_api_key_record_by_id(user.id, db=db)
+    return _build_usage_summary(user.id, record, db)
 
 
 @router.post("/me/regenerate", response_model=ApiKeyConsoleResponse)

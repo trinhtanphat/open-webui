@@ -271,6 +271,15 @@
 				<div class="flex flex-col">
 					<div class="mb-2">
 						<button
+							class="text-xs px-2.5 py-1.5 mr-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800"
+							on:click={async () => {
+								await goto('/developer/api-keys/pricing');
+							}}
+						>
+							{$i18n.t('Open API Pricing')}
+						</button>
+
+						<button
 							class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800"
 							on:click={async () => {
 								await goto('/developer/api-keys');
