@@ -117,6 +117,20 @@
 		}
 	};
 
+	const getPaymentProviderByTopupId = (topupId?: string) => {
+		if (!topupId) return 'generic';
+		const topup = topups.find((item) => item.id === topupId);
+		if (!topup) return 'generic';
+		const account = paymentAccounts.find((item) => item.id === topup.payment_account_id);
+		return account?.provider || 'generic';
+	};
+
+	const getPaymentProviderByAccountId = (accountId?: string) => {
+		if (!accountId) return 'generic';
+		const account = paymentAccounts.find((item) => item.id === accountId);
+		return account?.provider || 'generic';
+	};
+
 	const loadData = async () => {
 		keys = await getAdminApiKeys(localStorage.token).catch((error) => {
 			toast.error(`${error}`);
@@ -834,6 +848,7 @@
 							<tr>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Invoice')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('User')}</th>
+								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Provider')}</th>
 								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Amount')}</th>
 								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Credits')}</th>
 								<th class="px-4 py-2.5 text-center font-medium text-gray-500">{$i18n.t('Status')}</th>
@@ -842,7 +857,7 @@
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if invoices.length === 0}
-								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="6">
+								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="7">
 									<div class="flex flex-col items-center gap-2">
 										<svg class="size-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
 										{$i18n.t('No invoices yet')}
@@ -870,6 +885,12 @@
 													<div class="font-medium text-xs">{invoice.user_name || invoice.user_id.slice(0, 8)}</div>
 													<div class="text-[10px] text-gray-400 font-mono">{invoice.user_id.slice(0, 8)}...</div>
 												</div>
+											</div>
+										</td>
+										<td class="px-4 py-3">
+											<div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800">
+												<PaymentProviderIcon provider={getPaymentProviderByTopupId(invoice.topup_request_id)} size="size-4" />
+												<span class="text-[10px] uppercase font-semibold text-gray-600 dark:text-gray-300">{getPaymentProviderByTopupId(invoice.topup_request_id)}</span>
 											</div>
 										</td>
 										<td class="px-4 py-3 text-right">
@@ -910,6 +931,7 @@
 						<thead class="bg-gray-50 dark:bg-gray-900/40">
 							<tr>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('User')}</th>
+								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Provider')}</th>
 								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Amount')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Ref')}</th>
 								<th class="px-4 py-2.5 text-center font-medium text-gray-500">{$i18n.t('Status')}</th>
@@ -919,7 +941,7 @@
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if topups.length === 0}
-								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="6">
+								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="7">
 									<div class="flex flex-col items-center gap-2">
 										<svg class="size-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
 										{$i18n.t('No top-up requests')}
@@ -937,6 +959,12 @@
 													<div class="font-medium text-xs">{topup.user_name || topup.user_id.slice(0, 8)}</div>
 													<div class="text-[10px] text-gray-400 font-mono">{topup.user_id.slice(0, 8)}...</div>
 												</div>
+											</div>
+										</td>
+										<td class="px-4 py-3">
+											<div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800">
+												<PaymentProviderIcon provider={getPaymentProviderByAccountId(topup.payment_account_id)} size="size-4" />
+												<span class="text-[10px] uppercase font-semibold text-gray-600 dark:text-gray-300">{getPaymentProviderByAccountId(topup.payment_account_id)}</span>
 											</div>
 										</td>
 										<td class="px-4 py-3 text-right">

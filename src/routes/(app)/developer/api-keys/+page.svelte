@@ -86,6 +86,19 @@
 			? invoices
 			: invoices.filter((item) => item.status === invoiceStatusFilter);
 
+	const getPaymentProviderByAccountId = (accountId?: string) => {
+		if (!accountId) return 'generic';
+		const account = paymentAccounts.find((item) => item.id === accountId);
+		return account?.provider || 'generic';
+	};
+
+	const getPaymentProviderByTopupId = (topupId?: string) => {
+		if (!topupId) return 'generic';
+		const topup = topups.find((item) => item.id === topupId);
+		if (!topup) return 'generic';
+		return getPaymentProviderByAccountId(topup.payment_account_id);
+	};
+
 	const planIcons = [Bolt, Sparkles, Star];
 	const planColors = [
 		'from-gray-500 to-gray-600',
@@ -786,6 +799,7 @@
 					<table class="w-full text-xs">
 						<thead class="bg-gray-50 dark:bg-gray-900/40">
 							<tr>
+								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Provider')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Amount')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Ref')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Status')}</th>
@@ -793,10 +807,16 @@
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if filteredTopups.length === 0}
-								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="3">{$i18n.t('No top-up requests yet')}</td></tr>
+								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="4">{$i18n.t('No top-up requests yet')}</td></tr>
 							{:else}
 								{#each filteredTopups as topup}
 									<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+										<td class="px-4 py-2.5">
+											<div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800">
+												<PaymentProviderIcon provider={getPaymentProviderByAccountId(topup.payment_account_id)} size="size-4" />
+												<span class="text-[10px] uppercase font-semibold text-gray-600 dark:text-gray-300">{getPaymentProviderByAccountId(topup.payment_account_id)}</span>
+											</div>
+										</td>
 										<td class="px-4 py-2.5 font-medium">{topup.amount} {topup.currency}</td>
 										<td class="px-4 py-2.5 text-gray-500 font-mono">{topup.tx_ref ?? '-'}</td>
 										<td class="px-4 py-2.5">
@@ -830,6 +850,7 @@
 						<thead class="bg-gray-50 dark:bg-gray-900/40">
 							<tr>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Date')}</th>
+								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Provider')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Amount')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Credits')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Status')}</th>
@@ -838,11 +859,17 @@
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if filteredInvoices.length === 0}
-								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="5">{$i18n.t('No invoices yet')}</td></tr>
+								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="6">{$i18n.t('No invoices yet')}</td></tr>
 							{:else}
 								{#each filteredInvoices as invoice}
 									<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
 										<td class="px-4 py-2.5 text-gray-500">{new Date(invoice.created_at * 1000).toLocaleDateString()}</td>
+										<td class="px-4 py-2.5">
+											<div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800">
+												<PaymentProviderIcon provider={getPaymentProviderByTopupId(invoice.topup_request_id)} size="size-4" />
+												<span class="text-[10px] uppercase font-semibold text-gray-600 dark:text-gray-300">{getPaymentProviderByTopupId(invoice.topup_request_id)}</span>
+											</div>
+										</td>
 										<td class="px-4 py-2.5 font-medium">{invoice.amount} {invoice.currency}</td>
 										<td class="px-4 py-2.5">{invoice.credits}</td>
 										<td class="px-4 py-2.5">
