@@ -101,6 +101,12 @@
 	let qrCodeUrl = '';
 	let webhookSecret = '';
 
+	// Editing model pricing
+	let editingPricingId: string | null = null;
+
+	// QR file input ref
+	let qrFileInput: HTMLInputElement;
+
 	const statusColor = (status: string) => {
 		switch (status) {
 			case 'active': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
@@ -232,6 +238,26 @@
 			toast.error($i18n.t('Model ID is required'));
 			return;
 		}
+
+		if (editingPricingId) {
+			// Update existing pricing
+			await updateAdminModelPricing(localStorage.token, editingPricingId, {
+				model_id: mpModelId,
+				display_name: mpDisplayName || undefined,
+				input_cost_per_1k_tokens: mpInputCost,
+				output_cost_per_1k_tokens: mpOutputCost,
+				per_request_cost: mpRequestCost,
+				currency: mpCurrency
+			})
+				.then(async () => {
+					toast.success($i18n.t('Model pricing updated'));
+					cancelEditPricing();
+					await loadData();
+				})
+				.catch((error) => toast.error(`${error}`));
+			return;
+		}
+
 		await createAdminModelPricing(localStorage.token, {
 			model_id: mpModelId,
 			display_name: mpDisplayName || undefined,
@@ -250,6 +276,26 @@
 				await loadData();
 			})
 			.catch((error) => toast.error(`${error}`));
+	};
+
+	const startEditPricing = (pricing: ModelPricing) => {
+		editingPricingId = pricing.id;
+		mpModelId = pricing.model_id;
+		mpDisplayName = pricing.display_name || '';
+		mpInputCost = pricing.input_cost_per_1k_tokens;
+		mpOutputCost = pricing.output_cost_per_1k_tokens;
+		mpRequestCost = pricing.per_request_cost;
+		mpCurrency = pricing.currency;
+	};
+
+	const cancelEditPricing = () => {
+		editingPricingId = null;
+		mpModelId = '';
+		mpDisplayName = '';
+		mpInputCost = 0;
+		mpOutputCost = 0;
+		mpRequestCost = 0;
+		mpCurrency = 'USD';
 	};
 
 	const toggleModelPricingActive = async (pricing: ModelPricing) => {
@@ -478,6 +524,9 @@
 					<h3 class="font-semibold text-sm flex items-center gap-2">
 						<Sparkles className="size-4 text-amber-500" />
 						{$i18n.t('Model Pricing')}
+						{#if editingPricingId}
+							<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{$i18n.t('Editing')}</span>
+						{/if}
 					</h3>
 					<p class="text-xs text-gray-500">{$i18n.t('Set token-based pricing per model. Use glob patterns (e.g. gpt-4*) for families.')}</p>
 
@@ -505,24 +554,38 @@
 						</select>
 					</div>
 					<button class="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5" on:click={createModelPricing}>
-						<Plus className="size-3.5" />
-						{$i18n.t('Add Pricing')}
+						{#if editingPricingId}
+							<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+							{$i18n.t('Update Pricing')}
+						{:else}
+							<Plus className="size-3.5" />
+							{$i18n.t('Add Pricing')}
+						{/if}
 					</button>
+					{#if editingPricingId}
+						<button class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" on:click={cancelEditPricing}>
+							{$i18n.t('Cancel')}
+						</button>
+					{/if}
 
 					<div class="space-y-1.5 max-h-64 overflow-y-auto">
 						{#if modelPricings.length === 0}
 							<p class="text-xs text-gray-400 py-2">{$i18n.t('No model pricing configured. Flat 1-credit-per-request is used.')}</p>
 						{:else}
 							{#each modelPricings as mp}
-								<div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/40">
+								<div class="flex items-center justify-between p-2.5 rounded-xl transition-colors {editingPricingId === mp.id ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-300 dark:ring-blue-700' : 'bg-gray-50 dark:bg-gray-900/40'}">
 									<div class="min-w-0">
 										<div class="flex items-center gap-1.5">
 											<span class="w-2 h-2 rounded-full {mp.is_active === 'true' ? 'bg-emerald-500' : 'bg-gray-400'} flex-shrink-0"></span>
 											<span class="font-medium text-xs">{mp.display_name || mp.model_id}</span>
+											<span class="text-[10px] text-gray-400">{mp.currency}</span>
 										</div>
 										<div class="text-[10px] text-gray-500 font-mono mt-0.5 ml-3.5">{mp.model_id} · in: ${mp.input_cost_per_1k_tokens} · out: ${mp.output_cost_per_1k_tokens} · req: ${mp.per_request_cost}</div>
 									</div>
 									<div class="flex items-center gap-1 flex-shrink-0">
+										<button class="p-1 rounded-lg text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" title={$i18n.t('Edit')} on:click={() => startEditPricing(mp)}>
+											<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+										</button>
 										<button class="px-2 py-1 rounded-lg text-xs font-medium transition-colors {mp.is_active === 'true' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30'}" on:click={() => toggleModelPricingActive(mp)}>
 											{mp.is_active === 'true' ? $i18n.t('Disable') : $i18n.t('Enable')}
 										</button>
@@ -641,8 +704,44 @@
 							<input id="billing-account-number" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={accountNumber} />
 						</div>
 						<div>
-							<label for="billing-qr-url" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('QR Code URL')}</label>
-							<input id="billing-qr-url" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={qrCodeUrl} />
+							<label for="billing-qr-url" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('QR Code')}</label>
+							<div class="space-y-2">
+								<div class="flex items-center gap-2">
+									<input id="billing-qr-url" class="flex-1 px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={qrCodeUrl} placeholder={$i18n.t('Paste URL or upload image')} />
+									<input type="file" accept="image/*" class="hidden" bind:this={qrFileInput}
+										on:change={(e) => {
+											const input = e.target as HTMLInputElement;
+											const file = input?.files?.[0];
+											if (file) {
+												if (file.size > 2 * 1024 * 1024) {
+													toast.error($i18n.t('Image must be under 2MB'));
+													return;
+												}
+												const reader = new FileReader();
+												reader.onload = () => { qrCodeUrl = reader.result as string; };
+												reader.readAsDataURL(file);
+											}
+										}}
+									/>
+									<button type="button" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+										on:click={() => qrFileInput?.click()}>
+										<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+										{$i18n.t('Upload')}
+									</button>
+								</div>
+								{#if qrCodeUrl}
+									<div class="relative inline-block">
+										<img src={qrCodeUrl} alt="QR Preview" class="w-24 h-24 rounded-lg border border-gray-200 dark:border-gray-700 object-contain bg-white" />
+										<button type="button" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+											on:click={() => {
+												qrCodeUrl = '';
+												if (qrFileInput) { qrFileInput.value = ''; }
+											}}>
+											×
+										</button>
+									</div>
+								{/if}
+							</div>
 						</div>
 						<div class="sm:col-span-2">
 							<label for="billing-webhook-secret" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Webhook Secret')}</label>
@@ -683,25 +782,36 @@
 
 				<!-- Existing accounts -->
 				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-3">
-					<h3 class="font-semibold text-sm">{$i18n.t('Existing Accounts')}</h3>
+					<h3 class="font-semibold text-sm flex items-center gap-2">
+						<svg class="size-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
+						{$i18n.t('Existing Accounts')}
+						<span class="text-xs font-normal text-gray-400">({paymentAccounts.length})</span>
+					</h3>
 					{#if paymentAccounts.length === 0}
 						<p class="text-xs text-gray-400">{$i18n.t('No payment accounts configured')}</p>
 					{:else}
-						<div class="space-y-2">
+						<div class="space-y-2.5">
 							{#each paymentAccounts as account}
-								<div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900/40">
-									<PaymentProviderIcon provider={account.provider} size="size-9" />
-									<div class="min-w-0">
+								<div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800">
+									<PaymentProviderIcon provider={account.provider} size="size-10" />
+									<div class="flex-1 min-w-0">
 										<div class="font-medium text-sm flex items-center gap-1.5">
 											<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase
 												{account.provider === 'stripe' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
 												 account.provider === 'vnpay' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
 												 account.provider === 'momo' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' :
+												 account.provider === 'paypal' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
 												 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}">{account.provider}</span>
 											{account.account_name}
 										</div>
-										<div class="text-xs text-gray-500 font-mono">{account.account_number}</div>
+										<div class="text-xs text-gray-500 font-mono mt-0.5">{account.account_number}</div>
+										{#if account.instructions}
+											<div class="text-[11px] text-gray-400 mt-1 italic">{account.instructions}</div>
+										{/if}
 									</div>
+									{#if account.qr_code_url}
+										<img src={account.qr_code_url} alt="QR" class="w-14 h-14 rounded-lg border border-gray-200 dark:border-gray-700 object-contain bg-white flex-shrink-0" />
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -711,30 +821,68 @@
 
 			<!-- Invoices -->
 			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-				<div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 font-semibold text-sm flex items-center gap-2">
-					<svg class="size-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-					{$i18n.t('Invoices')}
+				<div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 font-semibold text-sm flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<svg class="size-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+						{$i18n.t('Invoices')}
+					</div>
+					<span class="text-xs font-normal text-gray-400">{invoices.length} {$i18n.t('total')}</span>
 				</div>
 				<div class="overflow-x-auto">
 					<table class="w-full text-xs">
 						<thead class="bg-gray-50 dark:bg-gray-900/40">
 							<tr>
+								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Invoice')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('User')}</th>
-								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Amount')}</th>
-								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Credits')}</th>
-								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Status')}</th>
+								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Amount')}</th>
+								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Credits')}</th>
+								<th class="px-4 py-2.5 text-center font-medium text-gray-500">{$i18n.t('Status')}</th>
+								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Date')}</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if invoices.length === 0}
-								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="4">{$i18n.t('No invoices')}</td></tr>
+								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="6">
+									<div class="flex flex-col items-center gap-2">
+										<svg class="size-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+										{$i18n.t('No invoices yet')}
+									</div>
+								</td></tr>
 							{:else}
 								{#each invoices as invoice}
 									<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-										<td class="px-4 py-2.5 font-mono text-gray-500 max-w-[120px] truncate">{invoice.user_id}</td>
-										<td class="px-4 py-2.5 font-medium">{invoice.amount} {invoice.currency}</td>
-										<td class="px-4 py-2.5">{invoice.credits}</td>
-										<td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-medium {statusColor(invoice.status)}">{invoice.status}</span></td>
+										<td class="px-4 py-3">
+											<div class="flex items-center gap-2">
+												<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
+													<svg class="size-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+												</div>
+												<div>
+													<div class="font-mono text-[10px] text-gray-400">#{invoice.id.slice(0, 8)}</div>
+												</div>
+											</div>
+										</td>
+										<td class="px-4 py-3">
+											<div class="flex items-center gap-2">
+												<div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+													{(invoice.user_name || invoice.user_id || '?').charAt(0).toUpperCase()}
+												</div>
+												<div>
+													<div class="font-medium text-xs">{invoice.user_name || invoice.user_id.slice(0, 8)}</div>
+													<div class="text-[10px] text-gray-400 font-mono">{invoice.user_id.slice(0, 8)}...</div>
+												</div>
+											</div>
+										</td>
+										<td class="px-4 py-3 text-right">
+											<span class="font-semibold text-sm">{invoice.amount.toLocaleString()}</span>
+											<span class="text-[10px] text-gray-400 ml-0.5">{invoice.currency}</span>
+										</td>
+										<td class="px-4 py-3 text-right">
+											<span class="px-2 py-0.5 rounded-lg bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 text-xs font-medium">{invoice.credits.toLocaleString()}</span>
+										</td>
+										<td class="px-4 py-3 text-center">
+											<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide {statusColor(invoice.status)}">{invoice.status}</span>
+										</td>
+										<td class="px-4 py-3 text-right text-gray-500 text-[11px]">{new Date((invoice.created_at ?? 0) * 1000).toLocaleDateString()}</td>
 									</tr>
 								{/each}
 							{/if}
@@ -750,6 +898,7 @@
 					<h3 class="font-semibold text-sm flex items-center gap-2">
 						<Plus className="size-4 text-emerald-500" />
 						{$i18n.t('Top-up Requests')}
+						<span class="text-xs font-normal text-gray-400">({topups.length})</span>
 					</h3>
 					<div class="flex items-center gap-2 text-xs">
 						<span class="text-gray-500">{$i18n.t('Credits to approve')}:</span>
@@ -761,25 +910,45 @@
 						<thead class="bg-gray-50 dark:bg-gray-900/40">
 							<tr>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('User')}</th>
-								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Amount')}</th>
+								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Amount')}</th>
 								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Ref')}</th>
-								<th class="px-4 py-2.5 text-left font-medium text-gray-500">{$i18n.t('Status')}</th>
+								<th class="px-4 py-2.5 text-center font-medium text-gray-500">{$i18n.t('Status')}</th>
+								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Date')}</th>
 								<th class="px-4 py-2.5 text-right font-medium text-gray-500">{$i18n.t('Actions')}</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							{#if topups.length === 0}
-								<tr><td class="px-4 py-6 text-gray-400 text-center" colspan="5">{$i18n.t('No top-up requests')}</td></tr>
+								<tr><td class="px-4 py-8 text-gray-400 text-center" colspan="6">
+									<div class="flex flex-col items-center gap-2">
+										<svg class="size-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+										{$i18n.t('No top-up requests')}
+									</div>
+								</td></tr>
 							{:else}
 								{#each topups as topup}
 									<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-										<td class="px-4 py-2.5 font-mono text-gray-500 max-w-[120px] truncate">{topup.user_id}</td>
-										<td class="px-4 py-2.5 font-medium">{topup.amount} {topup.currency}</td>
-										<td class="px-4 py-2.5 font-mono text-gray-500">{topup.tx_ref ?? '-'}</td>
-										<td class="px-4 py-2.5">
-											<span class="px-2 py-0.5 rounded-full text-xs font-medium {statusColor(topup.status)}">{topup.status}</span>
+										<td class="px-4 py-3">
+											<div class="flex items-center gap-2">
+												<div class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+													{(topup.user_name || topup.user_id || '?').charAt(0).toUpperCase()}
+												</div>
+												<div>
+													<div class="font-medium text-xs">{topup.user_name || topup.user_id.slice(0, 8)}</div>
+													<div class="text-[10px] text-gray-400 font-mono">{topup.user_id.slice(0, 8)}...</div>
+												</div>
+											</div>
 										</td>
-										<td class="px-4 py-2.5">
+										<td class="px-4 py-3 text-right">
+											<span class="font-semibold text-sm">{topup.amount.toLocaleString()}</span>
+											<span class="text-[10px] text-gray-400 ml-0.5">{topup.currency}</span>
+										</td>
+										<td class="px-4 py-3 font-mono text-gray-500">{topup.tx_ref ?? '-'}</td>
+										<td class="px-4 py-3 text-center">
+											<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide {statusColor(topup.status)}">{topup.status}</span>
+										</td>
+										<td class="px-4 py-3 text-right text-gray-500 text-[11px]">{new Date((topup.created_at ?? 0) * 1000).toLocaleDateString()}</td>
+										<td class="px-4 py-3">
 											{#if topup.status === 'pending'}
 												<div class="flex items-center gap-1.5 justify-end">
 													<button
@@ -969,7 +1138,14 @@
 								{#each auditLogs as log}
 									<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
 										<td class="px-4 py-2.5 text-gray-500">{new Date((log.created_at ?? 0) * 1000).toLocaleString()}</td>
-										<td class="px-4 py-2.5 font-mono text-gray-500 max-w-[120px] truncate">{log.actor_id}</td>
+										<td class="px-4 py-2.5">
+											<div class="flex items-center gap-1.5">
+												<div class="w-5 h-5 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0">
+													{(log.actor_name || log.actor_id || '?').charAt(0).toUpperCase()}
+												</div>
+												<span class="text-xs font-medium">{log.actor_name || log.actor_id.slice(0, 8)}</span>
+											</div>
+										</td>
 										<td class="px-4 py-2.5">
 											<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{log.action}</span>
 										</td>

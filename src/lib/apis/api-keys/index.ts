@@ -34,6 +34,7 @@ export type PaymentAccount = {
 export type TopupRequest = {
 	id: string;
 	user_id: string;
+	user_name?: string;
 	api_key_id: string;
 	payment_account_id: string;
 	amount: number;
@@ -51,6 +52,7 @@ export type TopupRequest = {
 export type BillingInvoice = {
 	id: string;
 	user_id: string;
+	user_name?: string;
 	api_key_id: string;
 	topup_request_id?: string;
 	amount: number;

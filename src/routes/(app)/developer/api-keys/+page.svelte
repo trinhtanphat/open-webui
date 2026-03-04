@@ -712,6 +712,11 @@
 								{#if selectedPaymentAccount.instructions}
 									<div class="text-gray-500">{selectedPaymentAccount.instructions}</div>
 								{/if}
+								{#if selectedPaymentAccount.qr_code_url}
+									<div class="mt-2 flex justify-center">
+										<img src={selectedPaymentAccount.qr_code_url} alt="QR Code" class="w-32 h-32 rounded-lg border border-gray-200 dark:border-gray-700 object-contain bg-white" />
+									</div>
+								{/if}
 							</div>
 						{/if}
 						</div>

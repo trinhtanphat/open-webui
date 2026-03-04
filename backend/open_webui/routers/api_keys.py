@@ -765,7 +765,20 @@ async def get_admin_topups(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
-    return Billing.get_topup_requests(status=status, db=db)
+    rows = Billing.get_topup_requests(status=status, db=db)
+    # Enrich with user names
+    user_ids = list({r.user_id for r in rows})
+    user_map: dict[str, str] = {}
+    for uid in user_ids:
+        u = Users.get_user_by_id(uid)
+        if u:
+            user_map[uid] = u.name or u.email or uid[:8]
+    result = []
+    for r in rows:
+        d = r.model_dump()
+        d["user_name"] = user_map.get(r.user_id, r.user_id[:8])
+        result.append(d)
+    return result
 
 
 @router.post("/admin/topups/{request_id}/approve")
@@ -940,7 +953,20 @@ async def reject_topup_request(
 
 @router.get("/admin/invoices")
 async def get_admin_invoices(user=Depends(get_admin_user), db: Session = Depends(get_session)):
-    return Billing.get_invoices(db=db)
+    rows = Billing.get_invoices(db=db)
+    # Enrich with user names
+    user_ids = list({r.user_id for r in rows})
+    user_map: dict[str, str] = {}
+    for uid in user_ids:
+        u = Users.get_user_by_id(uid)
+        if u:
+            user_map[uid] = u.name or u.email or uid[:8]
+    result = []
+    for r in rows:
+        d = r.model_dump()
+        d["user_name"] = user_map.get(r.user_id, r.user_id[:8])
+        result.append(d)
+    return result
 
 
 @router.get("/admin/invoices/{invoice_id}")
@@ -970,7 +996,20 @@ async def get_admin_audit_logs(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
-    return Billing.get_audit_logs(limit=limit, db=db)
+    rows = Billing.get_audit_logs(limit=limit, db=db)
+    # Enrich with actor names
+    actor_ids = list({r.actor_id for r in rows})
+    user_map: dict[str, str] = {}
+    for uid in actor_ids:
+        u = Users.get_user_by_id(uid)
+        if u:
+            user_map[uid] = u.name or u.email or uid[:8]
+    result = []
+    for r in rows:
+        d = r.model_dump()
+        d["actor_name"] = user_map.get(r.actor_id, r.actor_id[:8])
+        result.append(d)
+    return result
 
 
 # ---------------------------------------------------------------------------
