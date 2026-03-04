@@ -94,10 +94,12 @@ class TopupRejectForm(BaseModel):
 
 class BillingSettingsResponse(BaseModel):
     auto_approve_topups: bool
+    default_currency: str
 
 
 class BillingSettingsUpdateForm(BaseModel):
     auto_approve_topups: bool
+    default_currency: Optional[str] = None
 
 
 class BillingSummaryResponse(BaseModel):
@@ -561,14 +563,16 @@ async def get_admin_payment_accounts(user=Depends(get_admin_user), db: Session =
 @router.get("/settings", response_model=BillingSettingsResponse)
 async def get_billing_settings(user=Depends(get_verified_user), request: Request = None):
     return BillingSettingsResponse(
-        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
+        default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
     )
 
 
 @router.get("/admin/settings", response_model=BillingSettingsResponse)
 async def get_admin_billing_settings(user=Depends(get_admin_user), request: Request = None):
     return BillingSettingsResponse(
-        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
+        default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
     )
 
 
@@ -579,8 +583,11 @@ async def update_admin_billing_settings(
     request: Request = None,
 ):
     request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS = bool(form_data.auto_approve_topups)
+    if form_data.default_currency is not None:
+        request.app.state.config.BILLING_DEFAULT_CURRENCY = form_data.default_currency
     return BillingSettingsResponse(
-        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
+        default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
     )
 
 

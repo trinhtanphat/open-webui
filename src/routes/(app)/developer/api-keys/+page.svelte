@@ -5,6 +5,7 @@
 
 	import { copyToClipboard } from '$lib/utils';
 	import BarChart from '$lib/components/billing/BarChart.svelte';
+	import PaymentProviderIcon from '$lib/components/billing/PaymentProviderIcon.svelte';
 	import {
 		getApiKeyPlans,
 		getBillingSettings,
@@ -63,13 +64,18 @@
 	let selectedPaymentAccountId = '';
 	let topupAmount = 10;
 	let topupCurrency = 'USD';
+
+	// Will be set from billing settings once loaded
+	$: if (billingSettings.default_currency && topupCurrency === 'USD') {
+		topupCurrency = billingSettings.default_currency;
+	}
 	let topupTxRef = '';
 	let topupNote = '';
 	let selectedPaymentAccount: PaymentAccount | null = null;
 
 	let myUsageDaily: UsageDailySummary[] = [];
 	let myUsageByModel: UsageByModelSummary[] = [];
-	let billingSettings: BillingSettings = { auto_approve_topups: true };
+	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'USD' };
 	let activating = false;
 	let selectedActivationPlan = 'starter';
 
@@ -100,7 +106,7 @@
 		myUsageDaily = await getMyUsageDaily(localStorage.token, usageDays).catch(() => []);
 		myUsageByModel = await getMyUsageByModel(localStorage.token, usageDays).catch(() => []);
 		billingSettings = await getBillingSettings(localStorage.token).catch(() => ({
-			auto_approve_topups: true
+			auto_approve_topups: true, default_currency: 'USD'
 		}));
 
 		if (!selectedPaymentAccountId && paymentAccounts.length > 0) {
@@ -346,8 +352,19 @@
 
 			<div class="flex gap-2">
 				<div class="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 font-mono text-xs">
-					<span class="truncate select-all">{apiKey.key}</span>
+					<span class="truncate select-all">{showFullKey ? apiKey.key : apiKey.key_masked}</span>
 				</div>
+				<button
+					class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+					title={showFullKey ? $i18n.t('Hide') : $i18n.t('Show')}
+					on:click={() => (showFullKey = !showFullKey)}
+				>
+					{#if showFullKey}
+						<EyeSlash className="size-4" />
+					{:else}
+						<Eye className="size-4" />
+					{/if}
+				</button>
 				<button
 					class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 					title={$i18n.t('Copy')}
@@ -372,7 +389,11 @@
 				</button>
 			</div>
 
-			<p class="text-xs text-gray-400">{$i18n.t('Masked')}: {apiKey.key_masked}</p>
+			<div class="flex items-center gap-2 text-xs text-gray-400">
+				<span>{$i18n.t('Created')}: {apiKey.created_at ? new Date(apiKey.created_at * 1000).toLocaleDateString() : '-'}</span>
+				<span>·</span>
+				<span>{$i18n.t('Masked')}: {apiKey.key_masked}</span>
+			</div>
 		</div>
 
 		<!-- Stats Cards -->
@@ -412,6 +433,37 @@
 				</div>
 				<div class="text-xs text-gray-500">{$i18n.t('Total Requests')}</div>
 				<div class="text-lg font-bold mt-0.5">{apiKey.total_requests.toLocaleString()}</div>
+			</div>
+		</div>
+
+		<!-- Low Credit Warning -->
+		{#if apiKey.credits_remaining < 100}
+			<div class="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 flex items-center gap-2.5">
+				<svg class="size-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+				<div class="text-xs text-red-800 dark:text-red-200 flex-1">
+					<strong>{$i18n.t('Low Balance')}:</strong> {$i18n.t('You have {{count}} credits remaining. Top up to avoid service interruption.', { count: apiKey.credits_remaining })}
+				</div>
+				<button class="px-3 py-1 rounded-lg bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 text-xs font-medium hover:bg-red-200 dark:hover:bg-red-700/50 transition-colors" on:click={() => (activeTab = 'topup')}>
+					{$i18n.t('Top Up Now')}
+				</button>
+			</div>
+		{/if}
+
+		<!-- API Endpoint Quick-start -->
+		<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-3">
+			<h3 class="font-semibold text-sm flex items-center gap-2">
+				<svg class="size-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
+				{$i18n.t('Quick Start')}
+			</h3>
+			<div class="rounded-xl bg-gray-900 dark:bg-black p-4 text-xs text-gray-100 font-mono overflow-x-auto">
+				<div class="text-gray-500"># {$i18n.t('OpenAI-compatible endpoint')}</div>
+				<div class="mt-1">curl {window.location.origin}/api/v1/chat/completions \</div>
+				<div class="pl-4">-H "Authorization: Bearer YOUR_API_KEY" \</div>
+				<div class="pl-4">-H "Content-Type: application/json" \</div>
+				<div class="pl-4">-d '{"{"}\"model\": \"gpt-4\", \"messages\": [{"{"}\"role\": \"user\", \"content\": \"Hello!\"{"}"}]{"}"}'</div>
+			</div>
+			<div class="flex items-center gap-3 text-xs text-gray-500">
+				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> {$i18n.t('Base URL')}: <code class="text-gray-700 dark:text-gray-300">{window.location.origin}/api/v1</code></span>
 			</div>
 		</div>
 
@@ -650,7 +702,10 @@
 						</div>
 						{#if selectedPaymentAccount}
 							<div class="mt-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/30 p-3 text-xs space-y-1">
-								<div class="font-medium text-gray-700 dark:text-gray-200">{selectedPaymentAccount.provider.toUpperCase()} · {selectedPaymentAccount.account_name}</div>
+								<div class="font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2">
+									<PaymentProviderIcon provider={selectedPaymentAccount.provider} size="size-5" />
+									{selectedPaymentAccount.provider.toUpperCase()} · {selectedPaymentAccount.account_name}
+								</div>
 								<div class="text-gray-500 font-mono">{selectedPaymentAccount.account_number}</div>
 								{#if selectedPaymentAccount.instructions}
 									<div class="text-gray-500">{selectedPaymentAccount.instructions}</div>
@@ -666,7 +721,17 @@
 							</div>
 							<div>
 								<label for="topup-currency" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
-								<input id="topup-currency" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency} />
+								<select id="topup-currency" class="w-full appearance-none px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency}>
+									<option value="USD">USD ($)</option>
+									<option value="VND">VND (₫)</option>
+									<option value="EUR">EUR (€)</option>
+									<option value="GBP">GBP (£)</option>
+									<option value="JPY">JPY (¥)</option>
+									<option value="CNY">CNY (¥)</option>
+									<option value="KRW">KRW (₩)</option>
+									<option value="SGD">SGD (S$)</option>
+									<option value="THB">THB (฿)</option>
+								</select>
 							</div>
 						</div>
 

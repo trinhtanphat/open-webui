@@ -15,7 +15,8 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
 
 1. Từ màn hình chat, mở menu người dùng (avatar góc trên phải / dưới sidebar).
 2. Chọn **API Platform**.
-3. Hệ thống mở trang: `/developer/api-keys`
+3. Hoặc bấm nút **Developer Console** trên sidebar (icon `</>`, xuất hiện khi user có quyền API keys).
+4. Hệ thống mở trang: `/developer/api-keys`
 
 **Link trực tiếp:**
 - https://ai.vnso.vn/developer/api-keys
@@ -23,16 +24,20 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
 ### 2.2 Các tab/chức năng trong Developer Console (`/developer/api-keys`)
 
 - **Overview**
-  - Xem API key, copy/regenerate key
+  - Xem API key (mặc định ẩn `sk-***`, bấm 👁 để hiện/ẩn, bấm copy/regenerate)
   - Xem credits, monthly requests, total requests
+  - **Low Balance Warning**: tự động hiện cảnh báo khi credits < 100, có nút Top Up Now
+  - **Quick Start**: hiển thị curl endpoint mẫu, Base URL
   - Xem usage summary và chart
   - Chọn cửa sổ dữ liệu chart: **7d / 30d / 90d**
   - Xem workflow pipeline (Choose plan → Add credits → Processing → Track)
 
 - **Top Up**
-  - Chọn payment account
+  - Chọn payment account (có **icon/logo** cho từng provider: Stripe, VNPay, MoMo, PayPal, Bank Transfer, Generic)
   - Có preset số tiền nhanh: **$10 / $25 / $50 / $100 / $250**
-  - Nhập số tiền, currency, transaction ref, note
+  - Nhập số tiền, **currency select dropdown** (USD/VND/EUR/GBP/JPY/CNY/KRW/SGD/THB)
+  - Currency tự động lấy default từ admin settings
+  - Nhập transaction ref, note
   - Lọc lịch sử top-up theo trạng thái: **All / Pending / Approved / Rejected**
   - Gửi yêu cầu nạp tiền
   - Hiển thị trạng thái xử lý:
@@ -85,11 +90,15 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
   - Quản lý model pricing theo token/request
 
 - **Payments**
-  - Tạo payment account (Generic/Stripe/VNPay/MoMo)
+  - Tạo payment account (Generic/Bank Transfer/Stripe/VNPay/MoMo/PayPal)
+  - **Icon preview** cho từng provider khi chọn
   - Cấu hình webhook secret
-  - Xem danh sách payment accounts
+  - Xem danh sách payment accounts (có **icon/logo** provider)
   - **Billing Workflow Automation**
     - Toggle `Auto-Approve Topups` ON/OFF
+  - **Default Currency Setting**
+    - Chọn currency mặc định cho hệ thống (USD/VND/EUR/GBP/JPY/CNY/KRW/SGD/THB)
+    - User sẽ tự động thấy currency này trong form top-up
 
 - **Topups**
   - Duyệt/từ chối top-up pending
@@ -127,6 +136,33 @@ Các mode:
 - Dark
 - System
 
-## 7) i18n
+## 7) Sidebar enhancements
+
+### 7.1 User Role Badge
+- Sidebar hiển thị **role badge** bên cạnh tên user (Admin/User/Pending).
+- Admin: badge tím, User: badge xám, Pending: badge cam.
+
+### 7.2 Developer Console Button
+- Sidebar có nút **Developer Console** (icon `</>`) dẫn thẳng tới `/developer/api-keys`.
+- Chỉ hiện khi user có quyền API keys hoặc là admin.
+
+### 7.3 Upgrade Plan Button
+- Sidebar có nút **Upgrade plan** (gradient tím) dẫn tới `/developer/api-keys/pricing`.
+
+## 8) Payment Provider Icons (Logo)
+
+Các provider đã có icon/logo riêng:
+- **Stripe** — logo tím với chữ S
+- **VNPay** — logo xanh dương
+- **MoMo** — logo hồng (circle)
+- **PayPal** — logo xanh đậm  
+- **Bank Transfer** — icon ngân hàng cổ điển
+- **Generic** — icon thẻ tín dụng
+
+Hiển thị tại:
+- User: dropdown chọn payment account, card thông tin chi tiết
+- Admin: dropdown tạo account (có preview), danh sách accounts
+
+## 9) i18n
 
 OpenWebUI đã có i18n sẵn (Svelte `getContext('i18n')` + `$i18n.t(...)`), các màn hình billing/developer/admin đang dùng cùng cơ chế này.

@@ -1430,6 +1430,22 @@
 					class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
 				></div>
 				<div class="flex flex-col font-primary">
+					<!-- Developer Console Button -->
+					{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
+						<a
+							href="/developer/api-keys"
+							draggable="false"
+							class="flex items-center gap-2.5 rounded-2xl py-2 px-3 mb-1 w-full hover:bg-gray-100/50 dark:hover:bg-gray-900/50 transition-all duration-200 group"
+						>
+							<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 flex-shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+								<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
+							</div>
+							<div class="flex flex-col flex-1 min-w-0">
+								<span class="text-sm font-medium truncate">{$i18n.t('Developer Console')}</span>
+							</div>
+						</a>
+					{/if}
+
 					<!-- Upgrade Plan Button (full sidebar) -->
 					<a
 						href="/developer/api-keys/pricing"
@@ -1481,6 +1497,15 @@
 									{/if}
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>
+								<div class="ml-auto self-center">
+									<span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide
+										{$user?.role === 'admin'
+											? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300'
+											: $user?.role === 'pending'
+												? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+												: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}"
+									>{$user?.role}</span>
+								</div>
 							</div>
 						</UserMenu>
 					{/if}

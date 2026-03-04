@@ -5,6 +5,7 @@
 
 	import { user } from '$lib/stores';
 	import BarChart from '$lib/components/billing/BarChart.svelte';
+	import PaymentProviderIcon from '$lib/components/billing/PaymentProviderIcon.svelte';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import Star from '$lib/components/icons/Star.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
@@ -66,7 +67,7 @@
 	let usageLogs: UsageLogEntry[] = [];
 	let usageDaily: UsageDailySummary[] = [];
 	let usageByModel: UsageByModelSummary[] = [];
-	let billingSettings: BillingSettings = { auto_approve_topups: true };
+	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'USD' };
 	let savingBillingSettings = false;
 
 	let creditDelta = 100;
@@ -113,15 +114,16 @@
 		modelPricings = await getAdminModelPricings(localStorage.token, true).catch(() => []);
 		usageDaily = await getAdminUsageDaily(localStorage.token, { days: 30 }).catch(() => []);
 		usageByModel = await getAdminUsageByModel(localStorage.token, { days: 30 }).catch(() => []);
-		billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
-			auto_approve_topups: true
+		let billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
+			auto_approve_topups: true, default_currency: 'USD'
 		}));
 	};
 
 	const toggleAutoApproveTopups = async () => {
 		savingBillingSettings = true;
 		await updateAdminBillingSettings(localStorage.token, {
-			auto_approve_topups: !billingSettings.auto_approve_topups
+			auto_approve_topups: !billingSettings.auto_approve_topups,
+			default_currency: billingSettings.default_currency
 		})
 			.then((settings) => {
 				billingSettings = settings;
@@ -524,6 +526,45 @@
 				</div>
 			</div>
 
+			<!-- Default Currency Setting -->
+			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-4">
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<h3 class="font-semibold text-sm flex items-center gap-2">
+							<svg class="size-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+							{$i18n.t('Default Currency')}
+						</h3>
+						<p class="text-xs text-gray-500 mt-1">{$i18n.t('Used as the default currency for user top-up forms and model pricing.')}</p>
+					</div>
+					<div class="flex items-center gap-2">
+						<select
+							class="px-3 py-1.5 rounded-xl text-xs font-medium border border-gray-200 dark:border-gray-700 bg-transparent"
+							bind:value={billingSettings.default_currency}
+							on:change={async () => {
+								savingBillingSettings = true;
+								await updateAdminBillingSettings(localStorage.token, billingSettings)
+									.then((settings) => {
+										billingSettings = settings;
+										toast.success($i18n.t('Default currency updated'));
+									})
+									.catch((error) => toast.error(`${error}`));
+								savingBillingSettings = false;
+							}}
+						>
+							<option value="USD">USD ($)</option>
+							<option value="VND">VND (₫)</option>
+							<option value="EUR">EUR (€)</option>
+							<option value="GBP">GBP (£)</option>
+							<option value="JPY">JPY (¥)</option>
+							<option value="CNY">CNY (¥)</option>
+							<option value="KRW">KRW (₩)</option>
+							<option value="SGD">SGD (S$)</option>
+							<option value="THB">THB (฿)</option>
+						</select>
+					</div>
+				</div>
+			</div>
+
 			<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 				<!-- Add Payment Account -->
 				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-3">
@@ -535,12 +576,17 @@
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 						<div>
 							<label for="billing-provider" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Provider')}</label>
-							<select id="billing-provider" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={provider}>
+							<div class="flex items-center gap-2">
+								<PaymentProviderIcon provider={provider} size="size-8" />
+								<select id="billing-provider" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={provider}>
 								<option value="generic">Generic</option>
+								<option value="bank_transfer">Bank Transfer</option>
 								<option value="stripe">Stripe</option>
 								<option value="vnpay">VNPay</option>
 								<option value="momo">MoMo</option>
+								<option value="paypal">PayPal</option>
 							</select>
+							</div>
 						</div>
 						<div>
 							<label for="billing-account-name" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Account Name')}</label>
@@ -561,7 +607,7 @@
 						</div>
 					</div>
 
-					{#if provider !== 'generic'}
+					{#if provider !== 'generic' && provider !== 'bank_transfer'}
 						<div class="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 text-xs text-blue-800 dark:text-blue-200 space-y-1">
 							<div class="font-medium flex items-center gap-1">
 								<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
@@ -574,6 +620,8 @@
 								<p>Set as VNPay IPN URL. Hash secret = <code>vnp_HashSecret</code>. Pass topup ID as <code>vnp_OrderInfo</code>.</p>
 							{:else if provider === 'momo'}
 								<p>Set as MoMo IPN/notify URL. Pass topup ID as <code>orderId</code>.</p>
+							{:else if provider === 'paypal'}
+								<p>Configure in PayPal Developer Dashboard → Webhooks. Event: <code>PAYMENT.CAPTURE.COMPLETED</code>.</p>
 							{/if}
 						</div>
 					{/if}
@@ -598,17 +646,7 @@
 						<div class="space-y-2">
 							{#each paymentAccounts as account}
 								<div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900/40">
-									<div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
-										{account.provider === 'stripe' ? 'bg-purple-100 dark:bg-purple-900/30' :
-										 account.provider === 'vnpay' ? 'bg-blue-100 dark:bg-blue-900/30' :
-										 account.provider === 'momo' ? 'bg-pink-100 dark:bg-pink-900/30' :
-										 'bg-gray-100 dark:bg-gray-800'}">
-										<span class="text-xs font-bold
-											{account.provider === 'stripe' ? 'text-purple-600' :
-											 account.provider === 'vnpay' ? 'text-blue-600' :
-											 account.provider === 'momo' ? 'text-pink-600' :
-											 'text-gray-600'}">{account.provider.slice(0, 2).toUpperCase()}</span>
-									</div>
+									<PaymentProviderIcon provider={account.provider} size="size-9" />
 									<div class="min-w-0">
 										<div class="font-medium text-sm flex items-center gap-1.5">
 											<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase

@@ -303,6 +303,12 @@ BILLING_AUTO_APPROVE_TOPUPS = PersistentConfig(
     os.environ.get("BILLING_AUTO_APPROVE_TOPUPS", "True").lower() == "true",
 )
 
+BILLING_DEFAULT_CURRENCY = PersistentConfig(
+    "BILLING_DEFAULT_CURRENCY",
+    "billing.default_currency",
+    os.environ.get("BILLING_DEFAULT_CURRENCY", "USD"),
+)
+
 ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = PersistentConfig(
     "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS",
     "auth.api_key.endpoint_restrictions",

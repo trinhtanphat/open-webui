@@ -80,6 +80,7 @@ export type RevenueDailyEntry = {
 
 export type BillingSettings = {
 	auto_approve_topups: boolean;
+	default_currency: string;
 };
 
 export type ApiKeyPlan = {
