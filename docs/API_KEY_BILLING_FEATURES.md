@@ -26,11 +26,14 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
   - Xem API key, copy/regenerate key
   - Xem credits, monthly requests, total requests
   - Xem usage summary và chart
+  - Chọn cửa sổ dữ liệu chart: **7d / 30d / 90d**
   - Xem workflow pipeline (Choose plan → Add credits → Processing → Track)
 
 - **Top Up**
   - Chọn payment account
+  - Có preset số tiền nhanh: **$10 / $25 / $50 / $100 / $250**
   - Nhập số tiền, currency, transaction ref, note
+  - Lọc lịch sử top-up theo trạng thái: **All / Pending / Approved / Rejected**
   - Gửi yêu cầu nạp tiền
   - Hiển thị trạng thái xử lý:
     - Auto-approve (duyệt tự động)
@@ -38,6 +41,7 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
 
 - **Invoices**
   - Xem lịch sử invoice
+  - Lọc invoice theo trạng thái: **All / Paid / Pending / Rejected**
   - Export invoice PDF
 
 ### 2.3 Trang Pricing
