@@ -376,6 +376,7 @@ from open_webui.config import (
     ENABLE_SIGNUP,
     ENABLE_LOGIN_FORM,
     ENABLE_API_KEYS,
+    BILLING_AUTO_APPROVE_TOPUPS,
     ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
     API_KEYS_ALLOWED_ENDPOINTS,
     ENABLE_FOLDERS,
@@ -830,6 +831,7 @@ app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 app.state.config.ENABLE_LOGIN_FORM = ENABLE_LOGIN_FORM
 
 app.state.config.ENABLE_API_KEYS = ENABLE_API_KEYS
+app.state.config.BILLING_AUTO_APPROVE_TOPUPS = BILLING_AUTO_APPROVE_TOPUPS
 app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
     ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS
 )
@@ -2140,6 +2142,7 @@ async def get_app_config(request: Request):
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_ldap": app.state.config.ENABLE_LDAP,
             "enable_api_keys": app.state.config.ENABLE_API_KEYS,
+            "enable_billing_auto_approve_topups": app.state.config.BILLING_AUTO_APPROVE_TOPUPS,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_login_form": app.state.config.ENABLE_LOGIN_FORM,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,

@@ -78,6 +78,10 @@ export type RevenueDailyEntry = {
 	invoices: number;
 };
 
+export type BillingSettings = {
+	auto_approve_topups: boolean;
+};
+
 export type ApiKeyPlan = {
 	id: string;
 	name: string;
@@ -384,6 +388,73 @@ export const getAdminPaymentAccounts = async (token: string): Promise<PaymentAcc
 
 	if (error) throw error;
 	return res ?? [];
+};
+
+export const getBillingSettings = async (token: string): Promise<BillingSettings> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/settings`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch billing settings';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const getAdminBillingSettings = async (token: string): Promise<BillingSettings> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/settings`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch admin billing settings';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const updateAdminBillingSettings = async (
+	token: string,
+	formData: BillingSettings
+): Promise<BillingSettings> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/settings`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify(formData)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to update admin billing settings';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
 };
 
 export const createAdminPaymentAccount = async (

@@ -92,6 +92,14 @@ class TopupRejectForm(BaseModel):
     note: Optional[str] = None
 
 
+class BillingSettingsResponse(BaseModel):
+    auto_approve_topups: bool
+
+
+class BillingSettingsUpdateForm(BaseModel):
+    auto_approve_topups: bool
+
+
 class BillingSummaryResponse(BaseModel):
     total_keys: int
     active_keys: int
@@ -550,6 +558,32 @@ async def get_admin_payment_accounts(user=Depends(get_admin_user), db: Session =
     return Billing.get_payment_accounts(include_inactive=True, db=db)
 
 
+@router.get("/settings", response_model=BillingSettingsResponse)
+async def get_billing_settings(user=Depends(get_verified_user), request: Request = None):
+    return BillingSettingsResponse(
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+    )
+
+
+@router.get("/admin/settings", response_model=BillingSettingsResponse)
+async def get_admin_billing_settings(user=Depends(get_admin_user), request: Request = None):
+    return BillingSettingsResponse(
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+    )
+
+
+@router.post("/admin/settings", response_model=BillingSettingsResponse)
+async def update_admin_billing_settings(
+    form_data: BillingSettingsUpdateForm,
+    user=Depends(get_admin_user),
+    request: Request = None,
+):
+    request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS = bool(form_data.auto_approve_topups)
+    return BillingSettingsResponse(
+        auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS)
+    )
+
+
 @router.post("/admin/payment-accounts")
 async def create_admin_payment_account(
     form_data: PaymentAccountForm,
@@ -624,6 +658,28 @@ async def approve_topup_request(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
+    return _finalize_topup_approval(
+        request_id=request_id,
+        credits=max(0, int(form_data.credits)),
+        reviewed_by=user.id,
+        reviewed_note=form_data.note,
+        actor_id=user.id,
+        actor_action="topup.approve",
+        actor_details={"credits": form_data.credits},
+        db=db,
+    )
+
+
+def _finalize_topup_approval(
+    request_id: str,
+    credits: int,
+    reviewed_by: str,
+    reviewed_note: Optional[str],
+    actor_id: str,
+    actor_action: str,
+    actor_details: Optional[dict],
+    db: Session,
+):
     request_row = Billing.get_topup_request_by_id(request_id, db=db)
     if not request_row:
         raise HTTPException(status_code=404, detail="Top-up request not found")
@@ -636,8 +692,8 @@ async def approve_topup_request(
         raise HTTPException(status_code=404, detail="API key not found")
 
     metadata = key_row.data if isinstance(key_row.data, dict) else {}
-    metadata["credits_remaining"] = int(metadata.get("credits_remaining", 0)) + max(0, int(form_data.credits))
-    metadata["updated_by_admin"] = user.id
+    metadata["credits_remaining"] = int(metadata.get("credits_remaining", 0)) + max(0, int(credits))
+    metadata["updated_by_admin"] = reviewed_by
 
     updated_key = Users.update_api_key_by_id(key_row.id, {"data": metadata}, db=db)
     if not updated_key:
@@ -646,8 +702,8 @@ async def approve_topup_request(
     reviewed = Billing.update_topup_request_status(
         request_id,
         status="approved",
-        reviewed_by=user.id,
-        reviewed_note=form_data.note,
+        reviewed_by=reviewed_by,
+        reviewed_note=reviewed_note,
         db=db,
     )
 
@@ -657,17 +713,21 @@ async def approve_topup_request(
         topup_request_id=request_row.id,
         amount=request_row.amount,
         currency=request_row.currency,
-        credits=max(0, int(form_data.credits)),
-        data={"approved_by": user.id, "note": form_data.note},
+        credits=max(0, int(credits)),
+        data={"approved_by": reviewed_by, "note": reviewed_note},
         db=db,
     )
 
     Billing.log_audit(
-        actor_id=user.id,
-        action="topup.approve",
+        actor_id=actor_id,
+        action=actor_action,
         target_type="topup_request",
         target_id=request_id,
-        details={"credits": form_data.credits, "invoice_id": invoice.id if invoice else None},
+        details={
+            **(actor_details or {}),
+            "credits": credits,
+            "invoice_id": invoice.id if invoice else None,
+        },
         db=db,
     )
 
@@ -925,6 +985,7 @@ async def get_public_payment_accounts(user=Depends(get_verified_user), db: Sessi
 
 @router.post("/me/topups")
 async def create_my_topup_request(
+    request: Request,
     form_data: TopupRequestForm,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
@@ -963,6 +1024,20 @@ async def create_my_topup_request(
         details={"amount": row.amount, "currency": row.currency},
         db=db,
     )
+
+    if bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS):
+        credits = max(1, int(float(form_data.amount) * 100))
+        _finalize_topup_approval(
+            request_id=row.id,
+            credits=credits,
+            reviewed_by="system:auto",
+            reviewed_note="Auto-approved by billing setting",
+            actor_id="system:auto",
+            actor_action="topup.auto_approve",
+            actor_details={"reason": "billing.auto_approve_topups"},
+            db=db,
+        )
+        row = Billing.get_topup_request_by_id(row.id, db=db)
 
     return row
 

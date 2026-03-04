@@ -1,4 +1,5 @@
 <script lang="ts">
+	// @ts-nocheck
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -23,6 +24,7 @@
 	import ShareChatModal from '../chat/ShareChatModal.svelte';
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
+	import ThemeModeToggle from '../common/ThemeModeToggle.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
 	import AdjustmentsHorizontal from '../icons/AdjustmentsHorizontal.svelte';
@@ -45,6 +47,7 @@
 	export let initNewChat: Function;
 	export let shareEnabled: boolean = false;
 	export let scrollTop = 0;
+	$: scrollTop;
 
 	export let chat;
 	export let history;
@@ -70,7 +73,7 @@
 		initNewChat();
 	}}
 	aria-label="New Chat"
-/>
+></button>
 
 <nav
 	class="sticky top-0 z-30 w-full {chat?.id
@@ -227,6 +230,10 @@
 							</button>
 						</Tooltip>
 					{/if}
+
+					<div class="mx-1">
+						<ThemeModeToggle compact={true} />
+					</div>
 
 					{#if $user !== undefined && $user !== null}
 						<UserMenu

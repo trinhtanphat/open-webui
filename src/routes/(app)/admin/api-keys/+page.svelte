@@ -16,6 +16,7 @@
 	import {
 		approveAdminTopup,
 		createAdminPaymentAccount,
+		getAdminBillingSettings,
 		getAdminAuditLogs,
 		getApiKeyPlans,
 		getAdminRevenueDaily,
@@ -27,6 +28,7 @@
 		getAdminApiKeys,
 		updateAdminApiKeyCredits,
 		updateAdminApiKeyStatus,
+		updateAdminBillingSettings,
 		getAdminModelPricings,
 		createAdminModelPricing,
 		updateAdminModelPricing,
@@ -36,6 +38,7 @@
 		getAdminUsageByModel,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
+		type BillingSettings,
 		type BillingInvoice,
 		type BillingSummary,
 		type PaymentAccount,
@@ -63,6 +66,8 @@
 	let usageLogs: UsageLogEntry[] = [];
 	let usageDaily: UsageDailySummary[] = [];
 	let usageByModel: UsageByModelSummary[] = [];
+	let billingSettings: BillingSettings = { auto_approve_topups: true };
+	let savingBillingSettings = false;
 
 	let creditDelta = 100;
 	let approveCredits = 100;
@@ -108,6 +113,22 @@
 		modelPricings = await getAdminModelPricings(localStorage.token, true).catch(() => []);
 		usageDaily = await getAdminUsageDaily(localStorage.token, { days: 30 }).catch(() => []);
 		usageByModel = await getAdminUsageByModel(localStorage.token, { days: 30 }).catch(() => []);
+		billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
+			auto_approve_topups: true
+		}));
+	};
+
+	const toggleAutoApproveTopups = async () => {
+		savingBillingSettings = true;
+		await updateAdminBillingSettings(localStorage.token, {
+			auto_approve_topups: !billingSettings.auto_approve_topups
+		})
+			.then((settings) => {
+				billingSettings = settings;
+				toast.success($i18n.t('Billing automation settings updated'));
+			})
+			.catch((error) => toast.error(`${error}`));
+		savingBillingSettings = false;
 	};
 
 	onMount(async () => {
@@ -482,6 +503,27 @@
 
 		<!-- Payments Tab -->
 		{:else if adminTab === 'payments'}
+			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-4">
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<h3 class="font-semibold text-sm flex items-center gap-2">
+							<Sparkles className="size-4 text-violet-500" />
+							{$i18n.t('Billing Workflow Automation')}
+						</h3>
+						<p class="text-xs text-gray-500 mt-1">{$i18n.t('When enabled, top-up requests are approved instantly and invoices are issued automatically.')}</p>
+					</div>
+					<button
+						class="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors {billingSettings.auto_approve_topups
+							? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+							: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}"
+						on:click={toggleAutoApproveTopups}
+						disabled={savingBillingSettings}
+					>
+						{billingSettings.auto_approve_topups ? $i18n.t('Auto-Approve: ON') : $i18n.t('Auto-Approve: OFF')}
+					</button>
+				</div>
+			</div>
+
 			<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 				<!-- Add Payment Account -->
 				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-3">

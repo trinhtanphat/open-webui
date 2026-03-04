@@ -297,6 +297,12 @@ ENABLE_API_KEYS = PersistentConfig(
     os.environ.get("ENABLE_API_KEYS", "False").lower() == "true",
 )
 
+BILLING_AUTO_APPROVE_TOPUPS = PersistentConfig(
+    "BILLING_AUTO_APPROVE_TOPUPS",
+    "billing.auto_approve_topups",
+    os.environ.get("BILLING_AUTO_APPROVE_TOPUPS", "True").lower() == "true",
+)
+
 ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = PersistentConfig(
     "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS",
     "auth.api_key.endpoint_restrictions",

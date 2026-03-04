@@ -7,6 +7,7 @@
 	import BarChart from '$lib/components/billing/BarChart.svelte';
 	import {
 		getApiKeyPlans,
+		getBillingSettings,
 		createMyTopupRequest,
 		getMyApiKeyConsole,
 		getMyInvoiceById,
@@ -20,6 +21,7 @@
 		activateMyApiKey,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
+		type BillingSettings,
 		type BillingInvoice,
 		type PaymentAccount,
 		type TopupRequest,
@@ -59,11 +61,15 @@
 	let topupCurrency = 'USD';
 	let topupTxRef = '';
 	let topupNote = '';
+	let selectedPaymentAccount: PaymentAccount | null = null;
 
 	let myUsageDaily: UsageDailySummary[] = [];
 	let myUsageByModel: UsageByModelSummary[] = [];
+	let billingSettings: BillingSettings = { auto_approve_topups: true };
 	let activating = false;
 	let selectedActivationPlan = 'starter';
+
+	$: selectedPaymentAccount = paymentAccounts.find((item) => item.id === selectedPaymentAccountId) ?? null;
 
 	const planIcons = [Bolt, Sparkles, Star];
 	const planColors = [
@@ -84,6 +90,9 @@
 		usage = await getMyUsageSummary(localStorage.token).catch(() => null);
 		myUsageDaily = await getMyUsageDaily(localStorage.token).catch(() => []);
 		myUsageByModel = await getMyUsageByModel(localStorage.token).catch(() => []);
+		billingSettings = await getBillingSettings(localStorage.token).catch(() => ({
+			auto_approve_topups: true
+		}));
 
 		if (!selectedPaymentAccountId && paymentAccounts.length > 0) {
 			selectedPaymentAccountId = paymentAccounts[0].id;
@@ -424,6 +433,39 @@
 
 		<!-- Overview Tab -->
 		{#if activeTab === 'overview'}
+			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4">
+				<h3 class="font-semibold flex items-center gap-2">
+					<Sparkles className="size-4 text-violet-500" />
+					{$i18n.t('Workflow')}
+				</h3>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+					<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
+						<div class="text-[11px] text-gray-500">1. {$i18n.t('Choose Plan')}</div>
+						<div class="font-medium mt-1">{$i18n.t('Pricing & tiers')}</div>
+					</div>
+					<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
+						<div class="text-[11px] text-gray-500">2. {$i18n.t('Add Credits')}</div>
+						<div class="font-medium mt-1">{$i18n.t('Submit top-up')}</div>
+					</div>
+					<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
+						<div class="text-[11px] text-gray-500">3. {$i18n.t('Processing')}</div>
+						<div class="font-medium mt-1">
+							{billingSettings.auto_approve_topups ? $i18n.t('Auto-approved instantly') : $i18n.t('Pending admin review')}
+						</div>
+					</div>
+					<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
+						<div class="text-[11px] text-gray-500">4. {$i18n.t('Track')}</div>
+						<div class="font-medium mt-1">{$i18n.t('Usage + invoices')}</div>
+					</div>
+				</div>
+				<div class="flex flex-wrap gap-2 pt-1">
+					<button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs hover:bg-gray-50 dark:hover:bg-gray-800" on:click={() => goto('/developer/api-keys/pricing')}>{$i18n.t('Open Pricing')}</button>
+					<button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs hover:bg-gray-50 dark:hover:bg-gray-800" on:click={() => goto('/developer/api-keys/guide')}>{$i18n.t('Open Guide')}</button>
+					<button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs hover:bg-gray-50 dark:hover:bg-gray-800" on:click={() => (activeTab = 'topup')}>{$i18n.t('Go to Top Up')}</button>
+					<button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs hover:bg-gray-50 dark:hover:bg-gray-800" on:click={() => (activeTab = 'invoices')}>{$i18n.t('Go to Invoices')}</button>
+				</div>
+			</div>
+
 			<!-- Usage Summary -->
 			{#if usage}
 				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4">
@@ -535,19 +577,40 @@
 						<Plus className="size-4 text-emerald-500" />
 						{$i18n.t('Add Credits')}
 					</h3>
+					<div class="text-xs">
+						<span class="px-2 py-1 rounded-full font-medium {billingSettings.auto_approve_topups
+							? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+							: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}">
+							{billingSettings.auto_approve_topups ? $i18n.t('Instant auto-approval enabled') : $i18n.t('Manual admin approval enabled')}
+						</span>
+					</div>
 
 					<div class="space-y-3">
 						<div>
 						<label for="topup-payment-account" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Payment Account')}</label>
-						<select id="topup-payment-account" class="w-full px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={selectedPaymentAccountId}>
+						<div class="relative">
+							<select id="topup-payment-account" class="w-full appearance-none px-3 py-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 text-sm font-medium pr-10 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40" bind:value={selectedPaymentAccountId}>
 								{#if paymentAccounts.length === 0}
 									<option value="">{$i18n.t('No payment accounts available')}</option>
 								{:else}
 									{#each paymentAccounts as pa}
-										<option value={pa.id}>{pa.provider} · {pa.account_name} · {pa.account_number}</option>
+										<option value={pa.id}>{pa.provider.toUpperCase()} · {pa.account_name} · {pa.account_number}</option>
 									{/each}
 								{/if}
 							</select>
+							<div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+								<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+							</div>
+						</div>
+						{#if selectedPaymentAccount}
+							<div class="mt-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/30 p-3 text-xs space-y-1">
+								<div class="font-medium text-gray-700 dark:text-gray-200">{selectedPaymentAccount.provider.toUpperCase()} · {selectedPaymentAccount.account_name}</div>
+								<div class="text-gray-500 font-mono">{selectedPaymentAccount.account_number}</div>
+								{#if selectedPaymentAccount.instructions}
+									<div class="text-gray-500">{selectedPaymentAccount.instructions}</div>
+								{/if}
+							</div>
+						{/if}
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
