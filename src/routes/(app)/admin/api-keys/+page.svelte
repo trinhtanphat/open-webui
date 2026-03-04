@@ -96,6 +96,7 @@
 
 	let provider = 'bank_transfer';
 	let providerMenuOpen = false;
+	let providerMenuRef: HTMLDivElement;
 	let accountName = '';
 	let accountNumber = '';
 	let instructions = '';
@@ -184,14 +185,38 @@
 		savingBillingSettings = false;
 	};
 
-	onMount(async () => {
-		if ($user?.role !== 'admin') {
-			await goto('/');
-			return;
-		}
+	onMount(() => {
+		const handleDocumentClick = (event: MouseEvent) => {
+			if (!providerMenuOpen) return;
+			const target = event.target as Node;
+			if (providerMenuRef && !providerMenuRef.contains(target)) {
+				providerMenuOpen = false;
+			}
+		};
 
-		await loadData();
-		loading = false;
+		const handleEscape = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				providerMenuOpen = false;
+			}
+		};
+
+		document.addEventListener('click', handleDocumentClick);
+		document.addEventListener('keydown', handleEscape);
+
+		(async () => {
+			if ($user?.role !== 'admin') {
+				await goto('/');
+				return;
+			}
+
+			await loadData();
+			loading = false;
+		})();
+
+		return () => {
+			document.removeEventListener('click', handleDocumentClick);
+			document.removeEventListener('keydown', handleEscape);
+		};
 	});
 
 	const toggleStatus = async (key: ApiKeyConsole) => {
@@ -711,7 +736,7 @@
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 						<div>
 							<label for="billing-provider" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Provider')}</label>
-							<div class="relative">
+							<div class="relative" bind:this={providerMenuRef}>
 								<button
 									id="billing-provider"
 									type="button"

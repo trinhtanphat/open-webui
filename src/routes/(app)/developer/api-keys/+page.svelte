@@ -63,6 +63,7 @@
 
 	let selectedPaymentAccountId = '';
 	let paymentAccountMenuOpen = false;
+	let paymentAccountMenuRef: HTMLDivElement;
 	let topupAmount = 10;
 	let topupCurrency = 'USD';
 
@@ -163,9 +164,33 @@
 		activeTab = 'topup';
 	};
 
-	onMount(async () => {
-		await loadConsole();
-		loading = false;
+	onMount(() => {
+		const handleDocumentClick = (event: MouseEvent) => {
+			if (!paymentAccountMenuOpen) return;
+			const target = event.target as Node;
+			if (paymentAccountMenuRef && !paymentAccountMenuRef.contains(target)) {
+				paymentAccountMenuOpen = false;
+			}
+		};
+
+		const handleEscape = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				paymentAccountMenuOpen = false;
+			}
+		};
+
+		document.addEventListener('click', handleDocumentClick);
+		document.addEventListener('keydown', handleEscape);
+
+		(async () => {
+			await loadConsole();
+			loading = false;
+		})();
+
+		return () => {
+			document.removeEventListener('click', handleDocumentClick);
+			document.removeEventListener('keydown', handleEscape);
+		};
 	});
 
 	const regenerate = async () => {
@@ -706,7 +731,7 @@
 
 						<div>
 						<label for="topup-payment-account" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Payment Account')}</label>
-						<div class="relative">
+						<div class="relative" bind:this={paymentAccountMenuRef}>
 							<button
 								id="topup-payment-account"
 								type="button"
