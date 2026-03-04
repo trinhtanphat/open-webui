@@ -95,6 +95,7 @@
 	let mpCurrency = 'USD';
 
 	let provider = 'bank_transfer';
+	let providerMenuOpen = false;
 	let accountName = '';
 	let accountNumber = '';
 	let instructions = '';
@@ -129,6 +130,19 @@
 		if (!accountId) return 'generic';
 		const account = paymentAccounts.find((item) => item.id === accountId);
 		return account?.provider || 'generic';
+	};
+
+	const providerOptions = [
+		{ value: 'generic', label: 'Generic' },
+		{ value: 'bank_transfer', label: 'Bank Transfer' },
+		{ value: 'stripe', label: 'Stripe' },
+		{ value: 'vnpay', label: 'VNPay' },
+		{ value: 'momo', label: 'MoMo' },
+		{ value: 'paypal', label: 'PayPal' }
+	];
+
+	const getProviderLabel = (providerValue: string) => {
+		return providerOptions.find((item) => item.value === providerValue)?.label || providerValue;
 	};
 
 	const loadData = async () => {
@@ -697,16 +711,36 @@
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 						<div>
 							<label for="billing-provider" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Provider')}</label>
-							<div class="flex items-center gap-2">
-								<PaymentProviderIcon provider={provider} size="size-8" />
-								<select id="billing-provider" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={provider}>
-								<option value="generic">Generic</option>
-								<option value="bank_transfer">Bank Transfer</option>
-								<option value="stripe">Stripe</option>
-								<option value="vnpay">VNPay</option>
-								<option value="momo">MoMo</option>
-								<option value="paypal">PayPal</option>
-							</select>
+							<div class="relative">
+								<button
+									id="billing-provider"
+									type="button"
+									class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm flex items-center justify-between"
+									on:click={() => (providerMenuOpen = !providerMenuOpen)}
+								>
+									<span class="flex items-center gap-2 min-w-0">
+										<PaymentProviderIcon provider={provider} size="size-6" />
+										<span class="truncate">{getProviderLabel(provider)}</span>
+									</span>
+									<svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+								</button>
+								{#if providerMenuOpen}
+									<div class="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1">
+										{#each providerOptions as option}
+											<button
+												type="button"
+												class="w-full px-2.5 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors {provider === option.value ? 'bg-gray-100 dark:bg-gray-800' : ''}"
+												on:click={() => {
+													provider = option.value;
+													providerMenuOpen = false;
+												}}
+											>
+												<PaymentProviderIcon provider={option.value} size="size-5" />
+												<span>{option.label}</span>
+											</button>
+										{/each}
+									</div>
+								{/if}
 							</div>
 						</div>
 						<div>
