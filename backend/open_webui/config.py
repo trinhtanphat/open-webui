@@ -309,6 +309,52 @@ BILLING_DEFAULT_CURRENCY = PersistentConfig(
     os.environ.get("BILLING_DEFAULT_CURRENCY", "USD"),
 )
 
+# ---------------------------------------------------------------------------
+# SMTP / Email Notifications
+# ---------------------------------------------------------------------------
+
+SMTP_HOST = PersistentConfig(
+    "SMTP_HOST",
+    "smtp.host",
+    os.environ.get("SMTP_HOST", ""),
+)
+
+SMTP_PORT = PersistentConfig(
+    "SMTP_PORT",
+    "smtp.port",
+    int(os.environ.get("SMTP_PORT", "587")),
+)
+
+SMTP_USER = PersistentConfig(
+    "SMTP_USER",
+    "smtp.user",
+    os.environ.get("SMTP_USER", ""),
+)
+
+SMTP_PASSWORD = PersistentConfig(
+    "SMTP_PASSWORD",
+    "smtp.password",
+    os.environ.get("SMTP_PASSWORD", ""),
+)
+
+SMTP_FROM = PersistentConfig(
+    "SMTP_FROM",
+    "smtp.from",
+    os.environ.get("SMTP_FROM", ""),
+)
+
+SMTP_TLS = PersistentConfig(
+    "SMTP_TLS",
+    "smtp.tls",
+    os.environ.get("SMTP_TLS", "True").lower() == "true",
+)
+
+ENABLE_BILLING_EMAILS = PersistentConfig(
+    "ENABLE_BILLING_EMAILS",
+    "billing.enable_emails",
+    os.environ.get("ENABLE_BILLING_EMAILS", "True").lower() == "true",
+)
+
 ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = PersistentConfig(
     "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS",
     "auth.api_key.endpoint_restrictions",

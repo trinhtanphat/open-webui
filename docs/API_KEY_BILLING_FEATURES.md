@@ -166,3 +166,184 @@ Hiển thị tại:
 ## 9) i18n
 
 OpenWebUI đã có i18n sẵn (Svelte `getContext('i18n')` + `$i18n.t(...)`), các màn hình billing/developer/admin đang dùng cùng cơ chế này.
+
+## 10) Email Notifications (SMTP)
+
+### 10.1 Cấu hình SMTP
+
+**Cách đi từ trang chủ:**
+1. Admin Panel → Billing → tab **Email**
+2. Nhập SMTP Host, Port, Username, Password, From Address
+3. Bật/tắt TLS, Enable Billing Emails
+4. Bấm **Save SMTP Settings** → **Send Test Email** để kiểm tra
+
+**Environment Variables (alternative):**
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=noreply@yourcompany.com
+SMTP_TLS=True
+ENABLE_BILLING_EMAILS=True
+```
+
+### 10.2 Các loại email tự động
+
+| Sự kiện | Người nhận | Mô tả |
+|---------|-----------|-------|
+| Top-up Submitted | User + Admin | Xác nhận yêu cầu nạp tiền đã được gửi |
+| Top-up Approved | User | Thông báo đã duyệt + credits đã cộng |
+| Top-up Rejected | User | Thông báo từ chối + lý do |
+| Invoice Issued | User | Chi tiết hóa đơn sau khi thanh toán |
+| Low Credits | User | Cảnh báo credits sắp hết |
+| Admin Alert | Admin | Thông báo có yêu cầu nạp tiền mới cần duyệt |
+
+### 10.3 Gmail Quick Setup
+
+- SMTP Host: `smtp.gmail.com`
+- Port: `587`
+- TLS: ✓
+- Dùng **App Password** từ Google Account → Security → App passwords
+
+## 11) Currency với Country Flags 🏳️
+
+Tất cả dropdown chọn currency đều hiển thị cờ quốc gia:
+
+| Currency | Flag |
+|----------|------|
+| USD | 🇺🇸 |
+| VND | 🇻🇳 |
+| EUR | 🇪🇺 |
+| GBP | 🇬🇧 |
+| JPY | 🇯🇵 |
+| CNY | 🇨🇳 |
+| KRW | 🇰🇷 |
+| SGD | 🇸🇬 |
+| THB | 🇹🇭 |
+| AUD | 🇦🇺 |
+| CAD | 🇨🇦 |
+| INR | 🇮🇳 |
+| MYR | 🇲🇾 |
+| PHP | 🇵🇭 |
+| IDR | 🇮🇩 |
+| TWD | 🇹🇼 |
+| HKD | 🇭🇰 |
+| CHF | 🇨🇭 |
+| BRL | 🇧🇷 |
+
+Hiển thị tại:
+- User: Top-up form currency dropdown
+- Admin: Default currency dropdown
+- Admin: Model pricing currency dropdown (đã chuyển từ text input sang dropdown)
+
+## 12) Registration + Payment Workflow (Pipeline)
+
+### 12.1 Toàn bộ luồng từ đăng ký đến sử dụng API
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    REGISTRATION FLOW                            │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. User truy cập https://ai.vnso.vn/auth                       │
+│ 2. Chọn "Sign up" → nhập Name, Email, Password                 │
+│ 3. Tạo tài khoản thành công → đăng nhập tự động               │
+│ 4. User thấy giao diện chat                                    │
+└───────────────┬─────────────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  API KEY ACTIVATION                              │
+├─────────────────────────────────────────────────────────────────┤
+│ 5. Sidebar → "Developer Console" hoặc menu → "API Platform"    │
+│ 6. Bấm "Activate API Key" → chọn plan (Starter/Pro/Business)   │
+│ 7. Hệ thống tạo API key: sk-xxxx...xxxx (51 chars)             │
+│ 8. Key chỉ hiển thị ĐẦY ĐỦ 1 lần → copy & lưu                │
+│ 9. Sau đó chỉ thấy key masked: sk-abc1***...                   │
+└───────────────┬─────────────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    PAYMENT / TOP-UP                              │
+├─────────────────────────────────────────────────────────────────┤
+│ 10. Kéo xuống phần "Top Up Balance"                             │
+│ 11. Chọn Payment Account (Bank Transfer / MoMo / VNPay...)      │
+│ 12. Chọn preset ($10/$25/$50/$100/$250) hoặc nhập tùy ý        │
+│ 13. Chọn currency (🇻🇳 VND / 🇺🇸 USD / ...)                     │
+│ 14. Nhập Transaction Reference (mã giao dịch ngân hàng)        │
+│ 15. Bấm "Submit Top-up Request"                                │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────┐             │
+│ │ AUTO-APPROVE = ON?                              │             │
+│ │   ✓ → Tự động cộng credits + tạo invoice        │             │
+│ │   ✗ → Status = "pending" → chờ admin duyệt      │             │
+│ └─────────────────────────────────────────────────┘             │
+│                                                                 │
+│ 📧 Email notifications (nếu SMTP configured):                  │
+│   - User nhận email xác nhận đã gửi yêu cầu                   │
+│   - Admin nhận email có yêu cầu nạp tiền mới                   │
+│   - User nhận email khi được duyệt/từ chối                     │
+│   - User nhận invoice email                                     │
+└───────────────┬─────────────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    API USAGE                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ 16. User dùng API key gọi endpoint:                             │
+│     curl https://ai.vnso.vn/api/chat/completions \              │
+│       -H "Authorization: Bearer sk-xxxx..." \                   │
+│       -d '{"model":"gpt-4o","messages":[...]}'                  │
+│                                                                 │
+│ 17. Hệ thống trừ credits theo model pricing                    │
+│ 18. User theo dõi usage trong Developer Console:                │
+│     - Daily Usage chart (7d/14d/30d/90d)                        │
+│     - By Model chart                                            │
+│     - Usage summary (total requests, total spend)               │
+│                                                                 │
+│ ⚠️ Credits < 100 → Low Balance Warning hiện + email cảnh báo   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12.2 Admin Workflow (Duyệt thủ công)
+
+```
+Admin nhận 📧 email "New Top-up Request"
+    │
+    ▼
+Admin Panel → Billing → tab "Top-ups"
+    │
+    ├── Approve → nhập credits → cộng credits + tạo invoice
+    │                → User nhận 📧 "Top-up Approved" + "Invoice"
+    │
+    └── Reject → nhập lý do → từ chối
+                     → User nhận 📧 "Top-up Rejected"
+```
+
+## 13) Tổng hợp Admin có những gì
+
+### Admin Billing Dashboard (`/admin/api-keys`)
+
+| Tab | Chức năng |
+|-----|----------|
+| **API Keys** | Quản lý keys tất cả user, suspend/activate, +/- credits thủ công |
+| **Pricing** | Published Plans (Starter/Pro/Business), Model Pricing CRUD (input/output/request cost) |
+| **Payments** | Tạo/quản lý Payment Accounts, Auto-Approve toggle, Default Currency setting |
+| **Top-ups** | Xem/duyệt/từ chối yêu cầu nạp tiền pending |
+| **Analytics** | Daily Usage charts (30d), Usage by Model charts, Revenue Daily table, Usage tables |
+| **Audit** | Audit trail - log mọi thao tác billing (who/what/when) |
+| **Email** | SMTP config, Test email, Enable/disable billing emails |
+
+### Dashboard Summary Cards
+- Total Active Keys
+- Total Credits
+- Total Requests
+- Revenue
+
+### Các tính năng khác của Admin (ngoài billing)
+- User management (tạo/sửa/xóa user)
+- Model management (cấu hình Ollama/OpenAI models)
+- System settings (auth, OAuth, LDAP)
+- Chat access control
+- Analytics dashboard (chung)
+- Export/Import data

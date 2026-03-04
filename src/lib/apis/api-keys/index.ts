@@ -81,6 +81,17 @@ export type RevenueDailyEntry = {
 export type BillingSettings = {
 	auto_approve_topups: boolean;
 	default_currency: string;
+	enable_billing_emails?: boolean;
+};
+
+export type SmtpSettings = {
+	smtp_host: string;
+	smtp_port: number;
+	smtp_user: string;
+	smtp_password?: string;
+	smtp_from: string;
+	smtp_tls: boolean;
+	enable_billing_emails: boolean;
 };
 
 export type ApiKeyPlan = {
@@ -1054,6 +1065,77 @@ export const getMyInvoiceById = async (token: string, invoiceId: string): Promis
 		.catch((err) => {
 			console.error(err);
 			error = err.detail ?? 'Failed to fetch invoice detail';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+// ---------------------------------------------------------------------------
+// SMTP Settings (Admin)
+// ---------------------------------------------------------------------------
+
+export const getAdminSmtpSettings = async (token: string): Promise<SmtpSettings> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/smtp`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch SMTP settings';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const updateAdminSmtpSettings = async (
+	token: string,
+	formData: SmtpSettings
+): Promise<SmtpSettings> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/smtp`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify(formData)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to update SMTP settings';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const testAdminSmtp = async (token: string): Promise<{ status: string; message: string }> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/admin/smtp/test`, {
+		method: 'POST',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'SMTP test failed';
 			return null;
 		});
 

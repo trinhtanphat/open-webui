@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from typing import Optional
 
@@ -10,6 +11,15 @@ from open_webui.internal.db import get_session
 from open_webui.models.billing import Billing
 from open_webui.models.users import Users
 from open_webui.utils.auth import create_api_key, get_admin_user, get_verified_user
+from open_webui.utils.email import (
+    notify_topup_submitted,
+    notify_topup_approved,
+    notify_topup_rejected,
+    notify_invoice_issued,
+    notify_admin_new_topup,
+)
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -95,11 +105,32 @@ class TopupRejectForm(BaseModel):
 class BillingSettingsResponse(BaseModel):
     auto_approve_topups: bool
     default_currency: str
+    enable_billing_emails: bool = True
 
 
 class BillingSettingsUpdateForm(BaseModel):
     auto_approve_topups: bool
     default_currency: Optional[str] = None
+    enable_billing_emails: Optional[bool] = None
+
+
+class SmtpSettingsResponse(BaseModel):
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_from: str = ""
+    smtp_tls: bool = True
+    enable_billing_emails: bool = True
+
+
+class SmtpSettingsUpdateForm(BaseModel):
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: Optional[str] = None
+    smtp_from: str = ""
+    smtp_tls: bool = True
+    enable_billing_emails: bool = True
 
 
 class BillingSummaryResponse(BaseModel):
@@ -228,20 +259,27 @@ API_KEY_PLANS: list[ApiKeyPlan] = [
 ]
 
 
-def _mask_key(key: str) -> str:
-    if len(key) <= 10:
-        return key
-    return f"{key[:6]}...{key[-4:]}"
+def _mask_key(key: str, is_full: bool = True) -> str:
+    """Mask an API key for display.
+    
+    When is_full=True  (full key available): sk-abc123...wxyz  (show first 7 + last 4)
+    When is_full=False (only prefix stored):  sk-abc1***...    (show prefix + stars)
+    """
+    if is_full and len(key) > 12:
+        return f"{key[:7]}{'*' * 32}...{key[-4:]}"
+    # prefix-only: show what we have + stars
+    return f"{key}{'*' * 40}..."
 
 
 def _build_console_payload(record, full_key: str = None) -> ApiKeyConsoleResponse:
     metadata = record.data if isinstance(record.data, dict) else {}
+    has_full = full_key is not None
     display_key = full_key if full_key else record.key
     return ApiKeyConsoleResponse(
         id=record.id,
         user_id=record.user_id,
-        key=display_key,
-        key_masked=_mask_key(display_key),
+        key=display_key if has_full else "",
+        key_masked=_mask_key(display_key, is_full=has_full),
         status=metadata.get("status", "active"),
         plan_name=metadata.get("plan_name"),
         monthly_price_usd=metadata.get("monthly_price_usd"),
@@ -565,6 +603,7 @@ async def get_billing_settings(user=Depends(get_verified_user), request: Request
     return BillingSettingsResponse(
         auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
         default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
+        enable_billing_emails=bool(getattr(request.app.state.config, "ENABLE_BILLING_EMAILS", True)),
     )
 
 
@@ -573,6 +612,7 @@ async def get_admin_billing_settings(user=Depends(get_admin_user), request: Requ
     return BillingSettingsResponse(
         auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
         default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
+        enable_billing_emails=bool(getattr(request.app.state.config, "ENABLE_BILLING_EMAILS", True)),
     )
 
 
@@ -585,10 +625,80 @@ async def update_admin_billing_settings(
     request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS = bool(form_data.auto_approve_topups)
     if form_data.default_currency is not None:
         request.app.state.config.BILLING_DEFAULT_CURRENCY = form_data.default_currency
+    if form_data.enable_billing_emails is not None:
+        request.app.state.config.ENABLE_BILLING_EMAILS = bool(form_data.enable_billing_emails)
     return BillingSettingsResponse(
         auto_approve_topups=bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS),
         default_currency=str(request.app.state.config.BILLING_DEFAULT_CURRENCY),
+        enable_billing_emails=bool(getattr(request.app.state.config, "ENABLE_BILLING_EMAILS", True)),
     )
+
+
+# --- SMTP Settings (admin only) ---
+
+@router.get("/admin/smtp", response_model=SmtpSettingsResponse)
+async def get_admin_smtp_settings(user=Depends(get_admin_user), request: Request = None):
+    cfg = request.app.state.config
+    return SmtpSettingsResponse(
+        smtp_host=str(getattr(cfg, "SMTP_HOST", "") or ""),
+        smtp_port=int(getattr(cfg, "SMTP_PORT", 587) or 587),
+        smtp_user=str(getattr(cfg, "SMTP_USER", "") or ""),
+        smtp_from=str(getattr(cfg, "SMTP_FROM", "") or ""),
+        smtp_tls=bool(getattr(cfg, "SMTP_TLS", True)),
+        enable_billing_emails=bool(getattr(cfg, "ENABLE_BILLING_EMAILS", True)),
+    )
+
+
+@router.post("/admin/smtp", response_model=SmtpSettingsResponse)
+async def update_admin_smtp_settings(
+    form_data: SmtpSettingsUpdateForm,
+    user=Depends(get_admin_user),
+    request: Request = None,
+):
+    cfg = request.app.state.config
+    cfg.SMTP_HOST = form_data.smtp_host
+    cfg.SMTP_PORT = form_data.smtp_port
+    cfg.SMTP_USER = form_data.smtp_user
+    if form_data.smtp_password is not None:
+        cfg.SMTP_PASSWORD = form_data.smtp_password
+    cfg.SMTP_FROM = form_data.smtp_from
+    cfg.SMTP_TLS = form_data.smtp_tls
+    cfg.ENABLE_BILLING_EMAILS = form_data.enable_billing_emails
+    return SmtpSettingsResponse(
+        smtp_host=str(cfg.SMTP_HOST or ""),
+        smtp_port=int(cfg.SMTP_PORT or 587),
+        smtp_user=str(cfg.SMTP_USER or ""),
+        smtp_from=str(cfg.SMTP_FROM or ""),
+        smtp_tls=bool(cfg.SMTP_TLS),
+        enable_billing_emails=bool(cfg.ENABLE_BILLING_EMAILS),
+    )
+
+
+@router.post("/admin/smtp/test")
+async def test_smtp_settings(user=Depends(get_admin_user), request: Request = None):
+    """Send a test email to verify SMTP configuration."""
+    from open_webui.utils.email import send_billing_email, _base_html, _get_smtp_config
+
+    cfg = request.app.state.config
+    smtp_cfg = _get_smtp_config(cfg)
+    if not smtp_cfg["smtp_host"]:
+        raise HTTPException(status_code=400, detail="SMTP not configured")
+
+    target_email = user.email
+    if not target_email:
+        raise HTTPException(status_code=400, detail="Admin user has no email address")
+
+    body = "<h2>SMTP Test Successful</h2><p>If you're reading this, your email configuration is working correctly.</p>"
+    ok = send_billing_email(
+        to_email=target_email,
+        subject="Open WebUI – SMTP Test",
+        html_body=_base_html("SMTP Test", body),
+        **smtp_cfg,
+    )
+    if ok:
+        return {"status": "ok", "message": f"Test email sent to {target_email}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send test email. Check SMTP configuration and logs.")
 
 
 @router.post("/admin/payment-accounts")
@@ -661,6 +771,7 @@ async def get_admin_topups(
 @router.post("/admin/topups/{request_id}/approve")
 async def approve_topup_request(
     request_id: str,
+    request: Request,
     form_data: TopupReviewForm,
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
@@ -674,6 +785,7 @@ async def approve_topup_request(
         actor_action="topup.approve",
         actor_details={"credits": form_data.credits},
         db=db,
+        app_config=request.app.state.config,
     )
 
 
@@ -686,6 +798,7 @@ def _finalize_topup_approval(
     actor_action: str,
     actor_details: Optional[dict],
     db: Session,
+    app_config=None,
 ):
     request_row = Billing.get_topup_request_by_id(request_id, db=db)
     if not request_row:
@@ -738,6 +851,34 @@ def _finalize_topup_approval(
         db=db,
     )
 
+    # --- Email notifications ---
+    if app_config and getattr(app_config, "ENABLE_BILLING_EMAILS", False):
+        try:
+            target_user = Users.get_user_by_id(request_row.user_id)
+            if target_user and target_user.email:
+                notify_topup_approved(
+                    app_config=app_config,
+                    user_email=target_user.email,
+                    user_name=target_user.name or target_user.email,
+                    amount=float(request_row.amount),
+                    currency=request_row.currency or "USD",
+                    credits=credits,
+                    topup_id=request_row.id,
+                    note=reviewed_note or "",
+                )
+                if invoice:
+                    notify_invoice_issued(
+                        app_config=app_config,
+                        user_email=target_user.email,
+                        user_name=target_user.name or target_user.email,
+                        invoice_id=invoice.id,
+                        amount=float(request_row.amount),
+                        currency=request_row.currency or "USD",
+                        credits=credits,
+                    )
+        except Exception as e:
+            log.warning(f"Failed to send topup approval email: {e}")
+
     return {
         "topup": reviewed,
         "api_key": _build_console_payload(updated_key),
@@ -748,6 +889,7 @@ def _finalize_topup_approval(
 @router.post("/admin/topups/{request_id}/reject")
 async def reject_topup_request(
     request_id: str,
+    request: Request,
     form_data: TopupRejectForm,
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
@@ -775,6 +917,23 @@ async def reject_topup_request(
         details={"note": form_data.note},
         db=db,
     )
+
+    # --- Email notification ---
+    if getattr(request.app.state.config, "ENABLE_BILLING_EMAILS", False):
+        try:
+            target_user = Users.get_user_by_id(request_row.user_id)
+            if target_user and target_user.email:
+                notify_topup_rejected(
+                    app_config=request.app.state.config,
+                    user_email=target_user.email,
+                    user_name=target_user.name or target_user.email,
+                    amount=float(request_row.amount),
+                    currency=request_row.currency or "USD",
+                    topup_id=request_row.id,
+                    note=form_data.note or "",
+                )
+        except Exception as e:
+            log.warning(f"Failed to send topup rejection email: {e}")
 
     return reviewed
 
@@ -1032,6 +1191,35 @@ async def create_my_topup_request(
         db=db,
     )
 
+    # --- Email notifications ---
+    if getattr(request.app.state.config, "ENABLE_BILLING_EMAILS", False):
+        try:
+            # Notify user
+            if user.email:
+                notify_topup_submitted(
+                    app_config=request.app.state.config,
+                    user_email=user.email,
+                    user_name=user.name or user.email,
+                    amount=float(form_data.amount),
+                    currency=form_data.currency or "USD",
+                    tx_ref=form_data.tx_ref or "",
+                    topup_id=row.id,
+                )
+            # Notify admins
+            from open_webui.env import WEBUI_ADMIN_EMAIL
+            if WEBUI_ADMIN_EMAIL:
+                notify_admin_new_topup(
+                    app_config=request.app.state.config,
+                    admin_email=WEBUI_ADMIN_EMAIL,
+                    user_name=user.name or user.email,
+                    user_email=user.email or "",
+                    amount=float(form_data.amount),
+                    currency=form_data.currency or "USD",
+                    topup_id=row.id,
+                )
+        except Exception as e:
+            log.warning(f"Failed to send topup submission email: {e}")
+
     if bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS):
         credits = max(1, int(float(form_data.amount) * 100))
         _finalize_topup_approval(
@@ -1043,6 +1231,7 @@ async def create_my_topup_request(
             actor_action="topup.auto_approve",
             actor_details={"reason": "billing.auto_approve_topups"},
             db=db,
+            app_config=request.app.state.config,
         )
         row = Billing.get_topup_request_by_id(row.id, db=db)
 

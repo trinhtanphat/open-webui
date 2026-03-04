@@ -352,34 +352,36 @@
 
 			<div class="flex gap-2">
 				<div class="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 font-mono text-xs">
-					<span class="truncate select-all">{showFullKey ? apiKey.key : apiKey.key_masked}</span>
+					<span class="truncate select-all">{showFullKey && apiKey.key ? apiKey.key : apiKey.key_masked}</span>
 				</div>
-				<button
-					class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-					title={showFullKey ? $i18n.t('Hide') : $i18n.t('Show')}
-					on:click={() => (showFullKey = !showFullKey)}
-				>
-					{#if showFullKey}
-						<EyeSlash className="size-4" />
-					{:else}
-						<Eye className="size-4" />
-					{/if}
-				</button>
-				<button
-					class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-					title={$i18n.t('Copy')}
-					on:click={() => {
-						copyToClipboard(apiKey!.key);
-						copied = true;
-						setTimeout(() => (copied = false), 1200);
-					}}
-				>
-					{#if copied}
-						<CheckCircle className="size-4 text-emerald-500" />
-					{:else}
-						<Clipboard className="size-4" />
-					{/if}
-				</button>
+				{#if apiKey.key}
+					<button
+						class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+						title={showFullKey ? $i18n.t('Hide') : $i18n.t('Show')}
+						on:click={() => (showFullKey = !showFullKey)}
+					>
+						{#if showFullKey}
+							<EyeSlash className="size-4" />
+						{:else}
+							<Eye className="size-4" />
+						{/if}
+					</button>
+					<button
+						class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+						title={$i18n.t('Copy')}
+						on:click={() => {
+							copyToClipboard(apiKey!.key);
+							copied = true;
+							setTimeout(() => (copied = false), 1200);
+						}}
+					>
+						{#if copied}
+							<CheckCircle className="size-4 text-emerald-500" />
+						{:else}
+							<Clipboard className="size-4" />
+						{/if}
+					</button>
+				{/if}
 				<button
 					class="px-4 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
 					on:click={regenerate}
@@ -722,15 +724,25 @@
 							<div>
 								<label for="topup-currency" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
 								<select id="topup-currency" class="w-full appearance-none px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency}>
-									<option value="USD">USD ($)</option>
-									<option value="VND">VND (₫)</option>
-									<option value="EUR">EUR (€)</option>
-									<option value="GBP">GBP (£)</option>
-									<option value="JPY">JPY (¥)</option>
-									<option value="CNY">CNY (¥)</option>
-									<option value="KRW">KRW (₩)</option>
-									<option value="SGD">SGD (S$)</option>
-									<option value="THB">THB (฿)</option>
+									<option value="USD">🇺🇸 USD ($)</option>
+									<option value="VND">🇻🇳 VND (₫)</option>
+									<option value="EUR">🇪🇺 EUR (€)</option>
+									<option value="GBP">🇬🇧 GBP (£)</option>
+									<option value="JPY">🇯🇵 JPY (¥)</option>
+									<option value="CNY">🇨🇳 CNY (¥)</option>
+									<option value="KRW">🇰🇷 KRW (₩)</option>
+									<option value="SGD">🇸🇬 SGD (S$)</option>
+									<option value="THB">🇹🇭 THB (฿)</option>
+									<option value="AUD">🇦🇺 AUD (A$)</option>
+									<option value="CAD">🇨🇦 CAD (C$)</option>
+									<option value="INR">🇮🇳 INR (₹)</option>
+									<option value="MYR">🇲🇾 MYR (RM)</option>
+									<option value="PHP">🇵🇭 PHP (₱)</option>
+									<option value="IDR">🇮🇩 IDR (Rp)</option>
+									<option value="TWD">🇹🇼 TWD (NT$)</option>
+									<option value="HKD">🇭🇰 HKD (HK$)</option>
+									<option value="CHF">🇨🇭 CHF (Fr)</option>
+									<option value="BRL">🇧🇷 BRL (R$)</option>
 								</select>
 							</div>
 						</div>

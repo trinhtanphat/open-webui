@@ -37,6 +37,9 @@
 		getAdminUsageLogs,
 		getAdminUsageDaily,
 		getAdminUsageByModel,
+		getAdminSmtpSettings,
+		updateAdminSmtpSettings,
+		testAdminSmtp,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
 		type BillingSettings,
@@ -48,13 +51,14 @@
 		type ModelPricing,
 		type UsageLogEntry,
 		type UsageDailySummary,
-		type UsageByModelSummary
+		type UsageByModelSummary,
+		type SmtpSettings
 	} from '$lib/apis/api-keys';
 
 	const i18n = getContext<any>('i18n');
 
 	let loading = true;
-	let adminTab: 'keys' | 'pricing' | 'payments' | 'topups' | 'analytics' | 'audit' = 'keys';
+	let adminTab: 'keys' | 'pricing' | 'payments' | 'topups' | 'analytics' | 'audit' | 'email' = 'keys';
 	let keys: ApiKeyConsole[] = [];
 	let summary: BillingSummary | null = null;
 	let paymentAccounts: PaymentAccount[] = [];
@@ -69,6 +73,15 @@
 	let usageByModel: UsageByModelSummary[] = [];
 	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'USD' };
 	let savingBillingSettings = false;
+
+	// SMTP / Email settings
+	let smtpSettings: SmtpSettings = {
+		smtp_host: '', smtp_port: 587, smtp_user: '', smtp_from: '',
+		smtp_tls: true, enable_billing_emails: true
+	};
+	let smtpPassword = '';
+	let savingSmtp = false;
+	let testingSmtp = false;
 
 	let creditDelta = 100;
 	let approveCredits = 100;
@@ -116,6 +129,10 @@
 		usageByModel = await getAdminUsageByModel(localStorage.token, { days: 30 }).catch(() => []);
 		let billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
 			auto_approve_topups: true, default_currency: 'USD'
+		}));
+		smtpSettings = await getAdminSmtpSettings(localStorage.token).catch(() => ({
+			smtp_host: '', smtp_port: 587, smtp_user: '', smtp_from: '',
+			smtp_tls: true, enable_billing_emails: true
 		}));
 	};
 
@@ -341,7 +358,8 @@
 				{ id: 'payments', label: 'Payments', icon: 'card' },
 				{ id: 'topups', label: 'Top-ups', icon: 'plus' },
 				{ id: 'analytics', label: 'Analytics', icon: 'chart' },
-				{ id: 'audit', label: 'Audit', icon: 'log' }
+				{ id: 'audit', label: 'Audit', icon: 'log' },
+				{ id: 'email', label: 'Email', icon: 'mail' }
 			] as tab}
 				<button
 					class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5
@@ -353,6 +371,7 @@
 					{:else if tab.icon === 'card'}<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
 					{:else if tab.icon === 'plus'}<Plus className="size-3.5" />
 					{:else if tab.icon === 'chart'}<ChartBar className="size-3.5" />
+					{:else if tab.icon === 'mail'}<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
 					{:else}<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
 					{/if}
 					{$i18n.t(tab.label)}
@@ -468,7 +487,22 @@
 						<input class="px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={mpInputCost} type="number" step="0.0001" placeholder="input $/1K" />
 						<input class="px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={mpOutputCost} type="number" step="0.0001" placeholder="output $/1K" />
 						<input class="px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={mpRequestCost} type="number" step="0.0001" placeholder="per-req $" />
-						<input class="px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={mpCurrency} placeholder="currency" />
+						<select class="px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={mpCurrency}>
+							<option value="USD">🇺🇸 USD</option>
+							<option value="VND">🇻🇳 VND</option>
+							<option value="EUR">🇪🇺 EUR</option>
+							<option value="GBP">🇬🇧 GBP</option>
+							<option value="JPY">🇯🇵 JPY</option>
+							<option value="CNY">🇨🇳 CNY</option>
+							<option value="KRW">🇰🇷 KRW</option>
+							<option value="SGD">🇸🇬 SGD</option>
+							<option value="THB">🇹🇭 THB</option>
+							<option value="AUD">🇦🇺 AUD</option>
+							<option value="INR">🇮🇳 INR</option>
+							<option value="MYR">🇲🇾 MYR</option>
+							<option value="PHP">🇵🇭 PHP</option>
+							<option value="IDR">🇮🇩 IDR</option>
+						</select>
 					</div>
 					<button class="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5" on:click={createModelPricing}>
 						<Plus className="size-3.5" />
@@ -551,15 +585,25 @@
 								savingBillingSettings = false;
 							}}
 						>
-							<option value="USD">USD ($)</option>
-							<option value="VND">VND (₫)</option>
-							<option value="EUR">EUR (€)</option>
-							<option value="GBP">GBP (£)</option>
-							<option value="JPY">JPY (¥)</option>
-							<option value="CNY">CNY (¥)</option>
-							<option value="KRW">KRW (₩)</option>
-							<option value="SGD">SGD (S$)</option>
-							<option value="THB">THB (฿)</option>
+							<option value="USD">🇺🇸 USD ($)</option>
+							<option value="VND">🇻🇳 VND (₫)</option>
+							<option value="EUR">🇪🇺 EUR (€)</option>
+							<option value="GBP">🇬🇧 GBP (£)</option>
+							<option value="JPY">🇯🇵 JPY (¥)</option>
+							<option value="CNY">🇨🇳 CNY (¥)</option>
+							<option value="KRW">🇰🇷 KRW (₩)</option>
+							<option value="SGD">🇸🇬 SGD (S$)</option>
+							<option value="THB">🇹🇭 THB (฿)</option>
+							<option value="AUD">🇦🇺 AUD (A$)</option>
+							<option value="CAD">🇨🇦 CAD (C$)</option>
+							<option value="INR">🇮🇳 INR (₹)</option>
+							<option value="MYR">🇲🇾 MYR (RM)</option>
+							<option value="PHP">🇵🇭 PHP (₱)</option>
+							<option value="IDR">🇮🇩 IDR (Rp)</option>
+							<option value="TWD">🇹🇼 TWD (NT$)</option>
+							<option value="HKD">🇭🇰 HKD (HK$)</option>
+							<option value="CHF">🇨🇭 CHF (Fr)</option>
+							<option value="BRL">🇧🇷 BRL (R$)</option>
 						</select>
 					</div>
 				</div>
@@ -935,6 +979,130 @@
 							{/if}
 						</tbody>
 					</table>
+				</div>
+			</div>
+
+		<!-- Email / SMTP Tab -->
+		{:else if adminTab === 'email'}
+			<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+				<!-- SMTP Configuration -->
+				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4">
+					<h3 class="font-semibold text-sm flex items-center gap-2">
+						<svg class="size-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+						{$i18n.t('SMTP Configuration')}
+					</h3>
+					<p class="text-xs text-gray-500">{$i18n.t('Configure email server for billing notifications (top-up receipts, invoices, low credit warnings).')}</p>
+
+					<div class="space-y-3">
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label for="smtp-host" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('SMTP Host')}</label>
+								<input id="smtp-host" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={smtpSettings.smtp_host} placeholder="smtp.gmail.com" />
+							</div>
+							<div>
+								<label for="smtp-port" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('SMTP Port')}</label>
+								<input id="smtp-port" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" type="number" bind:value={smtpSettings.smtp_port} placeholder="587" />
+							</div>
+						</div>
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label for="smtp-user" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Username')}</label>
+								<input id="smtp-user" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={smtpSettings.smtp_user} placeholder="user@example.com" />
+							</div>
+							<div>
+								<label for="smtp-pass" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Password')}</label>
+								<input id="smtp-pass" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" type="password" bind:value={smtpPassword} placeholder="••••••••" />
+							</div>
+						</div>
+						<div>
+							<label for="smtp-from" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('From Address')}</label>
+							<input id="smtp-from" class="w-full px-3 py-2 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={smtpSettings.smtp_from} placeholder="noreply@yourcompany.com" />
+						</div>
+						<div class="flex items-center gap-3">
+							<label class="flex items-center gap-2 cursor-pointer">
+								<input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" bind:checked={smtpSettings.smtp_tls} />
+								<span class="text-xs font-medium text-gray-600 dark:text-gray-400">{$i18n.t('Use TLS')}</span>
+							</label>
+							<label class="flex items-center gap-2 cursor-pointer">
+								<input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" bind:checked={smtpSettings.enable_billing_emails} />
+								<span class="text-xs font-medium text-gray-600 dark:text-gray-400">{$i18n.t('Enable Billing Emails')}</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-2">
+						<button
+							class="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
+							disabled={savingSmtp}
+							on:click={async () => {
+								savingSmtp = true;
+								const payload = { ...smtpSettings };
+								if (smtpPassword) payload.smtp_password = smtpPassword;
+								await updateAdminSmtpSettings(localStorage.token, payload)
+									.then((res) => {
+										smtpSettings = res;
+										smtpPassword = '';
+										toast.success($i18n.t('SMTP settings saved'));
+									})
+									.catch((error) => toast.error(`${error}`));
+								savingSmtp = false;
+							}}
+						>
+							{savingSmtp ? $i18n.t('Saving...') : $i18n.t('Save SMTP Settings')}
+						</button>
+						<button
+							class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1.5"
+							disabled={testingSmtp || !smtpSettings.smtp_host}
+							on:click={async () => {
+								testingSmtp = true;
+								await testAdminSmtp(localStorage.token)
+									.then((res) => toast.success(res.message))
+									.catch((error) => toast.error(`${error}`));
+								testingSmtp = false;
+							}}
+						>
+							{testingSmtp ? $i18n.t('Sending...') : $i18n.t('Send Test Email')}
+						</button>
+					</div>
+				</div>
+
+				<!-- Email Notifications Info -->
+				<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4">
+					<h3 class="font-semibold text-sm flex items-center gap-2">
+						<svg class="size-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
+						{$i18n.t('Notification Events')}
+					</h3>
+					<p class="text-xs text-gray-500">{$i18n.t('When SMTP is configured and billing emails are enabled, the following notifications are sent automatically:')}</p>
+
+					<div class="space-y-2.5">
+						{#each [
+							{ event: 'Top-up Submitted', desc: 'User receives confirmation when they submit a top-up request', badge: 'badge-info' },
+							{ event: 'Top-up Approved', desc: 'User is notified when credits are added to their account', badge: 'badge-success' },
+							{ event: 'Top-up Rejected', desc: 'User is informed if their top-up request is declined', badge: 'badge-danger' },
+							{ event: 'Invoice Issued', desc: 'User receives invoice details after payment is processed', badge: 'badge-info' },
+							{ event: 'Low Credits', desc: 'User receives a warning when credits fall below threshold', badge: 'badge-warning' },
+							{ event: 'Admin Alert', desc: 'Admin receives notification of new pending top-up requests', badge: 'badge-info' },
+						] as item}
+							<div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900/40">
+								<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap
+									{item.badge === 'badge-success' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : ''}
+									{item.badge === 'badge-danger' ? 'bg-red-100 text-red-700 dark:bg-red-900/30' : ''}
+									{item.badge === 'badge-warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30' : ''}
+									{item.badge === 'badge-info' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30' : ''}
+								">{item.event}</span>
+								<span class="text-xs text-gray-500">{$i18n.t(item.desc)}</span>
+							</div>
+						{/each}
+					</div>
+
+					<div class="rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 p-3.5">
+						<p class="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{$i18n.t('Gmail Quick Setup')}</p>
+						<p class="text-[11px] text-blue-600 dark:text-blue-400 leading-relaxed">
+							{$i18n.t('Host')}: <code class="bg-blue-100 dark:bg-blue-900/30 px-1 rounded">smtp.gmail.com</code> · 
+							{$i18n.t('Port')}: <code class="bg-blue-100 dark:bg-blue-900/30 px-1 rounded">587</code> · 
+							TLS: ✓ · {$i18n.t('Use an App Password from Google Account settings.')}
+						</p>
+					</div>
 				</div>
 			</div>
 		{/if}
