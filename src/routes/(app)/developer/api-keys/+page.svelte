@@ -62,6 +62,7 @@
 	let invoiceStatusFilter: 'all' | 'paid' | 'pending' | 'rejected' = 'all';
 
 	let selectedPaymentAccountId = '';
+	let paymentAccountMenuOpen = false;
 	let topupAmount = 10;
 	let topupCurrency = 'USD';
 
@@ -97,6 +98,10 @@
 		const topup = topups.find((item) => item.id === topupId);
 		if (!topup) return 'generic';
 		return getPaymentProviderByAccountId(topup.payment_account_id);
+	};
+
+	const getPaymentAccountLabel = (account: PaymentAccount) => {
+		return `${account.account_name} · ${account.account_number}`;
 	};
 
 	const planIcons = [Bolt, Sparkles, Star];
@@ -702,18 +707,43 @@
 						<div>
 						<label for="topup-payment-account" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Payment Account')}</label>
 						<div class="relative">
-							<select id="topup-payment-account" class="w-full appearance-none px-3 py-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 text-sm font-medium pr-10 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40" bind:value={selectedPaymentAccountId}>
-								{#if paymentAccounts.length === 0}
-									<option value="">{$i18n.t('No payment accounts available')}</option>
+							<button
+								id="topup-payment-account"
+								type="button"
+								class="w-full px-3 py-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 flex items-center justify-between"
+								on:click={() => (paymentAccountMenuOpen = !paymentAccountMenuOpen)}
+							>
+								{#if selectedPaymentAccount}
+									<span class="flex items-center gap-2 min-w-0">
+										<PaymentProviderIcon provider={selectedPaymentAccount.provider} size="size-5" />
+										<span class="truncate">{getPaymentAccountLabel(selectedPaymentAccount)}</span>
+									</span>
 								{:else}
-									{#each paymentAccounts as pa}
-										<option value={pa.id}>{pa.provider.toUpperCase()} · {pa.account_name} · {pa.account_number}</option>
-									{/each}
+									<span class="text-gray-400">{$i18n.t('No payment accounts available')}</span>
 								{/if}
-							</select>
-							<div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-								<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-							</div>
+								<svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+							</button>
+
+							{#if paymentAccountMenuOpen && paymentAccounts.length > 0}
+								<div class="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1 max-h-64 overflow-y-auto">
+									{#each paymentAccounts as pa}
+										<button
+											type="button"
+											class="w-full px-2.5 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors {selectedPaymentAccountId === pa.id ? 'bg-gray-100 dark:bg-gray-800' : ''}"
+											on:click={() => {
+												selectedPaymentAccountId = pa.id;
+												paymentAccountMenuOpen = false;
+											}}
+										>
+											<PaymentProviderIcon provider={pa.provider} size="size-5" />
+											<div class="min-w-0 text-left">
+												<div class="truncate">{pa.account_name}</div>
+												<div class="text-[11px] text-gray-500 truncate">{pa.provider.toUpperCase()} · {pa.account_number}</div>
+											</div>
+										</button>
+									{/each}
+								</div>
+							{/if}
 						</div>
 						{#if selectedPaymentAccount}
 							<div class="mt-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/30 p-3 text-xs space-y-1">
