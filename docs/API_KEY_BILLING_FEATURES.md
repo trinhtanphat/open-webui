@@ -33,7 +33,7 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
   - Xem workflow pipeline (Choose plan → Add credits → Processing → Track)
 
 - **Top Up**
-  - Chọn payment account (có **icon/logo** cho từng provider: Stripe, VNPay, MoMo, PayPal, Bank Transfer, Generic)
+  - Chọn payment account (có **icon/logo** cho từng provider: Stripe, VNPay, MoMo, ZaloPay(VNG), PayPal, Bank Transfer, Generic)
   - Có preset số tiền nhanh: **$10 / $25 / $50 / $100 / $250**
   - Nhập số tiền, **currency select dropdown** (USD/VND/EUR/GBP/JPY/CNY/KRW/SGD/THB)
   - Currency tự động lấy default từ admin settings
@@ -90,7 +90,7 @@ Tài liệu tổng hợp các chức năng đã triển khai cho gói dùng API-
   - Quản lý model pricing theo token/request
 
 - **Payments**
-  - Tạo payment account (Generic/Bank Transfer/Stripe/VNPay/MoMo/PayPal)
+  - Tạo payment account (Generic/Bank Transfer/Stripe/VNPay/MoMo/ZaloPay(VNG)/PayPal)
   - **Icon preview** cho từng provider khi chọn
   - Cấu hình webhook secret
   - Xem danh sách payment accounts (có **icon/logo** provider)
@@ -155,9 +155,23 @@ Các provider đã có icon/logo riêng:
 - **Stripe** — logo tím với chữ S
 - **VNPay** — logo xanh dương
 - **MoMo** — logo hồng (circle)
+- **ZaloPay (VNG)** — logo xanh cyan
 - **PayPal** — logo xanh đậm  
 - **Bank Transfer** — icon ngân hàng cổ điển
 - **Generic** — icon thẻ tín dụng
+
+Nguồn file logo đang được lưu nội bộ trong source tại:
+- `static/assets/payments/momo.svg`
+- `static/assets/payments/vnpay.svg`
+- `static/assets/payments/zalopay.svg`
+
+Đồng bộ logo từ nguồn public (khi server có internet):
+- `npm run assets:payment-logos:sync`
+- Có thể dùng proxy qua env: `HTTPS_PROXY`, `HTTP_PROXY`, `ALL_PROXY`
+
+Lưu ý trademark:
+- Logo và thương hiệu MoMo/VNPay/ZaloPay thuộc sở hữu của từng công ty tương ứng.
+- Chỉ sử dụng cho mục đích hiển thị phương thức thanh toán; không chỉnh sửa gây nhầm lẫn thương hiệu.
 
 Hiển thị tại:
 - User: dropdown chọn payment account, card thông tin chi tiết
@@ -256,10 +270,11 @@ Hiển thị tại:
 │                  API KEY ACTIVATION                              │
 ├─────────────────────────────────────────────────────────────────┤
 │ 5. Sidebar → "Developer Console" hoặc menu → "API Platform"    │
-│ 6. Bấm "Activate API Key" → chọn plan (Starter/Pro/Business)   │
-│ 7. Hệ thống tạo API key: sk-xxxx...xxxx (51 chars)             │
-│ 8. Key chỉ hiển thị ĐẦY ĐỦ 1 lần → copy & lưu                │
-│ 9. Sau đó chỉ thấy key masked: sk-abc1***...                   │
+│ 6. Chọn plan (Starter/Pro/Business + VIP-style tiers)          │
+│ 7. User hoàn tất payment/top-up theo provider đã chọn          │
+│ 8. Payment success → credits kích hoạt + API key hiển thị      │
+│ 9. Key chỉ hiển thị ĐẦY ĐỦ 1 lần → copy & lưu                  │
+│ 10. Sau đó chỉ thấy key masked: sk-abc1***...                  │
 └───────────────┬─────────────────────────────────────────────────┘
                 │
                 ▼
@@ -267,7 +282,7 @@ Hiển thị tại:
 │                    PAYMENT / TOP-UP                              │
 ├─────────────────────────────────────────────────────────────────┤
 │ 10. Kéo xuống phần "Top Up Balance"                             │
-│ 11. Chọn Payment Account (Bank Transfer / MoMo / VNPay...)      │
+│ 11. Chọn Payment Account (Bank Transfer / MoMo / VNPay / ZaloPay)|
 │ 12. Chọn preset ($10/$25/$50/$100/$250) hoặc nhập tùy ý        │
 │ 13. Chọn currency (🇻🇳 VND / 🇺🇸 USD / ...)                     │
 │ 14. Nhập Transaction Reference (mã giao dịch ngân hàng)        │
@@ -333,6 +348,14 @@ Admin Panel → Billing → tab "Top-ups"
 | **Analytics** | Daily Usage charts (30d), Usage by Model charts, Revenue Daily table, Usage tables |
 | **Audit** | Audit trail - log mọi thao tác billing (who/what/when) |
 | **Email** | SMTP config, Test email, Enable/disable billing emails |
+
+## 14) Gói tính năng tương đương ChatGPT Pro/VIP (đề xuất áp dụng)
+
+- **Plan access by tier**: Free / Pro / VIP, giới hạn model theo tier.
+- **Higher limits**: RPM, context window, concurrency cao hơn cho Pro/VIP.
+- **Priority routing**: ưu tiên queue cho Pro/VIP khi tải cao.
+- **Advanced models**: admin bật/tắt model trả phí và đặt giá token/request.
+- **Billing guardrails**: cảnh báo ngưỡng chi tiêu, khóa overage, tự động top-up tùy chọn.
 
 ### Dashboard Summary Cards
 - Total Active Keys

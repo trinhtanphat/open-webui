@@ -139,10 +139,13 @@
 		{ value: 'stripe', label: 'Stripe' },
 		{ value: 'vnpay', label: 'VNPay' },
 		{ value: 'momo', label: 'MoMo' },
+		{ value: 'zalopay', label: 'ZaloPay (VNG)' },
+		{ value: 'vng', label: 'VNG (ZaloPay)' },
 		{ value: 'paypal', label: 'PayPal' }
 	];
 
 	const getProviderLabel = (providerValue: string) => {
+		if (providerValue === 'vng') return 'VNG (ZaloPay)';
 		return providerOptions.find((item) => item.value === providerValue)?.label || providerValue;
 	};
 

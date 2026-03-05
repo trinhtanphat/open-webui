@@ -246,7 +246,7 @@
 				</div>
 				<div class="flex items-start gap-3">
 					<div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">2</div>
-					<div><span class="font-medium">{$i18n.t('Submit payment')}</span><p class="text-gray-500 text-xs mt-0.5">{$i18n.t('Bank, Stripe, VNPay, or MoMo')}</p></div>
+					<div><span class="font-medium">{$i18n.t('Submit payment')}</span><p class="text-gray-500 text-xs mt-0.5">{$i18n.t('Bank, Stripe, VNPay, MoMo, or ZaloPay (VNG)')}</p></div>
 				</div>
 				<div class="flex items-start gap-3">
 					<div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">3</div>
@@ -277,7 +277,7 @@
 				</div>
 				<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4">
 					<h3 class="font-medium text-sm">{$i18n.t('What payment methods are accepted?')}</h3>
-					<p class="text-xs text-gray-500 mt-1.5">{$i18n.t('Bank transfer, Stripe, VNPay, and MoMo. Admin configures available methods.')}</p>
+					<p class="text-xs text-gray-500 mt-1.5">{$i18n.t('Bank transfer, Stripe, VNPay, MoMo, and ZaloPay (VNG). Admin configures available methods.')}</p>
 				</div>
 			</div>
 		</div>

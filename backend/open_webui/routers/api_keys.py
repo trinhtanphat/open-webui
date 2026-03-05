@@ -259,6 +259,40 @@ API_KEY_PLANS: list[ApiKeyPlan] = [
 ]
 
 
+PROVIDER_ALIASES: dict[str, str] = {
+    "vng": "zalopay",
+    "vngpay": "zalopay",
+    "zalo": "zalopay",
+    "zalo_pay": "zalopay",
+    "zalo-pay": "zalopay",
+    "zalopay": "zalopay",
+    "vnpay": "vnpay",
+    "vn_pay": "vnpay",
+    "vn-pay": "vnpay",
+    "momo": "momo",
+    "mo_mo": "momo",
+    "mo-mo": "momo",
+    "paypal": "paypal",
+    "pay_pal": "paypal",
+    "pay-pal": "paypal",
+    "bank": "bank_transfer",
+    "banktransfer": "bank_transfer",
+    "bank_transfer": "bank_transfer",
+    "bank-transfer": "bank_transfer",
+    "stripe": "stripe",
+    "generic": "generic",
+}
+
+
+def _normalize_payment_provider(provider: Optional[str]) -> str:
+    if not provider:
+        return "generic"
+
+    normalized = provider.strip().lower().replace(" ", "_").replace("-", "_")
+    normalized = "".join(ch for ch in normalized if ch.isalnum() or ch == "_")
+    return PROVIDER_ALIASES.get(normalized, normalized or "generic")
+
+
 def _mask_key(key: str, is_full: bool = True) -> str:
     """Mask an API key for display.
     
@@ -707,8 +741,10 @@ async def create_admin_payment_account(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
+    provider = _normalize_payment_provider(form_data.provider)
+
     row = Billing.create_payment_account(
-        provider=form_data.provider,
+        provider=provider,
         account_name=form_data.account_name,
         account_number=form_data.account_number,
         qr_code_url=form_data.qr_code_url,
@@ -740,6 +776,8 @@ async def update_admin_payment_account(
     db: Session = Depends(get_session),
 ):
     updated_data = form_data.model_dump(exclude_none=True)
+    if "provider" in updated_data:
+        updated_data["provider"] = _normalize_payment_provider(updated_data["provider"])
     if "is_active" in updated_data:
         updated_data["is_active"] = "true" if updated_data["is_active"] else "false"
 
@@ -1316,6 +1354,8 @@ async def payment_webhook(
         WebhookPayload,
     )
 
+    provider = _normalize_payment_provider(provider)
+
     body_bytes = await request.body()
 
     # ---- Provider-specific verification ----
@@ -1366,6 +1406,14 @@ async def payment_webhook(
     if not topup:
         raise HTTPException(status_code=404, detail="Top-up request not found")
 
+    account = Billing.get_payment_account_by_id(topup.payment_account_id, db=db)
+    if not account:
+        raise HTTPException(status_code=404, detail="Payment account not found")
+
+    account_provider = _normalize_payment_provider(account.provider)
+    if provider != "generic" and account_provider not in {provider, "generic"}:
+        raise HTTPException(status_code=400, detail="Webhook provider does not match payment account provider")
+
     if topup.status == "approved":
         invoice = Billing.get_invoice_by_topup_request_id(topup.id, db=db)
         return {"ok": True, "idempotent": True, "invoice_id": invoice.id if invoice else None}
@@ -1375,10 +1423,6 @@ async def payment_webhook(
 
     # For generic provider, verify via payment account webhook_secret
     if wh is None:
-        account = Billing.get_payment_account_by_id(topup.payment_account_id, db=db)
-        if not account:
-            raise HTTPException(status_code=404, detail="Payment account not found")
-
         acct_metadata = account.metadata if isinstance(account.metadata, dict) else {}
         expected_secret = acct_metadata.get("webhook_secret")
         generic_result = verify_generic(x_billing_webhook_secret, expected_secret or "")
@@ -1446,9 +1490,10 @@ def _get_provider_secret(provider: str, db: Session) -> str:
     Get the webhook/hash secret for a given payment provider.
     Looks up payment accounts with matching provider name.
     """
+    provider = _normalize_payment_provider(provider)
     accounts = Billing.get_payment_accounts(db=db)
     for acct in accounts:
-        if acct.provider.lower() == provider.lower():
+        if _normalize_payment_provider(acct.provider) == provider:
             meta = acct.metadata if isinstance(acct.metadata, dict) else {}
             return meta.get("webhook_secret", meta.get("hash_secret", meta.get("secret_key", "")))
     return ""

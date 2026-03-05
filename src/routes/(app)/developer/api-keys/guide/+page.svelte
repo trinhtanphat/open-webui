@@ -59,7 +59,7 @@ print(response.choices[0].message.content)`;
 		{
 			num: '5',
 			title: 'Admin: payment accounts',
-			desc: 'Admin adds bank/Stripe/VNPay/MoMo accounts with transfer instructions and QR codes.',
+			desc: 'Admin adds bank/Stripe/VNPay/MoMo/ZaloPay(VNG) accounts with transfer instructions and QR codes.',
 			icon: 'card',
 			color: 'pink'
 		},

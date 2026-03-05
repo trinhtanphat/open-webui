@@ -60,7 +60,7 @@
 	const steps = [
 		{ num: '01', title: 'Create Account', desc: 'Sign up and get started in seconds. No credit card required initially.' },
 		{ num: '02', title: 'Choose a Plan', desc: 'Pick Starter, Pro, or Business based on your usage needs.' },
-		{ num: '03', title: 'Add Credits', desc: 'Top up via bank transfer, Stripe, VNPay, or MoMo payment.' },
+		{ num: '03', title: 'Add Credits', desc: 'Top up via bank transfer, Stripe, VNPay, MoMo, or ZaloPay (VNG).' },
 		{ num: '04', title: 'Start Building', desc: 'Use your API key with any OpenAI-compatible SDK or HTTP client.' }
 	];
 </script>
