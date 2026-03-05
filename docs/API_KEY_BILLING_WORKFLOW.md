@@ -97,3 +97,7 @@ This document describes the product workflow for paid API key operations in Open
 - Stage 4: deploy canary and run health checks
 - Stage 5: full production rollout + rollback policy
 
+## 7) Release Checklist Reference
+
+- Use `docs/BILLING_RELEASE_CHECKLIST.md` as the deployment runbook for billing-related releases.
+

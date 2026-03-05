@@ -22,6 +22,7 @@ This is to ensure large feature PRs are discussed with the community first, befo
 - [ ] **Code review:** Have you performed a self-review of your code, addressing any coding standard issues and ensuring adherence to the project's coding standards?
 - [ ] **Design & Architecture:** Prefer smart defaults over adding new settings; use local state for ephemeral UI logic. Open a Discussion for major architectural or UX changes.
 - [ ] **Git Hygiene:** Keep PRs atomic (one logical change). Clean up commits and rebase on `dev` to ensure no unrelated commits (e.g. from `main`) are included. Push updates to the existing PR branch instead of closing and reopening.
+- [ ] **Billing (if applicable):** For payment/billing PRs, verify provider normalization, webhook verification, top-up idempotency, invoice generation, and audit logs.
 - [ ] **Title Prefix:** To clearly categorize this pull request, prefix the pull request title using one of the following:
   - **BREAKING CHANGE**: Significant changes that may affect compatibility
   - **build**: Changes that affect the build system or external dependencies
@@ -77,6 +78,7 @@ This is to ensure large feature PRs are discussed with the community first, befo
 
 - [Insert any additional context, notes, or explanations for the changes]
   - [Reference any related issues, commits, or other relevant information]
+  - [For billing-related PRs, include a copy of completed checklist items from `docs/BILLING_RELEASE_CHECKLIST.md`]
 
 ### Screenshots or Videos
 
