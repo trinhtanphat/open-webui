@@ -1,13 +1,39 @@
 <script lang="ts">
 	export let provider: string = 'generic';
+	export let accountName: string = '';
 	export let size: string = 'size-5';
 
-	const normalizedProvider = (provider || '').toLowerCase();
+	const normalize = (value: string) =>
+		(value || '')
+			.toLowerCase()
+			.trim()
+			.replace(/[^a-z0-9]/g, ' ')
+			.replace(/\s+/g, ' ');
+
+	const detectProvider = (rawProvider: string, rawAccountName: string) => {
+		const p = normalize(rawProvider);
+		const n = normalize(rawAccountName);
+		const haystack = `${p} ${n}`;
+
+		if (haystack.includes('momo')) return 'momo';
+		if (haystack.includes('vnpay') || haystack.includes('vn pay')) return 'vnpay';
+		if (haystack.includes('zalopay') || haystack.includes('zalo pay') || haystack.includes('vng')) return 'zalopay';
+		if (haystack.includes('techcombank') || haystack.includes(' tcb ')) return 'techcombank';
+		if (haystack.includes('vietcombank') || haystack.includes(' vcb ')) return 'vietcombank';
+		if (haystack.includes('sacombank') || haystack.includes(' stb ')) return 'sacombank';
+
+		return p || 'generic';
+	};
+
+	const normalizedProvider = detectProvider(provider, accountName);
 	const logoSrcByProvider: Record<string, string> = {
 		momo: '/assets/payments/momo.svg',
 		vnpay: '/assets/payments/vnpay.svg',
 		zalopay: '/assets/payments/zalopay.svg',
-		vng: '/assets/payments/zalopay.svg'
+		vng: '/assets/payments/zalopay.svg',
+		techcombank: '/assets/payments/techcombank.svg',
+		vietcombank: '/assets/payments/vietcombank.svg',
+		sacombank: '/assets/payments/sacombank.svg'
 	};
 </script>
 

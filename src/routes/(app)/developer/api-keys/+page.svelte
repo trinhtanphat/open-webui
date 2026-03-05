@@ -88,10 +88,42 @@
 			? invoices
 			: invoices.filter((item) => item.status === invoiceStatusFilter);
 
+	const inferPaymentProvider = (provider?: string, accountName?: string) => {
+		const normalized = `${provider || ''} ${accountName || ''}`.toLowerCase();
+		if (normalized.includes('momo')) return 'momo';
+		if (normalized.includes('vnpay') || normalized.includes('vn pay')) return 'vnpay';
+		if (normalized.includes('zalopay') || normalized.includes('zalo pay') || normalized.includes('vng')) return 'zalopay';
+		if (normalized.includes('techcombank') || normalized.includes(' tcb')) return 'techcombank';
+		if (normalized.includes('vietcombank') || normalized.includes(' vcb')) return 'vietcombank';
+		if (normalized.includes('sacombank') || normalized.includes(' stb')) return 'sacombank';
+		return provider || 'generic';
+	};
+
+	const providerDisplayLabel = (provider?: string, accountName?: string) => {
+		switch (inferPaymentProvider(provider, accountName)) {
+			case 'momo':
+				return 'MoMo';
+			case 'vnpay':
+				return 'VNPay';
+			case 'zalopay':
+				return 'ZaloPay';
+			case 'techcombank':
+				return 'Techcombank';
+			case 'vietcombank':
+				return 'Vietcombank';
+			case 'sacombank':
+				return 'Sacombank';
+			case 'bank_transfer':
+				return 'Bank Transfer';
+			default:
+				return (provider || 'generic').toUpperCase();
+		}
+	};
+
 	const getPaymentProviderByAccountId = (accountId?: string) => {
 		if (!accountId) return 'generic';
 		const account = paymentAccounts.find((item) => item.id === accountId);
-		return account?.provider || 'generic';
+		return inferPaymentProvider(account?.provider, account?.account_name);
 	};
 
 	const getPaymentProviderByTopupId = (topupId?: string) => {
@@ -740,7 +772,7 @@
 							>
 								{#if selectedPaymentAccount}
 									<span class="flex items-center gap-2 min-w-0">
-										<PaymentProviderIcon provider={selectedPaymentAccount.provider} size="size-5" />
+										<PaymentProviderIcon provider={selectedPaymentAccount.provider} accountName={selectedPaymentAccount.account_name} size="size-5" />
 										<span class="truncate">{getPaymentAccountLabel(selectedPaymentAccount)}</span>
 									</span>
 								{:else}
@@ -760,10 +792,10 @@
 												paymentAccountMenuOpen = false;
 											}}
 										>
-											<PaymentProviderIcon provider={pa.provider} size="size-5" />
+											<PaymentProviderIcon provider={pa.provider} accountName={pa.account_name} size="size-5" />
 											<div class="min-w-0 text-left">
 												<div class="truncate">{pa.account_name}</div>
-												<div class="text-[11px] text-gray-500 truncate">{pa.provider.toUpperCase()} · {pa.account_number}</div>
+												<div class="text-[11px] text-gray-500 truncate">{providerDisplayLabel(pa.provider, pa.account_name)} · {pa.account_number}</div>
 											</div>
 										</button>
 									{/each}
@@ -773,8 +805,8 @@
 						{#if selectedPaymentAccount}
 							<div class="mt-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/30 p-3 text-xs space-y-1">
 								<div class="font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2">
-									<PaymentProviderIcon provider={selectedPaymentAccount.provider} size="size-5" />
-									{selectedPaymentAccount.provider.toUpperCase()} · {selectedPaymentAccount.account_name}
+									<PaymentProviderIcon provider={selectedPaymentAccount.provider} accountName={selectedPaymentAccount.account_name} size="size-5" />
+									{providerDisplayLabel(selectedPaymentAccount.provider, selectedPaymentAccount.account_name)} · {selectedPaymentAccount.account_name}
 								</div>
 								<div class="text-gray-500 font-mono">{selectedPaymentAccount.account_number}</div>
 								{#if selectedPaymentAccount.instructions}
