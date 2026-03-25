@@ -908,7 +908,7 @@ class UsersTable:
                     metadata["usage_month"] = current_month
                     metadata["monthly_requests"] = 0
 
-                if endpoint.startswith("/openai"):
+                if endpoint.startswith("/openai") or endpoint.startswith("/api"):
                     rpm_limit = int(metadata.get("rpm_limit", 60))
                     window = metadata.get("rate_limit_window", {})
                     window_minute = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d %H:%M")

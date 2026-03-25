@@ -4,6 +4,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { copyToClipboard } from '$lib/utils';
+	import { models } from '$lib/stores';
 	import BarChart from '$lib/components/billing/BarChart.svelte';
 	import PaymentProviderIcon from '$lib/components/billing/PaymentProviderIcon.svelte';
 	import {
@@ -534,15 +535,47 @@
 			</h3>
 			<div class="rounded-xl bg-gray-900 dark:bg-black p-4 text-xs text-gray-100 font-mono overflow-x-auto">
 				<div class="text-gray-500"># {$i18n.t('OpenAI-compatible endpoint')}</div>
-				<div class="mt-1">curl {window.location.origin}/api/v1/chat/completions \</div>
+				<div class="mt-1">curl {window.location.origin}/openai/chat/completions \</div>
 				<div class="pl-4">-H "Authorization: Bearer YOUR_API_KEY" \</div>
 				<div class="pl-4">-H "Content-Type: application/json" \</div>
 				<div class="pl-4">-d '{"{"}\"model\": \"gpt-4\", \"messages\": [{"{"}\"role\": \"user\", \"content\": \"Hello!\"{"}"}]{"}"}'</div>
 			</div>
 			<div class="flex items-center gap-3 text-xs text-gray-500">
-				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> {$i18n.t('Base URL')}: <code class="text-gray-700 dark:text-gray-300">{window.location.origin}/api/v1</code></span>
+				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> {$i18n.t('Base URL')}: <code class="text-gray-700 dark:text-gray-300">{window.location.origin}/openai</code></span>
 			</div>
 		</div>
+
+		<!-- Available Models -->
+		{#if ($models ?? []).length > 0}
+			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-3">
+				<h3 class="font-semibold text-sm flex items-center gap-2">
+					<Sparkles className="size-4 text-violet-500" />
+					{$i18n.t('Available Models')}
+					<span class="text-xs font-normal text-gray-400">({$models.length})</span>
+				</h3>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+					{#each $models as model}
+						<button
+							class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-left group"
+							on:click={() => {
+								copyToClipboard(model.id);
+								toast.success($i18n.t('Model ID copied: {{id}}', { id: model.id }));
+							}}
+							title={$i18n.t('Click to copy model ID')}
+						>
+							<div class="min-w-0">
+								<div class="text-xs font-medium truncate">{model.name}</div>
+								{#if model.name !== model.id}
+									<div class="text-[10px] text-gray-400 font-mono truncate">{model.id}</div>
+								{/if}
+							</div>
+							<Clipboard className="size-3.5 text-gray-300 group-hover:text-gray-500 dark:group-hover:text-gray-300 flex-shrink-0" />
+						</button>
+					{/each}
+				</div>
+				<p class="text-[11px] text-gray-400">{$i18n.t('Click any model to copy its ID for use in API calls')}</p>
+			</div>
+		{/if}
 
 		<!-- Tab Navigation -->
 		<div class="flex items-center gap-1 p-1 rounded-xl bg-gray-50 dark:bg-gray-900/40 w-fit">

@@ -272,7 +272,7 @@
 			<pre class="text-sm text-gray-300 leading-relaxed"><code><span class="text-violet-400">from</span> openai <span class="text-violet-400">import</span> OpenAI
 
 client = OpenAI(
-    base_url=<span class="text-emerald-400">"{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api"</span>,
+    base_url=<span class="text-emerald-400">"{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/openai"</span>,
     api_key=<span class="text-emerald-400">"sk-your-api-key"</span>,
 )
 

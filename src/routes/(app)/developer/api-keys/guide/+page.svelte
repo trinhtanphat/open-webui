@@ -7,7 +7,8 @@
 	import ArrowRight from '$lib/components/icons/ArrowRight.svelte';
 
 	const i18n = getContext<any>('i18n');
-	const curlExample = `curl -X POST "https://YOUR_DOMAIN/api/openai/chat/completions" \\
+	const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com';
+	const curlExample = `curl -X POST "${baseUrl}/openai/chat/completions" \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer sk-xxxxxxxxxxxxxxxx" \\
   -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Hello"}]}'`;
@@ -18,7 +19,7 @@ Body: {"topup_request_id":"...","status":"paid","tx_ref":"...","amount":12.5,"cu
 
 client = OpenAI(
     api_key="sk-xxxxxxxxxxxxxxxx",
-    base_url="https://YOUR_DOMAIN/api"
+    base_url="${baseUrl}/openai"
 )
 
 response = client.chat.completions.create(
