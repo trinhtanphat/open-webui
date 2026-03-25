@@ -55,18 +55,31 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo docker system prune -af
 
-      # Build bản thường (không CUDA) cho nhẹ, nếu cần CUDA bạn báo mình sửa thêm
-      - name: Build and push Docker image
+      - name: Build Docker image for smoke test
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          load: true
+          tags: open-webui-vnso:smoke
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_HASH=${{ github.sha }}
+
+      - name: Smoke test image
+        run: |
+          docker run --rm --entrypoint python open-webui-vnso:smoke -c "import uvicorn, fastapi, open_webui.main; print('uvicorn=', uvicorn.__version__)"
+
+      - name: Tag and push verified image
+        run: |
+          while IFS= read -r tag; do
+            if [ -n "$tag" ]; then
+              echo "Pushing $tag"
+              docker tag open-webui-vnso:smoke "$tag"
+              docker push "$tag"
+            fi
+          done <<< "${{ steps.meta.outputs.tags }}"
 
       # # Nếu sau này muốn build thêm CUDA song song, mình gợi ý:
       # - name: Build & push CUDA image
