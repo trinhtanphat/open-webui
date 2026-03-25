@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	// @ts-ignore
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { goto } from '$app/navigation';
@@ -32,7 +31,7 @@
 	} from '$lib/stores';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
 
-	const i18n: any = getContext('i18n');
+	const i18n = getContext('i18n');
 
 	import {
 		getChatList,
@@ -65,8 +64,6 @@
 	import Sidebar from '../icons/Sidebar.svelte';
 	import PinnedModelList from './Sidebar/PinnedModelList.svelte';
 	import Note from '../icons/Note.svelte';
-	import Bolt from '../icons/Bolt.svelte';
-	import Sparkles from '../icons/Sparkles.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
@@ -77,7 +74,7 @@
 	let navElement;
 	let shiftKey = false;
 
-	let selectedChatId: string | null = null;
+	let selectedChatId = null;
 	let showCreateChannel = false;
 
 	// Pagination variables
@@ -86,30 +83,30 @@
 
 	let showCreateFolderModal = false;
 
-	let pinnedModels: string[] = [];
+	let pinnedModels = [];
 
 	let showPinnedModels = false;
 	let showChannels = false;
 	let showFolders = false;
 
-	let folders: Record<string, any> = {};
-	let folderRegistry: Record<string, any> = {};
+	let folders = {};
+	let folderRegistry = {};
 
-	let newFolderId: string | null = null;
+	let newFolderId = null;
 
 	$: if ($selectedFolder) {
 		initFolders();
 	}
 
 	const initFolders = async () => {
-		if (($config?.features as any)?.enable_folders === false) {
+		if ($config?.features?.enable_folders === false) {
 			return;
 		}
 
 		const folderList = await getFolders(localStorage.token).catch((error) => {
 			return [];
 		});
-		_folders.set(folderList.sort((a: any, b: any) => b.updated_at - a.updated_at));
+		_folders.set(folderList.sort((a, b) => b.updated_at - a.updated_at));
 
 		folders = {};
 
@@ -138,7 +135,7 @@
 					: [folder.id];
 
 				// Sort the children by updated_at field
-				folders[folder.parent_id].childrenIds.sort((a: any, b: any) => {
+				folders[folder.parent_id].childrenIds.sort((a, b) => {
 					return folders[b].updated_at - folders[a].updated_at;
 				});
 			}
@@ -211,7 +208,7 @@
 		if (res) {
 			await channels.set(
 				res.sort(
-					(a: any, b: any) =>
+					(a, b) =>
 						['', null, 'group', 'dm'].indexOf(a.type) - ['', null, 'group', 'dm'].indexOf(b.type)
 				)
 			);
@@ -259,12 +256,12 @@
 
 		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
-		await chats.set([...($chats ? $chats : []), ...newChatList] as any);
+		await chats.set([...($chats ? $chats : []), ...newChatList]);
 
 		chatListLoading = false;
 	};
 
-	const importChatHandler = async (items: any[], pinned = false, folderId: string | null = null) => {
+	const importChatHandler = async (items, pinned = false, folderId = null) => {
 		console.log('importChatHandler', items, pinned, folderId);
 		for (const item of items) {
 			console.log(item);
@@ -285,13 +282,13 @@
 		initChatList();
 	};
 
-	const inputFilesHandler = async (files: any[]) => {
+	const inputFilesHandler = async (files) => {
 		console.log(files);
 
 		for (const file of files) {
 			const reader = new FileReader();
 			reader.onload = async (e) => {
-				const content = e.target?.result as string;
+				const content = e.target.result;
 
 				try {
 					const chatItems = JSON.parse(content);
@@ -305,7 +302,7 @@
 		}
 	};
 
-	const tagEventHandler = async (type: string, tagName: string, chatId: string) => {
+	const tagEventHandler = async (type, tagName, chatId) => {
 		console.log(type, tagName, chatId);
 		if (type === 'delete') {
 			initChatList();
@@ -316,7 +313,7 @@
 
 	let draggedOver = false;
 
-	const onDragOver = (e: DragEvent) => {
+	const onDragOver = (e) => {
 		e.preventDefault();
 
 		// Check if a file is being draggedOver.
@@ -331,7 +328,7 @@
 		draggedOver = false;
 	};
 
-	const onDrop = async (e: DragEvent) => {
+	const onDrop = async (e) => {
 		e.preventDefault();
 		console.log(e); // Log the drop event
 
@@ -348,8 +345,8 @@
 		draggedOver = false; // Reset draggedOver status after drop
 	};
 
-	let touchstart: any;
-	let touchend: any;
+	let touchstart;
+	let touchend;
 
 	function checkDirection() {
 		const screenWidth = window.innerWidth;
@@ -364,23 +361,23 @@
 		}
 	}
 
-	const onTouchStart = (e: TouchEvent) => {
+	const onTouchStart = (e) => {
 		touchstart = e.changedTouches[0];
 		console.log(touchstart.clientX);
 	};
 
-	const onTouchEnd = (e: TouchEvent) => {
+	const onTouchEnd = (e) => {
 		touchend = e.changedTouches[0];
 		checkDirection();
 	};
 
-	const onKeyDown = (e: KeyboardEvent) => {
+	const onKeyDown = (e) => {
 		if (e.key === 'Shift') {
 			shiftKey = true;
 		}
 	};
 
-	const onKeyUp = (e: KeyboardEvent) => {
+	const onKeyUp = (e) => {
 		if (e.key === 'Shift') {
 			shiftKey = false;
 		}
@@ -419,7 +416,7 @@
 		localStorage.setItem('sidebarWidth', String($sidebarWidth));
 	};
 
-	const resizeSidebarHandler = (endClientX: number) => {
+	const resizeSidebarHandler = (endClientX) => {
 		const dx = endClientX - startClientX;
 		const newSidebarWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + dx));
 
@@ -449,7 +446,7 @@
 				}
 
 				if ($showSidebar && !value) {
-					const navElement: any = document.getElementsByTagName('nav')[0];
+					const navElement = document.getElementsByTagName('nav')[0];
 					if (navElement) {
 						navElement.style['-webkit-app-region'] = 'drag';
 					}
@@ -458,7 +455,8 @@
 			showSidebar.subscribe(async (value) => {
 				localStorage.sidebar = value;
 
-				const navElement: any = document.getElementsByTagName('nav')[0];
+				// nav element is not available on the first render
+				const navElement = document.getElementsByTagName('nav')[0];
 
 				if (navElement) {
 					if ($mobile) {
@@ -483,7 +481,7 @@
 					await initChatList();
 
 					// Check which chats have active tasks
-					const allChatIds = [...($chats ?? []).map((c: any) => c.id), ...$pinnedChats.map((c: any) => c.id)];
+					const allChatIds = [...$chats.map((c) => c.id), ...$pinnedChats.map((c) => c.id)];
 					if (allChatIds.length > 0) {
 						try {
 							const res = await checkActiveChats(localStorage.token, allChatIds);
@@ -495,7 +493,7 @@
 				}
 			}),
 			settings.subscribe((value) => {
-				if (pinnedModels != (value?.pinnedModels ?? [])) {
+				if (pinnedModels != value?.pinnedModels ?? []) {
 					pinnedModels = value?.pinnedModels ?? [];
 					showPinnedModels = pinnedModels.length > 0;
 				}
@@ -632,7 +630,7 @@
 		});
 
 		if (res) {
-			$socket?.emit('join-channels', { auth: { token: $user?.token } });
+			$socket.emit('join-channels', { auth: { token: $user?.token } });
 			await initChannels();
 			showCreateChannel = false;
 			showChannels = true;
@@ -643,7 +641,7 @@
 
 <FolderModal
 	bind:show={showCreateFolderModal}
-	onSubmit={async (folder: any) => {
+	onSubmit={async (folder) => {
 		await createFolder(folder);
 		showCreateFolderModal = false;
 	}}
@@ -659,7 +657,7 @@
 		on:mousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
-	></div>
+	/>
 {/if}
 
 <SearchModal
@@ -674,12 +672,11 @@
 <button
 	id="sidebar-new-chat-button"
 	class="hidden"
-	aria-label="New Chat"
 	on:click={() => {
 		goto('/');
 		newChatHandler();
 	}}
-></button>
+/>
 
 <svelte:window
 	on:mousemove={(e) => {
@@ -793,30 +790,6 @@
 					</div>
 				{/if}
 
-				{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
-					<div class="">
-						<Tooltip content={$i18n.t('API Platform')} placement="right">
-							<a
-								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
-								href="/developer/api-keys/landing"
-								on:click={async (e) => {
-									e.stopImmediatePropagation();
-									e.preventDefault();
-
-									goto('/developer/api-keys/landing');
-									itemClickHandler();
-								}}
-								aria-label={$i18n.t('API Platform')}
-								draggable="false"
-							>
-								<div class=" self-center flex items-center justify-center size-9">
-									<Bolt className="size-4.5" />
-								</div>
-							</a>
-						</Tooltip>
-					</div>
-				{/if}
-
 				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="">
 						<Tooltip content={$i18n.t('Workspace')} placement="right">
@@ -858,19 +831,6 @@
 
 		<div>
 			<div>
-				<!-- Upgrade Plan Button (collapsed sidebar) -->
-				<div class="flex justify-center py-1">
-					<Tooltip content={$i18n.t('Upgrade plan')} placement="right">
-						<a
-							href="/developer/api-keys/pricing"
-							draggable="false"
-							class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
-						>
-							<Sparkles className="size-4" />
-						</a>
-					</Tooltip>
-				</div>
-
 				<div class=" py-2 flex justify-center items-center">
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
@@ -990,10 +950,10 @@
 			<div
 				class="relative flex flex-col flex-1 overflow-y-auto scrollbar-hidden pt-3 pb-3"
 				on:scroll={(e) => {
-					if ((e.target as HTMLElement).scrollTop === 0) {
+					if (e.target.scrollTop === 0) {
 						scrollTop = 0;
 					} else {
-						scrollTop = (e.target as HTMLElement).scrollTop;
+						scrollTop = e.target.scrollTop;
 					}
 				}}
 			>
@@ -1105,7 +1065,7 @@
 						chevron={false}
 						dragAndDrop={false}
 					>
-						<PinnedModelList bind:selectedChatId={selectedChatId as any} {shiftKey} />
+						<PinnedModelList bind:selectedChatId {shiftKey} />
 					</Folder>
 				{/if}
 
@@ -1163,7 +1123,7 @@
 									return;
 								}
 
-								const res = await updateFolderParentIdById(localStorage.token, id, null as any).catch(
+								const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
 									(error) => {
 										toast.error(`${error}`);
 										return null;
@@ -1232,7 +1192,7 @@
 							if (chat) {
 								console.log(chat);
 								if (chat.folder_id) {
-									const res = await updateChatFolderIdById(localStorage.token, chat.id, null as any).catch(
+									const res = await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
 										(error) => {
 											toast.error(`${error}`);
 											return null;
@@ -1253,7 +1213,7 @@
 								return;
 							}
 
-							const res = await updateFolderParentIdById(localStorage.token, id, null as any).catch(
+							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
 								(error) => {
 									toast.error(`${error}`);
 									return null;
@@ -1301,7 +1261,7 @@
 													const res = await updateChatFolderIdById(
 														localStorage.token,
 														chat.id,
-														null as any
+														null
 													).catch((error) => {
 														toast.error(`${error}`);
 														return null;
@@ -1440,37 +1400,6 @@
 					class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
 				></div>
 				<div class="flex flex-col font-primary">
-					<!-- Developer Console Button -->
-					{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
-						<a
-							href="/developer/api-keys"
-							draggable="false"
-							class="flex items-center gap-2.5 rounded-2xl py-2 px-3 mb-1 w-full hover:bg-gray-100/50 dark:hover:bg-gray-900/50 transition-all duration-200 group"
-						>
-							<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 flex-shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-								<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
-							</div>
-							<div class="flex flex-col flex-1 min-w-0">
-								<span class="text-sm font-medium truncate">{$i18n.t('Developer Console')}</span>
-							</div>
-						</a>
-					{/if}
-
-					<!-- Upgrade Plan Button (full sidebar) -->
-					<a
-						href="/developer/api-keys/pricing"
-						draggable="false"
-						class="flex items-center gap-2.5 rounded-2xl py-2 px-3 mb-1 w-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 dark:from-violet-500/15 dark:to-fuchsia-500/15 hover:from-violet-500/20 hover:to-fuchsia-500/20 dark:hover:from-violet-500/25 dark:hover:to-fuchsia-500/25 border border-violet-200/50 dark:border-violet-500/20 transition-all duration-200 group"
-					>
-						<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white flex-shrink-0 shadow-sm">
-							<Sparkles className="size-3.5" />
-						</div>
-						<div class="flex flex-col flex-1 min-w-0">
-							<span class="text-sm font-medium text-violet-700 dark:text-violet-300 truncate">{$i18n.t('Upgrade plan')}</span>
-							<span class="text-[10px] text-violet-500/70 dark:text-violet-400/50 truncate">{$i18n.t('Get more with Pro')}</span>
-						</div>
-					</a>
-
 					{#if $user !== undefined && $user !== null}
 						<UserMenu
 							role={$user?.role}
@@ -1507,15 +1436,6 @@
 									{/if}
 								</div>
 								<div class=" self-center font-medium">{$user?.name}</div>
-								<div class="ml-auto self-center">
-									<span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide
-										{$user?.role === 'admin'
-											? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300'
-											: $user?.role === 'pending'
-												? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-												: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}"
-									>{$user?.role}</span>
-								</div>
 							</div>
 						</UserMenu>
 					{/if}
@@ -1525,17 +1445,15 @@
 	</div>
 
 	{#if !$mobile}
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800 transition z-20"
 			id="sidebar-resizer"
 			on:mousedown={resizeStartHandler}
 			role="separator"
-			aria-label="Resize sidebar"
 		>
 			<div
 				class=" absolute -left-1.5 -right-1.5 -top-0 -bottom-0 z-20 cursor-col-resize bg-transparent"
-			></div>
+			/>
 		</div>
 	{/if}
 {/if}
