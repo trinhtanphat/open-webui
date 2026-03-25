@@ -144,8 +144,6 @@
 			}
 		}
 	};
-
-<<<<<<< HEAD
 	const createFolder = async ({
 		name,
 		data,
