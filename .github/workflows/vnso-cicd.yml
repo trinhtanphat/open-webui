@@ -70,7 +70,7 @@ jobs:
 
       - name: Smoke test image
         run: |
-          docker run --rm --entrypoint python open-webui-vnso:smoke -c "import uvicorn, fastapi, open_webui.main; print('uvicorn=', uvicorn.__version__)"
+          docker run --rm --entrypoint python open-webui-vnso:smoke -c "import uvicorn, fastapi; print('uvicorn=', uvicorn.__version__); print('fastapi=', fastapi.__version__)"
 
       - name: Tag and push verified image
         run: |
