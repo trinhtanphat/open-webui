@@ -3,6 +3,7 @@ import time
 from typing import Optional, Any
 
 from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm.attributes import flag_modified
 from open_webui.internal.db import Base, JSONField, get_db, get_db_context
 
 
@@ -942,6 +943,7 @@ class UsersTable:
                 record.last_used_at = now
                 record.updated_at = now
                 record.data = metadata
+                flag_modified(record, "data")
 
                 db.commit()
                 db.refresh(record)
