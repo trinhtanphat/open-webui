@@ -243,9 +243,6 @@
 
 			{#if ($config?.features?.enable_api_keys ?? true) && (role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
 				<DropdownMenu.Item
-					{...({as: 'a'} as any)}
-					href="/developer/api-keys/landing"
-					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					on:click={async () => {
 						show = false;
@@ -253,6 +250,8 @@
 							await tick();
 							showSidebar.set(false);
 						}
+
+						await goto('/developer/api-keys/landing');
 					}}
 				>
 					<div class=" self-center mr-3">
@@ -264,9 +263,6 @@
 
 			{#if role === 'admin'}
 				<DropdownMenu.Item
-					{...({as: 'a'} as any)}
-					href="/playground"
-					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					on:click={async () => {
 						show = false;
@@ -274,6 +270,8 @@
 							await tick();
 							showSidebar.set(false);
 						}
+
+						await goto('/playground');
 					}}
 				>
 					<div class=" self-center mr-3">
@@ -282,9 +280,6 @@
 					<div class=" self-center truncate">{$i18n.t('Playground')}</div>
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
-					{...({as: 'a'} as any)}
-					href="/admin"
-					draggable="false"
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					on:click={async () => {
 						show = false;
@@ -292,6 +287,8 @@
 							await tick();
 							showSidebar.set(false);
 						}
+
+						await goto('/admin');
 					}}
 				>
 					<div class=" self-center mr-3">
@@ -308,14 +305,11 @@
 
 				{#if $user?.role === 'admin'}
 					<DropdownMenu.Item
-						{...({as: 'a'} as any)}
-						href="https://docs.openwebui.com"
-						target="_blank"
-						draggable="false"
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
 						on:click={() => {
 							show = false;
+							window.open('https://docs.openwebui.com', '_blank', 'noopener,noreferrer');
 						}}
 					>
 						<div class=" self-center mr-3">
@@ -326,14 +320,11 @@
 
 					<!-- Releases -->
 					<DropdownMenu.Item
-						{...({as: 'a'} as any)}
-						href="https://github.com/open-webui/open-webui/releases"
-						target="_blank"
-						draggable="false"
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
 						on:click={() => {
 							show = false;
+							window.open('https://github.com/open-webui/open-webui/releases', '_blank', 'noopener,noreferrer');
 						}}
 					>
 						<div class=" self-center mr-3">
