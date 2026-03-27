@@ -244,8 +244,7 @@
 			{#if ($config?.features?.enable_api_keys ?? true) && (role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					on:click={async () => {
-						show = false;
+					onSelect={async () => {
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -264,8 +263,7 @@
 			{#if role === 'admin'}
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					on:click={async () => {
-						show = false;
+					onSelect={async () => {
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -281,8 +279,7 @@
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					on:click={async () => {
-						show = false;
+					onSelect={async () => {
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -307,8 +304,7 @@
 					<DropdownMenu.Item
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
-						on:click={() => {
-							show = false;
+						onSelect={() => {
 							window.open('https://docs.openwebui.com', '_blank', 'noopener,noreferrer');
 						}}
 					>
@@ -322,8 +318,7 @@
 					<DropdownMenu.Item
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
-						on:click={() => {
-							show = false;
+						onSelect={() => {
 							window.open('https://github.com/open-webui/open-webui/releases', '_blank', 'noopener,noreferrer');
 						}}
 					>
