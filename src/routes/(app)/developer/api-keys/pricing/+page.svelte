@@ -32,6 +32,18 @@
 		'from-blue-500 to-violet-600',
 		'from-violet-500 to-fuchsia-600'
 	];
+
+	const USD_TO_VND = 25000;
+
+	function toVND(usd: number): string {
+		return (Math.round(usd * USD_TO_VND)).toLocaleString('vi-VN') + '₫';
+	}
+
+	function toVNDPerK(usdPerK: number): string {
+		const vnd = Math.round(usdPerK * USD_TO_VND);
+		if (vnd < 1000) return vnd.toLocaleString('vi-VN') + '₫';
+		return (vnd / 1000).toFixed(1).replace(/\.0$/, '') + 'k₫';
+	}
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -85,7 +97,7 @@
 
 						<!-- Price -->
 						<div class="flex items-baseline gap-1">
-							<span class="text-4xl font-bold">${plan.monthly_price_usd}</span>
+							<span class="text-4xl font-bold">{toVND(plan.monthly_price_usd)}</span>
 							<span class="text-gray-500">/{$i18n.t('month')}</span>
 						</div>
 
@@ -105,7 +117,7 @@
 							</li>
 							<li class="flex items-start gap-2.5 text-sm">
 								<CheckCircle className="size-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-								<span>${plan.overage_usd_per_1k_requests} {$i18n.t('per 1K overage requests')}</span>
+								<span>{toVND(plan.overage_usd_per_1k_requests)} {$i18n.t('per 1K overage requests')}</span>
 							</li>
 							<li class="flex items-start gap-2.5 text-sm">
 								<CheckCircle className="size-4 text-emerald-500 mt-0.5 flex-shrink-0" />
@@ -207,9 +219,9 @@
 									<td class="px-5 py-3">
 										<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase {tierColor}">{tier}</span>
 									</td>
-									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.input_cost_per_1k_tokens.toFixed(4)}</td>
-									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.output_cost_per_1k_tokens.toFixed(4)}</td>
-									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">${m.per_request_cost.toFixed(4)}</td>
+							<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">{toVNDPerK(m.input_cost_per_1k_tokens)}</td>
+							<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">{toVNDPerK(m.output_cost_per_1k_tokens)}</td>
+							<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">{m.per_request_cost > 0 ? toVND(m.per_request_cost) : '—'}</td>
 									<td class="px-5 py-3 text-right font-mono text-gray-600 dark:text-gray-300">
 										~{Math.max(1, Math.round(((m.input_cost_per_1k_tokens + m.output_cost_per_1k_tokens) / 2 + m.per_request_cost) / 0.001))}
 									</td>
