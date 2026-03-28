@@ -281,7 +281,7 @@
 				</div>
 				<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4">
 					<h3 class="font-medium text-sm">{$i18n.t('How do credits translate to actual usage?')}</h3>
-					<p class="text-xs text-gray-500 mt-1.5">{$i18n.t('1 credit ≈ $0.001. Actual cost depends on the model used — cheaper models use fewer credits per token.')}</p>
+					<p class="text-xs text-gray-500 mt-1.5">{$i18n.t('1 credit ≈ 25 ₫. Actual cost depends on the model used — cheaper models use fewer credits per token.')}</p>
 				</div>
 				<div class="rounded-xl border border-gray-100 dark:border-gray-800 p-4">
 					<h3 class="font-medium text-sm">{$i18n.t('Can I top up mid-cycle?')}</h3>

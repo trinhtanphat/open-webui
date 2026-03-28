@@ -17,6 +17,9 @@
 	let plans: ApiKeyPlan[] = [];
 	let models: ModelPricing[] = [];
 	let loading = true;
+	const USD_TO_VND = 25000;
+
+	const formatVND = (usd: number) => `${Math.round(usd * USD_TO_VND).toLocaleString('vi-VN')} ₫`;
 
 	onMount(async () => {
 		plans = await getApiKeyPlans(localStorage.token).catch(() => []);
@@ -183,8 +186,8 @@
 							<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{plan.recommended_for}</p>
 						</div>
 						<div class="flex items-baseline gap-1">
-							<span class="text-3xl font-bold">${plan.monthly_price_usd}</span>
-							<span class="text-sm text-gray-500">/month</span>
+							<span class="text-3xl font-bold">{formatVND(plan.monthly_price_usd)}</span>
+							<span class="text-sm text-gray-500">/{$i18n.t('month')}</span>
 						</div>
 						<ul class="space-y-2 text-sm">
 							<li class="flex items-center gap-2">
@@ -201,7 +204,7 @@
 							</li>
 							<li class="flex items-center gap-2">
 								<CheckCircle className="size-4 text-emerald-500 flex-shrink-0" />
-								<span>${plan.overage_usd_per_1k_requests}/1k overage</span>
+								<span>{formatVND(plan.overage_usd_per_1k_requests)}/1k overage</span>
 							</li>
 						</ul>
 						<button
@@ -244,9 +247,9 @@
 										<div class="text-xs text-gray-400 font-mono">{m.model_id}</div>
 									{/if}
 								</td>
-								<td class="px-4 py-3 text-right font-mono">${m.input_cost_per_1k_tokens.toFixed(4)}</td>
-								<td class="px-4 py-3 text-right font-mono">${m.output_cost_per_1k_tokens.toFixed(4)}</td>
-								<td class="px-4 py-3 text-right font-mono">${m.per_request_cost.toFixed(4)}</td>
+								<td class="px-4 py-3 text-right font-mono">{formatVND(m.input_cost_per_1k_tokens)}</td>
+								<td class="px-4 py-3 text-right font-mono">{formatVND(m.output_cost_per_1k_tokens)}</td>
+								<td class="px-4 py-3 text-right font-mono">{formatVND(m.per_request_cost)}</td>
 							</tr>
 						{/each}
 					</tbody>

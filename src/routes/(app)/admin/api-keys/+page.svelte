@@ -71,7 +71,7 @@
 	let usageLogs: UsageLogEntry[] = [];
 	let usageDaily: UsageDailySummary[] = [];
 	let usageByModel: UsageByModelSummary[] = [];
-	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'USD' };
+	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'VND' };
 	let savingBillingSettings = false;
 
 	// SMTP / Email settings
@@ -165,8 +165,8 @@
 		modelPricings = await getAdminModelPricings(localStorage.token, true).catch(() => []);
 		usageDaily = await getAdminUsageDaily(localStorage.token, { days: 30 }).catch(() => []);
 		usageByModel = await getAdminUsageByModel(localStorage.token, { days: 30 }).catch(() => []);
-		let billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
-			auto_approve_topups: true, default_currency: 'USD'
+		billingSettings = await getAdminBillingSettings(localStorage.token).catch(() => ({
+			auto_approve_topups: true, default_currency: 'VND'
 		}));
 		smtpSettings = await getAdminSmtpSettings(localStorage.token).catch(() => ({
 			smtp_host: '', smtp_port: 587, smtp_user: '', smtp_from: '',

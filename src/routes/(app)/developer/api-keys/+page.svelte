@@ -66,10 +66,14 @@
 	let paymentAccountMenuOpen = false;
 	let paymentAccountMenuRef: HTMLDivElement;
 	let topupAmount = 10;
-	let topupCurrency = 'USD';
+	let topupCurrency = 'VND';
+	const USD_TO_VND = 25000;
 
-	// Will be set from billing settings once loaded
-	$: if (billingSettings.default_currency && topupCurrency === 'USD') {
+	const formatVND = (value: number) => `${Math.round(value).toLocaleString('vi-VN')} ₫`;
+	const usdToVnd = (usd: number) => formatVND(usd * USD_TO_VND);
+
+	// Respect server currency when user has not changed the default yet.
+	$: if (billingSettings.default_currency && topupCurrency === 'VND') {
 		topupCurrency = billingSettings.default_currency;
 	}
 	let topupTxRef = '';
@@ -78,7 +82,7 @@
 
 	let myUsageDaily: UsageDailySummary[] = [];
 	let myUsageByModel: UsageByModelSummary[] = [];
-	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'USD' };
+	let billingSettings: BillingSettings = { auto_approve_topups: true, default_currency: 'VND' };
 	let activating = false;
 	let selectedActivationPlan = 'starter';
 
@@ -158,7 +162,7 @@
 		myUsageDaily = await getMyUsageDaily(localStorage.token, usageDays).catch(() => []);
 		myUsageByModel = await getMyUsageByModel(localStorage.token, usageDays).catch(() => []);
 		billingSettings = await getBillingSettings(localStorage.token).catch(() => ({
-			auto_approve_topups: true, default_currency: 'USD'
+			auto_approve_topups: true, default_currency: 'VND'
 		}));
 
 		if (!selectedPaymentAccountId && paymentAccounts.length > 0) {
@@ -192,7 +196,7 @@
 
 	const selectPlan = (plan: ApiKeyPlan) => {
 		selectedPlanId = plan.id;
-		topupAmount = plan.monthly_price_usd;
+		topupAmount = Math.round(plan.monthly_price_usd * USD_TO_VND);
 		topupNote = `Subscribe plan ${plan.name}`;
 		activeTab = 'topup';
 	};
@@ -368,7 +372,7 @@
 									<span class="ml-auto px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold">Popular</span>
 								{/if}
 							</div>
-							<div class="text-lg font-bold">${plan.monthly_price_usd}<span class="text-xs font-normal text-gray-500">/mo</span></div>
+							<div class="text-lg font-bold">{usdToVnd(plan.monthly_price_usd)}<span class="text-xs font-normal text-gray-500">/{$i18n.t('month')}</span></div>
 							<div class="text-xs text-gray-500 mt-1">{plan.included_credits.toLocaleString()} credits • {plan.rpm_limit} RPM</div>
 						</button>
 					{/each}
@@ -665,10 +669,10 @@
 						</div>
 						<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 p-3">
 							<div class="text-xs text-gray-500">{$i18n.t('Total Spend')}</div>
-							<div class="text-base font-bold mt-0.5">${usage.total_spend_usd.toFixed(2)}</div>
+							<div class="text-base font-bold mt-0.5">{usdToVnd(usage.total_spend_usd)}</div>
 						</div>
 					</div>
-					<p class="text-xs text-gray-400">{$i18n.t('Avg spend / 1K requests')}: ${usage.avg_spend_per_1k_requests_usd.toFixed(4)} · {$i18n.t('Period')}: {usage.usage_month ?? '-'}</p>
+					<p class="text-xs text-gray-400">{$i18n.t('Avg spend / 1K requests')}: {usdToVnd(usage.avg_spend_per_1k_requests_usd)} · {$i18n.t('Period')}: {usage.usage_month ?? '-'}</p>
 				</div>
 			{/if}
 
@@ -700,10 +704,11 @@
 							<BarChart
 								data={myUsageDaily.map((d) => ({ label: d.date, value: d.requests, secondary: d.total_cost }))}
 								valueLabel="Requests"
-								secondaryLabel="Cost ($)"
+								secondaryLabel="Cost (VND)"
 								barColor="#3b82f6"
 								secondaryColor="#f59e0b"
 								height={200}
+								formatValue={(v) => Math.round(v).toLocaleString('vi-VN')}
 							/>
 						</div>
 					{/if}
@@ -749,7 +754,7 @@
 								</div>
 								<div>
 									<div class="font-semibold text-sm">{plan.name}</div>
-									<div class="text-xs text-gray-500">${plan.monthly_price_usd}/{$i18n.t('month')}</div>
+									<div class="text-xs text-gray-500">{usdToVnd(plan.monthly_price_usd)}/{$i18n.t('month')}</div>
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-1.5 text-xs text-gray-500">
@@ -782,13 +787,13 @@
 						<div>
 							<div class="text-xs font-medium text-gray-500 mb-1">{$i18n.t('Quick amount')}</div>
 							<div class="flex flex-wrap gap-2">
-								{#each [10, 25, 50, 100, 250] as amountOption}
+								{#each [100000, 250000, 500000, 1000000, 2000000] as amountOption}
 									<button
 										type="button"
 										class="px-2.5 py-1 rounded-lg text-xs border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
 										on:click={() => (topupAmount = amountOption)}
 									>
-										${amountOption}
+										{formatVND(amountOption)}
 									</button>
 								{/each}
 							</div>
@@ -862,25 +867,7 @@
 							<div>
 								<label for="topup-currency" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
 								<select id="topup-currency" class="w-full appearance-none px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency}>
-									<option value="USD">🇺🇸 USD ($)</option>
 									<option value="VND">🇻🇳 VND (₫)</option>
-									<option value="EUR">🇪🇺 EUR (€)</option>
-									<option value="GBP">🇬🇧 GBP (£)</option>
-									<option value="JPY">🇯🇵 JPY (¥)</option>
-									<option value="CNY">🇨🇳 CNY (¥)</option>
-									<option value="KRW">🇰🇷 KRW (₩)</option>
-									<option value="SGD">🇸🇬 SGD (S$)</option>
-									<option value="THB">🇹🇭 THB (฿)</option>
-									<option value="AUD">🇦🇺 AUD (A$)</option>
-									<option value="CAD">🇨🇦 CAD (C$)</option>
-									<option value="INR">🇮🇳 INR (₹)</option>
-									<option value="MYR">🇲🇾 MYR (RM)</option>
-									<option value="PHP">🇵🇭 PHP (₱)</option>
-									<option value="IDR">🇮🇩 IDR (Rp)</option>
-									<option value="TWD">🇹🇼 TWD (NT$)</option>
-									<option value="HKD">🇭🇰 HKD (HK$)</option>
-									<option value="CHF">🇨🇭 CHF (Fr)</option>
-									<option value="BRL">🇧🇷 BRL (R$)</option>
 								</select>
 							</div>
 						</div>

@@ -23,6 +23,7 @@
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
+	import Star from '$lib/components/icons/Star.svelte';
 	import SignOut from '$lib/components/icons/SignOut.svelte';
 	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
 	import UserStatusModal from './UserStatusModal.svelte';
@@ -91,7 +92,6 @@
 			sideOffset={4}
 			side="top"
 			{align}
-			transition={(e) => fade(e, { duration: 100 })}
 		>
 			{#if profile}
 				<div class=" flex gap-3.5 w-full p-2.5 items-center">
@@ -204,7 +204,7 @@
 
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				on:click={async () => {
+				onSelect={async () => {
 					show = false;
 
 					await showSettings.set(true);
@@ -223,7 +223,7 @@
 
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				on:click={async () => {
+				onSelect={async () => {
 					show = false;
 
 					dispatch('show', 'archived-chat');
@@ -245,6 +245,8 @@
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					onSelect={async () => {
+						show = false;
+
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -258,12 +260,33 @@
 					</div>
 					<div class=" self-center truncate">{$i18n.t('API Platform')}</div>
 				</DropdownMenu.Item>
+
+				<DropdownMenu.Item
+					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+					onSelect={async () => {
+						show = false;
+
+						if ($mobile) {
+							await tick();
+							showSidebar.set(false);
+						}
+
+						await goto('/developer/api-keys/pricing');
+					}}
+				>
+					<div class=" self-center mr-3">
+						<Star className="size-5" strokeWidth="1.5" />
+					</div>
+					<div class=" self-center truncate">{$i18n.t('Pricing')}</div>
+				</DropdownMenu.Item>
 			{/if}
 
 			{#if role === 'admin'}
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					onSelect={async () => {
+						show = false;
+
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -280,6 +303,8 @@
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					onSelect={async () => {
+						show = false;
+
 						if ($mobile) {
 							await tick();
 							showSidebar.set(false);
@@ -332,7 +357,7 @@
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					id="chat-share-button"
-					on:click={async () => {
+					onSelect={async () => {
 						show = false;
 						showShortcuts.set(!$showShortcuts);
 
@@ -353,13 +378,14 @@
 
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				on:click={async () => {
+				onSelect={async () => {
+					show = false;
+
 					const res = await userSignOut();
 					user.set(undefined);
 					localStorage.removeItem('token');
 
 					location.href = res?.redirect_url ?? '/auth';
-					show = false;
 				}}
 			>
 				<div class=" self-center mr-3">
