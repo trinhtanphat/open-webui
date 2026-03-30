@@ -23,7 +23,7 @@ class WebhookPayload:
         verified: bool,
         tx_ref: str = "",
         amount: float = 0,
-        currency: str = "USD",
+        currency: str = "VND",
         status: str = "",
         raw: Optional[dict] = None,
         error: str = "",
@@ -96,7 +96,7 @@ def verify_stripe(
             verified=True,
             tx_ref=data_obj.get("id", data_obj.get("payment_intent", "")),
             amount=float(data_obj.get("amount_total", data_obj.get("amount", 0))) / 100,
-            currency=(data_obj.get("currency", "usd")).upper(),
+            currency=(data_obj.get("currency", "vnd")).upper(),
             status=status,
             raw=event,
         )

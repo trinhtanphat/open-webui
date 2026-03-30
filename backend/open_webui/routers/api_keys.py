@@ -88,7 +88,7 @@ class TopupRequestForm(BaseModel):
     api_key_id: str
     payment_account_id: str
     amount: float
-    currency: str = "USD"
+    currency: str = "VND"
     tx_ref: Optional[str] = None
     note: Optional[str] = None
 
@@ -196,7 +196,7 @@ class ModelPricingForm(BaseModel):
     input_cost_per_1k_tokens: float = 0.0
     output_cost_per_1k_tokens: float = 0.0
     per_request_cost: float = 0.0
-    currency: str = "USD"
+    currency: str = "VND"
 
 
 class ModelPricingUpdateForm(BaseModel):
@@ -912,7 +912,7 @@ def _finalize_topup_approval(
                     user_email=target_user.email,
                     user_name=target_user.name or target_user.email,
                     amount=float(request_row.amount),
-                    currency=request_row.currency or "USD",
+                    currency=request_row.currency or "VND",
                     credits=credits,
                     topup_id=request_row.id,
                     note=reviewed_note or "",
@@ -924,7 +924,7 @@ def _finalize_topup_approval(
                         user_name=target_user.name or target_user.email,
                         invoice_id=invoice.id,
                         amount=float(request_row.amount),
-                        currency=request_row.currency or "USD",
+                        currency=request_row.currency or "VND",
                         credits=credits,
                     )
         except Exception as e:
@@ -979,7 +979,7 @@ async def reject_topup_request(
                     user_email=target_user.email,
                     user_name=target_user.name or target_user.email,
                     amount=float(request_row.amount),
-                    currency=request_row.currency or "USD",
+                    currency=request_row.currency or "VND",
                     topup_id=request_row.id,
                     note=form_data.note or "",
                 )
@@ -1278,7 +1278,7 @@ async def create_my_topup_request(
                     user_email=user.email,
                     user_name=user.name or user.email,
                     amount=float(form_data.amount),
-                    currency=form_data.currency or "USD",
+                    currency=form_data.currency or "VND",
                     tx_ref=form_data.tx_ref or "",
                     topup_id=row.id,
                 )
@@ -1291,7 +1291,7 @@ async def create_my_topup_request(
                     user_name=user.name or user.email,
                     user_email=user.email or "",
                     amount=float(form_data.amount),
-                    currency=form_data.currency or "USD",
+                    currency=form_data.currency or "VND",
                     topup_id=row.id,
                 )
         except Exception as e:

@@ -115,7 +115,7 @@ def finalize_billing(
             output_cost=output_cost,
             total_cost=total_cost,
             credits_deducted=actual_credits_deducted,
-            currency=pricing.currency if pricing else "USD",
+            currency=pricing.currency if pricing else "VND",
             request_metadata=request_metadata,
         )
 

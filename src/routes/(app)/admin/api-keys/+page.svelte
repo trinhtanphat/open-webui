@@ -92,7 +92,7 @@
 	let mpInputCost = 0;
 	let mpOutputCost = 0;
 	let mpRequestCost = 0;
-	let mpCurrency = 'USD';
+	let mpCurrency = 'VND';
 
 	let provider = 'bank_transfer';
 	let providerMenuOpen = false;
@@ -351,7 +351,7 @@
 		mpInputCost = 0;
 		mpOutputCost = 0;
 		mpRequestCost = 0;
-		mpCurrency = 'USD';
+		mpCurrency = 'VND';
 	};
 
 	const toggleModelPricingActive = async (pricing: ModelPricing) => {

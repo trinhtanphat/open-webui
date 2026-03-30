@@ -29,7 +29,7 @@ def upgrade():
             sa.Column("input_cost_per_1k_tokens", sa.Float(), nullable=False, server_default="0"),
             sa.Column("output_cost_per_1k_tokens", sa.Float(), nullable=False, server_default="0"),
             sa.Column("per_request_cost", sa.Float(), nullable=False, server_default="0"),
-            sa.Column("currency", sa.Text(), nullable=False, server_default="USD"),
+            sa.Column("currency", sa.Text(), nullable=False, server_default="VND"),
             sa.Column("is_active", sa.Text(), nullable=False, server_default="true"),
             sa.Column("created_by", sa.Text(), nullable=True),
             sa.Column("updated_by", sa.Text(), nullable=True),
@@ -52,7 +52,7 @@ def upgrade():
             sa.Column("output_cost", sa.Float(), nullable=False, server_default="0"),
             sa.Column("total_cost", sa.Float(), nullable=False, server_default="0"),
             sa.Column("credits_deducted", sa.BigInteger(), nullable=False, server_default="0"),
-            sa.Column("currency", sa.Text(), nullable=False, server_default="USD"),
+            sa.Column("currency", sa.Text(), nullable=False, server_default="VND"),
             sa.Column("request_metadata", sa.JSON(), nullable=True),
             sa.Column("created_at", sa.BigInteger(), nullable=False),
         )

@@ -24,7 +24,7 @@ class ModelPricing(Base):
     input_cost_per_1k_tokens = Column(Float, nullable=False, default=0.0)
     output_cost_per_1k_tokens = Column(Float, nullable=False, default=0.0)
     per_request_cost = Column(Float, nullable=False, default=0.0)
-    currency = Column(Text, nullable=False, default="USD")
+    currency = Column(Text, nullable=False, default="VND")
     is_active = Column(Text, nullable=False, default="true")
     created_by = Column(Text, nullable=True)
     updated_by = Column(Text, nullable=True)
@@ -50,7 +50,7 @@ class UsageLog(Base):
     output_cost = Column(Float, nullable=False, default=0.0)
     total_cost = Column(Float, nullable=False, default=0.0)
     credits_deducted = Column(BigInteger, nullable=False, default=0)
-    currency = Column(Text, nullable=False, default="USD")
+    currency = Column(Text, nullable=False, default="VND")
     request_metadata = Column(JSON, nullable=True)
     created_at = Column(BigInteger, nullable=False)
 
@@ -80,7 +80,7 @@ class BillingTopupRequest(Base):
     api_key_id = Column(Text, nullable=False)
     payment_account_id = Column(Text, nullable=False)
     amount = Column(Float, nullable=False)
-    currency = Column(Text, nullable=False, default="USD")
+    currency = Column(Text, nullable=False, default="VND")
     tx_ref = Column(Text, nullable=True)
     note = Column(Text, nullable=True)
     status = Column(Text, nullable=False, default="pending")
@@ -99,7 +99,7 @@ class BillingInvoice(Base):
     api_key_id = Column(Text, nullable=False)
     topup_request_id = Column(Text, nullable=True)
     amount = Column(Float, nullable=False)
-    currency = Column(Text, nullable=False, default="USD")
+    currency = Column(Text, nullable=False, default="VND")
     credits = Column(BigInteger, nullable=False)
     status = Column(Text, nullable=False, default="paid")
     data = Column(JSON, nullable=True)
@@ -148,7 +148,7 @@ class BillingTopupRequestModel(BaseModel):
     api_key_id: str
     payment_account_id: str
     amount: float
-    currency: str = "USD"
+    currency: str = "VND"
     tx_ref: Optional[str] = None
     note: Optional[str] = None
     status: str = "pending"
@@ -167,7 +167,7 @@ class BillingInvoiceModel(BaseModel):
     api_key_id: str
     topup_request_id: Optional[str] = None
     amount: float
-    currency: str = "USD"
+    currency: str = "VND"
     credits: int
     status: str = "paid"
     data: Optional[dict] = None
@@ -199,7 +199,7 @@ class ModelPricingModel(BaseModel):
     input_cost_per_1k_tokens: float = 0.0
     output_cost_per_1k_tokens: float = 0.0
     per_request_cost: float = 0.0
-    currency: str = "USD"
+    currency: str = "VND"
     is_active: str = "true"
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
@@ -222,7 +222,7 @@ class UsageLogModel(BaseModel):
     output_cost: float = 0.0
     total_cost: float = 0.0
     credits_deducted: int = 0
-    currency: str = "USD"
+    currency: str = "VND"
     request_metadata: Optional[dict] = None
     created_at: int
 
@@ -663,7 +663,7 @@ class BillingTable:
         output_cost: float,
         total_cost: float,
         credits_deducted: int,
-        currency: str = "USD",
+        currency: str = "VND",
         request_metadata: Optional[dict] = None,
         db: Optional[Session] = None,
     ) -> Optional[UsageLogModel]:

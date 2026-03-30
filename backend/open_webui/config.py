@@ -295,7 +295,7 @@ BILLING_AUTO_APPROVE_TOPUPS = PersistentConfig(
 BILLING_DEFAULT_CURRENCY = PersistentConfig(
     "BILLING_DEFAULT_CURRENCY",
     "billing.default_currency",
-    os.environ.get("BILLING_DEFAULT_CURRENCY", "USD"),
+    os.environ.get("BILLING_DEFAULT_CURRENCY", "VND"),
 )
 
 # ---------------------------------------------------------------------------
