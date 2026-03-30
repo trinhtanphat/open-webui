@@ -1414,6 +1414,11 @@ class OAuthManager:
                             user_data[key] = value
             if provider == 'feishu' and isinstance(user_data, dict) and 'data' in user_data:
                 user_data = user_data['data']
+            # Facebook returns picture as nested object: picture.data.url
+            if provider == 'facebook' and isinstance(user_data.get('picture'), dict):
+                picture_data = user_data.get('picture', {})
+                if isinstance(picture_data, dict) and 'data' in picture_data:
+                    user_data['picture'] = picture_data['data'].get('url', '')
             if not user_data:
                 log.warning(f'OAuth callback failed, user data is missing: {token}')
                 raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
