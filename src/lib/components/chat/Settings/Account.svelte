@@ -4,7 +4,8 @@
 	import { goto } from '$app/navigation';
 
 	import { user, config, settings } from '$lib/stores';
-	import { updateUserProfile, createAPIKey, getAPIKey, getSessionUser } from '$lib/apis/auths';
+	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
+	import { activateMyApiKey, getMyApiKeyConsole, regenerateMyApiKey } from '$lib/apis/api-keys';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
@@ -82,11 +83,32 @@
 	};
 
 	const createAPIKeyHandler = async () => {
-		APIKey = await createAPIKey(localStorage.token);
-		if (APIKey) {
-			toast.success($i18n.t('API Key created.'));
-		} else {
-			toast.error($i18n.t('Failed to create API Key.'));
+		try {
+			// Try to activate a new key (first time)
+			const result = await activateMyApiKey(localStorage.token, 'starter');
+			if (result?.key) {
+				APIKey = result.key;
+				toast.success($i18n.t('API Key created.'));
+			} else {
+				toast.error($i18n.t('Failed to create API Key.'));
+			}
+		} catch (err: any) {
+			// If key already exists, regenerate instead
+			if (typeof err === 'string' && err.includes('already exists')) {
+				try {
+					const result = await regenerateMyApiKey(localStorage.token);
+					if (result?.key) {
+						APIKey = result.key;
+						toast.success($i18n.t('API Key regenerated.'));
+					} else {
+						toast.error($i18n.t('Failed to regenerate API Key.'));
+					}
+				} catch (regenErr) {
+					toast.error($i18n.t('Failed to regenerate API Key.'));
+				}
+			} else {
+				toast.error(`${err}`);
+			}
 		}
 	};
 
@@ -115,10 +137,11 @@
 			($config?.features?.enable_api_keys ?? true) &&
 			(user?.role === 'admin' || (user?.permissions?.features?.api_keys ?? false))
 		) {
-			APIKey = await getAPIKey(localStorage.token).catch((error) => {
+			const keyConsole = await getMyApiKeyConsole(localStorage.token).catch((error) => {
 				console.log(error);
-				return '';
+				return null;
 			});
+			APIKey = keyConsole?.key_masked ?? '';
 		}
 
 		loaded = true;

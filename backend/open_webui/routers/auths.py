@@ -1167,12 +1167,34 @@ async def generate_api_key(request: Request, user=Depends(get_current_user), db:
     api_key = create_api_key()
     success = Users.update_user_api_key_by_id(user.id, api_key, db=db)
 
-    if success:
-        return {
-            'api_key': api_key,
-        }
-    else:
+    if not success:
         raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_API_KEY_ERROR)
+
+    # Set default billing metadata so the key works with the billing system
+    import time as _time
+    record = Users.get_user_api_key_record_by_id(user.id, db=db)
+    if record:
+        Users.update_api_key_by_id(
+            record.id,
+            {
+                "data": {
+                    "status": "active",
+                    "plan_name": "starter",
+                    "monthly_price_usd": 0,
+                    "credits_remaining": 5000,
+                    "rpm_limit": 60,
+                    "total_requests": 0,
+                    "monthly_requests": 0,
+                    "usage_month": _time.strftime("%Y-%m", _time.gmtime()),
+                    "activated_by": "legacy",
+                },
+            },
+            db=db,
+        )
+
+    return {
+        'api_key': api_key,
+    }
 
 
 # delete api key

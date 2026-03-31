@@ -903,13 +903,26 @@ class UsersTable:
                 if record.expires_at and now > record.expires_at:
                     return (False, "expired", ApiKeyModel.model_validate(record))
 
+                # Legacy keys without billing metadata: allow through without
+                # credit enforcement (backward compatibility).
+                has_billing = bool(metadata.get("plan_name") or metadata.get("credits_remaining"))
+
+                # Don't deduct credits for API key management endpoints
+                is_billing_endpoint = endpoint.startswith("/api/v1/api-keys")
+
                 current_month = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m")
                 metadata_month = metadata.get("usage_month")
                 if metadata_month != current_month:
                     metadata["usage_month"] = current_month
                     metadata["monthly_requests"] = 0
 
-                if endpoint.startswith("/openai") or endpoint.startswith("/api"):
+                should_deduct = (
+                    has_billing
+                    and not is_billing_endpoint
+                    and (endpoint.startswith("/openai") or endpoint.startswith("/api") or endpoint.startswith("/ollama"))
+                )
+
+                if should_deduct:
                     rpm_limit = int(metadata.get("rpm_limit", 60))
                     window = metadata.get("rate_limit_window", {})
                     window_minute = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d %H:%M")
@@ -939,6 +952,10 @@ class UsersTable:
                         usage_daily = {}
                     usage_daily[day_key] = int(usage_daily.get(day_key, 0)) + 1
                     metadata["usage_daily"] = usage_daily
+                else:
+                    # Track usage even for legacy keys (no credit deduction)
+                    metadata["total_requests"] = int(metadata.get("total_requests", 0)) + 1
+                    metadata["monthly_requests"] = int(metadata.get("monthly_requests", 0)) + 1
 
                 record.last_used_at = now
                 record.updated_at = now
