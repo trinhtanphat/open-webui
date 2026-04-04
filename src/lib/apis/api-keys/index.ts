@@ -18,6 +18,21 @@ export type ApiKeyConsole = {
 	updated_at: number;
 };
 
+export type ApiKeyListItem = {
+	id: string;
+	user_id: string;
+	name?: string;
+	key_prefix: string;
+	status: 'active' | 'suspended' | string;
+	plan_name?: string;
+	credits_remaining: number;
+	total_requests: number;
+	last_used_at?: number;
+	expires_at?: number;
+	created_at: number;
+	updated_at: number;
+};
+
 export type PaymentAccount = {
 	id: string;
 	provider: string;
@@ -286,6 +301,75 @@ export const regenerateMyApiKey = async (token: string): Promise<ApiKeyConsole> 
 
 	if (error) throw error;
 	return res;
+};
+
+export const getMyApiKeys = async (token: string): Promise<ApiKeyListItem[]> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/keys`, {
+		method: 'GET',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to fetch API keys';
+			return null;
+		});
+
+	if (error) throw error;
+	return res ?? [];
+};
+
+export const createMyApiKey = async (
+	token: string,
+	name?: string
+): Promise<ApiKeyConsole> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/keys`, {
+		method: 'POST',
+		headers: authHeaders(token),
+		body: JSON.stringify({ name: name || null })
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to create API key';
+			return null;
+		});
+
+	if (error) throw error;
+	return res;
+};
+
+export const deleteMyApiKey = async (
+	token: string,
+	keyId: string
+): Promise<void> => {
+	let error = null;
+
+	await fetch(`${WEBUI_API_BASE_URL}/api-keys/me/keys/${keyId}`, {
+		method: 'DELETE',
+		headers: authHeaders(token)
+	})
+		.then(async (response) => {
+			if (!response.ok) throw await response.json();
+			return response.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? 'Failed to delete API key';
+			return null;
+		});
+
+	if (error) throw error;
 };
 
 export const getAdminApiKeys = async (token: string): Promise<ApiKeyConsole[]> => {

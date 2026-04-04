@@ -21,8 +21,12 @@
 		getMyUsageDaily,
 		getMyUsageByModel,
 		activateMyApiKey,
+		getMyApiKeys,
+		createMyApiKey,
+		deleteMyApiKey,
 		type ApiKeyConsole,
 		type ApiKeyPlan,
+		type ApiKeyListItem,
 		type BillingSettings,
 		type BillingInvoice,
 		type PaymentAccount,
@@ -58,6 +62,15 @@
 	let selectedPlanId = 'starter';
 	let activeTab: 'overview' | 'topup' | 'invoices' = 'overview';
 	let usageDays = 30;
+
+	// Multi-key vault state
+	let allKeys: ApiKeyListItem[] = [];
+	let newKeyName = '';
+	let showCreateForm = false;
+	let creatingKey = false;
+	let newlyCreatedKey: ApiKeyConsole | null = null;
+	let newKeyCopied = false;
+	let deletingKeyId: string | null = null;
 	const usageDayOptions = [7, 30, 90];
 	let topupStatusFilter: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
 	let invoiceStatusFilter: 'all' | 'paid' | 'pending' | 'rejected' = 'all';
@@ -154,6 +167,7 @@
 			return null;
 		});
 
+		allKeys = await getMyApiKeys(localStorage.token).catch(() => []);
 		paymentAccounts = await getPublicPaymentAccounts(localStorage.token).catch(() => []);
 		topups = await getMyTopups(localStorage.token).catch(() => []);
 		invoices = await getMyInvoices(localStorage.token).catch(() => []);
@@ -199,6 +213,38 @@
 		topupAmount = Math.round(plan.monthly_price_usd * USD_TO_VND);
 		topupNote = `Subscribe plan ${plan.name}`;
 		activeTab = 'topup';
+	};
+
+	const createNewKey = async () => {
+		creatingKey = true;
+		try {
+			const result = await createMyApiKey(localStorage.token, newKeyName || undefined);
+			newlyCreatedKey = result;
+			newKeyCopied = false;
+			showCreateForm = false;
+			newKeyName = '';
+			toast.success($i18n.t('New API key created! Copy it now — it will not be shown again.'));
+			allKeys = await getMyApiKeys(localStorage.token).catch(() => []);
+		} catch (error) {
+			toast.error(`${error}`);
+		} finally {
+			creatingKey = false;
+		}
+	};
+
+	const deleteKey = async (keyId: string) => {
+		deletingKeyId = keyId;
+		try {
+			await deleteMyApiKey(localStorage.token, keyId);
+			toast.success($i18n.t('API key deleted'));
+			allKeys = await getMyApiKeys(localStorage.token).catch(() => []);
+			// Refresh primary key info
+			apiKey = await getMyApiKeyConsole(localStorage.token).catch(() => null);
+		} catch (error) {
+			toast.error(`${error}`);
+		} finally {
+			deletingKeyId = null;
+		}
 	};
 
 	onMount(() => {
@@ -476,6 +522,168 @@
 				<span>·</span>
 				<span>{$i18n.t('Masked')}: {apiKey.key_masked}</span>
 			</div>
+		</div>
+
+		<!-- Key Vault (Multi-key Management) -->
+		<div class="rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4">
+			<div class="flex items-center justify-between">
+				<h2 class="font-semibold flex items-center gap-2">
+					<svg class="size-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>
+					{$i18n.t('API Key Vault')}
+					<span class="text-xs font-normal text-gray-400">({allKeys.length}/10)</span>
+				</h2>
+				<button
+					class="px-3 py-1.5 rounded-lg text-xs font-medium bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity flex items-center gap-1.5"
+					on:click={() => { showCreateForm = !showCreateForm; newlyCreatedKey = null; }}
+				>
+					<Plus className="size-3.5" />
+					{$i18n.t('Create New Key')}
+				</button>
+			</div>
+
+			<!-- Newly Created Key Alert -->
+			{#if newlyCreatedKey}
+				<div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 space-y-3">
+					<div class="flex items-start gap-2.5">
+						<CheckCircle className="size-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+						<div class="text-xs text-emerald-800 dark:text-emerald-200">
+							<strong>{$i18n.t('Key created successfully!')}:</strong> {$i18n.t('Copy your new API key now. For security, you will not be able to see the full key again.')}
+						</div>
+					</div>
+					<div class="flex gap-2">
+						<div class="flex-1 flex items-center px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-emerald-200 dark:border-emerald-800 font-mono text-xs">
+							<span class="truncate select-all">{newlyCreatedKey.key}</span>
+						</div>
+						<button
+							class="px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 transition-colors"
+							title={$i18n.t('Copy')}
+							on:click={() => {
+								if (newlyCreatedKey) {
+									copyToClipboard(newlyCreatedKey.key);
+									newKeyCopied = true;
+									setTimeout(() => (newKeyCopied = false), 1200);
+								}
+							}}
+						>
+							{#if newKeyCopied}
+								<CheckCircle className="size-4 text-emerald-500" />
+							{:else}
+								<Clipboard className="size-4 text-emerald-600" />
+							{/if}
+						</button>
+						<button
+							class="px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+							on:click={() => (newlyCreatedKey = null)}
+						>
+							{$i18n.t('Dismiss')}
+						</button>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Create Form -->
+			{#if showCreateForm}
+				<div class="rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 p-4 space-y-3">
+					<div class="text-sm font-medium">{$i18n.t('Create a new API key')}</div>
+					<div class="flex gap-2">
+						<input
+							type="text"
+							placeholder={$i18n.t('Key name (e.g. Production, Testing)')}
+							bind:value={newKeyName}
+							class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+							on:keydown={(e) => { if (e.key === 'Enter') createNewKey(); }}
+						/>
+						<button
+							class="px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+							on:click={createNewKey}
+							disabled={creatingKey}
+						>
+							{#if creatingKey}
+								<div class="animate-spin w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full"></div>
+							{:else}
+								<Plus className="size-3.5" />
+							{/if}
+							{$i18n.t('Create')}
+						</button>
+						<button
+							class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+							on:click={() => { showCreateForm = false; newKeyName = ''; }}
+						>
+							{$i18n.t('Cancel')}
+						</button>
+					</div>
+					<div class="text-[11px] text-gray-400">{$i18n.t('New keys inherit your current plan settings. Credits start at 0 — contact admin or top up.')}</div>
+				</div>
+			{/if}
+
+			<!-- Keys Table -->
+			{#if allKeys.length > 0}
+				<div class="overflow-x-auto">
+					<table class="w-full text-xs">
+						<thead>
+							<tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Name')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Key')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Status')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Credits')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Requests')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Created')}</th>
+								<th class="pb-2 pr-3 font-medium">{$i18n.t('Last Used')}</th>
+								<th class="pb-2 font-medium"></th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each allKeys as keyItem (keyItem.id)}
+								<tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+									<td class="py-2.5 pr-3">
+										<span class="font-medium text-gray-800 dark:text-gray-200">{keyItem.name || 'Unnamed'}</span>
+									</td>
+									<td class="py-2.5 pr-3">
+										<code class="text-gray-500 font-mono">{keyItem.key_prefix}{'*'.repeat(8)}...</code>
+									</td>
+									<td class="py-2.5 pr-3">
+										<span class="px-2 py-0.5 rounded-full text-[10px] font-medium {statusColor(keyItem.status)}">{keyItem.status}</span>
+									</td>
+									<td class="py-2.5 pr-3 text-gray-600 dark:text-gray-400">
+										{keyItem.credits_remaining.toLocaleString()}
+									</td>
+									<td class="py-2.5 pr-3 text-gray-600 dark:text-gray-400">
+										{keyItem.total_requests.toLocaleString()}
+									</td>
+									<td class="py-2.5 pr-3 text-gray-400">
+										{new Date(keyItem.created_at * 1000).toLocaleDateString()}
+									</td>
+									<td class="py-2.5 pr-3 text-gray-400">
+										{keyItem.last_used_at ? new Date(keyItem.last_used_at * 1000).toLocaleDateString() : '-'}
+									</td>
+									<td class="py-2.5">
+										<button
+											class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+											title={$i18n.t('Delete key')}
+											on:click={() => {
+												if (confirm($i18n.t('Are you sure you want to delete this API key? This cannot be undone.'))) {
+													deleteKey(keyItem.id);
+												}
+											}}
+											disabled={deletingKeyId === keyItem.id}
+										>
+											{#if deletingKeyId === keyItem.id}
+												<div class="animate-spin w-3.5 h-3.5 border-2 border-red-300 border-t-red-600 rounded-full"></div>
+											{:else}
+												<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+											{/if}
+										</button>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{:else}
+				<div class="text-center py-6 text-gray-400 text-sm">
+					{$i18n.t('No API keys yet. Create your first key to get started.')}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Stats Cards -->

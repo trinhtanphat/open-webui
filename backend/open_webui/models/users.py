@@ -1,5 +1,6 @@
 import hashlib
 import time
+import uuid
 from typing import Optional, Any
 
 from sqlalchemy.orm import Session, defer
@@ -142,6 +143,7 @@ class ApiKey(Base):
 
     id = Column(Text, primary_key=True, unique=True)
     user_id = Column(Text, nullable=False)
+    name = Column(Text, nullable=True)  # user-friendly label for the key
     key = Column(Text, unique=True, nullable=False)  # after migration: stores prefix only
     key_hash = Column(Text, unique=True, nullable=True)  # SHA-256 hash for lookup
     data = Column(JSON, nullable=True)
@@ -154,6 +156,7 @@ class ApiKey(Base):
 class ApiKeyModel(BaseModel):
     id: str
     user_id: str
+    name: Optional[str] = None
     key: str
     key_hash: Optional[str] = None
     data: Optional[dict] = None
@@ -831,6 +834,66 @@ class UsersTable:
                 return [ApiKeyModel.model_validate(api_key) for api_key in api_keys]
         except Exception:
             return []
+
+    def get_user_api_keys(
+        self, user_id: str, db: Optional[Session] = None
+    ) -> list[ApiKeyModel]:
+        """Return ALL API keys belonging to a user (multi-key support)."""
+        try:
+            with get_db_context(db) as db:
+                api_keys = (
+                    db.query(ApiKey)
+                    .filter_by(user_id=user_id)
+                    .order_by(ApiKey.created_at.desc())
+                    .all()
+                )
+                return [ApiKeyModel.model_validate(k) for k in api_keys]
+        except Exception:
+            return []
+
+    def create_user_api_key(
+        self,
+        user_id: str,
+        api_key: str,
+        name: Optional[str] = None,
+        db: Optional[Session] = None,
+    ) -> Optional[ApiKeyModel]:
+        """Create a new API key for a user WITHOUT deleting existing keys."""
+        try:
+            with get_db_context(db) as db:
+                now = int(time.time())
+                key_id = f"key_{uuid.uuid4().hex[:12]}"
+                new_api_key = ApiKey(
+                    id=key_id,
+                    user_id=user_id,
+                    name=name or f"Key {now}",
+                    key=_key_prefix(api_key),
+                    key_hash=_hash_api_key(api_key),
+                    created_at=now,
+                    updated_at=now,
+                )
+                db.add(new_api_key)
+                db.commit()
+                db.refresh(new_api_key)
+                return ApiKeyModel.model_validate(new_api_key)
+        except Exception:
+            return None
+
+    def delete_api_key_by_id(
+        self, key_id: str, user_id: str, db: Optional[Session] = None
+    ) -> bool:
+        """Delete a specific API key by its ID, scoped to user_id for safety."""
+        try:
+            with get_db_context(db) as db:
+                deleted = (
+                    db.query(ApiKey)
+                    .filter_by(id=key_id, user_id=user_id)
+                    .delete()
+                )
+                db.commit()
+                return deleted > 0
+        except Exception:
+            return False
 
     def update_user_api_key_by_id(
         self, id: str, api_key: str, db: Optional[Session] = None

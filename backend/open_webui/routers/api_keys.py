@@ -59,6 +59,25 @@ class ApiKeyStatusUpdateForm(BaseModel):
     status: str
 
 
+class CreateApiKeyForm(BaseModel):
+    name: Optional[str] = None
+
+
+class ApiKeyListItemResponse(BaseModel):
+    id: str
+    user_id: str
+    name: Optional[str] = None
+    key_prefix: str
+    status: str
+    plan_name: Optional[str] = None
+    credits_remaining: int = 0
+    total_requests: int = 0
+    last_used_at: Optional[int] = None
+    expires_at: Optional[int] = None
+    created_at: int
+    updated_at: int
+
+
 class ApiKeyPlanUpdateForm(BaseModel):
     plan_name: Optional[str] = None
     monthly_price_usd: Optional[float] = None
@@ -328,6 +347,24 @@ def _build_console_payload(record, full_key: str = None) -> ApiKeyConsoleRespons
     )
 
 
+def _build_key_list_item(record) -> ApiKeyListItemResponse:
+    metadata = record.data if isinstance(record.data, dict) else {}
+    return ApiKeyListItemResponse(
+        id=record.id,
+        user_id=record.user_id,
+        name=record.name,
+        key_prefix=record.key,
+        status=metadata.get("status", "active"),
+        plan_name=metadata.get("plan_name"),
+        credits_remaining=int(metadata.get("credits_remaining", 0)),
+        total_requests=int(metadata.get("total_requests", 0)),
+        last_used_at=record.last_used_at,
+        expires_at=record.expires_at,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
+
+
 def _build_usage_summary(user_id: str, record, db: Session) -> UserUsageSummary:
     metadata = record.data if record and isinstance(record.data, dict) else {}
 
@@ -467,6 +504,103 @@ async def regenerate_my_api_key(
         new_record = Users.get_user_api_key_record_by_id(user.id, db=db)
 
     return _build_console_payload(new_record, full_key=new_key)
+
+
+# ---------------------------------------------------------------------------
+# Multi-key management endpoints (like ChatGPT / OpenAI style)
+# ---------------------------------------------------------------------------
+
+@router.get("/me/keys", response_model=list[ApiKeyListItemResponse])
+async def list_my_api_keys(
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    """List all API keys belonging to the current user."""
+    records = Users.get_user_api_keys(user.id, db=db)
+    return [_build_key_list_item(r) for r in records]
+
+
+@router.post("/me/keys", response_model=ApiKeyConsoleResponse)
+async def create_my_api_key(
+    form_data: CreateApiKeyForm = CreateApiKeyForm(),
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    """Create a new API key without deleting existing ones.
+    
+    The full key is returned only once — store it securely.
+    """
+    # Limit total keys per user to prevent abuse
+    existing = Users.get_user_api_keys(user.id, db=db)
+    if len(existing) >= 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 10 API keys per user. Please delete an old key first.",
+        )
+
+    # Copy plan/metadata from the latest existing key if any
+    base_metadata = {}
+    if existing:
+        latest = existing[0]  # already sorted desc by created_at
+        if isinstance(latest.data, dict):
+            base_metadata = {
+                "status": latest.data.get("status", "active"),
+                "plan_name": latest.data.get("plan_name"),
+                "monthly_price_usd": latest.data.get("monthly_price_usd"),
+                "rpm_limit": latest.data.get("rpm_limit"),
+            }
+
+    key = create_api_key()
+    record = Users.create_user_api_key(
+        user_id=user.id,
+        api_key=key,
+        name=form_data.name,
+        db=db,
+    )
+    if not record:
+        raise HTTPException(status_code=500, detail="Failed to create API key")
+
+    # Initialize metadata
+    metadata = {
+        "status": base_metadata.get("status", "active"),
+        "plan_name": base_metadata.get("plan_name", "starter"),
+        "monthly_price_usd": base_metadata.get("monthly_price_usd", 0),
+        "rpm_limit": base_metadata.get("rpm_limit", 30),
+        "credits_remaining": 0,
+        "total_requests": 0,
+        "monthly_requests": 0,
+        "usage_month": time.strftime("%Y-%m", time.gmtime()),
+    }
+
+    updated = Users.update_api_key_by_id(
+        record.id,
+        {"data": metadata},
+        db=db,
+    )
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to initialize key metadata")
+
+    return _build_console_payload(updated, full_key=key)
+
+
+@router.delete("/me/keys/{key_id}")
+async def delete_my_api_key(
+    key_id: str,
+    user=Depends(get_verified_user),
+    db: Session = Depends(get_session),
+):
+    """Delete a specific API key by ID."""
+    # Ensure user has at least one key remaining
+    existing = Users.get_user_api_keys(user.id, db=db)
+    target = next((k for k in existing if k.id == key_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    success = Users.delete_api_key_by_id(key_id, user.id, db=db)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete API key")
+
+    return {"detail": "API key deleted", "id": key_id}
 
 
 @router.get("/admin/keys", response_model=list[ApiKeyConsoleResponse])
