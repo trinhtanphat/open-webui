@@ -11,6 +11,7 @@
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import ArrowRight from '$lib/components/icons/ArrowRight.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
+	import PageToolbar from '$lib/components/billing/PageToolbar.svelte';
 
 	const i18n = getContext<any>('i18n');
 
@@ -27,65 +28,69 @@
 		loading = false;
 	});
 
-	const features = [
+	$: features = [
 		{
 			icon: 'bolt',
-			title: 'Lightning Fast',
-			desc: 'OpenAI-compatible API with sub-second latency. Drop-in replacement for any OpenAI SDK.'
+			title: $i18n.t('Lightning Fast'),
+			desc: $i18n.t('OpenAI-compatible API with sub-second latency. Drop-in replacement for any OpenAI SDK.')
 		},
 		{
 			icon: 'lock',
-			title: 'Secure by Default',
-			desc: 'SHA-256 hashed API keys, rate limiting, and granular credit controls per user.'
+			title: $i18n.t('Secure by Default'),
+			desc: $i18n.t('SHA-256 hashed API keys, rate limiting, and granular credit controls per user.')
 		},
 		{
 			icon: 'globe',
-			title: 'Multi-Model Access',
-			desc: 'Access GPT-4o, Claude, Gemini, Llama and more through a single unified API endpoint.'
+			title: $i18n.t('Multi-Model Access'),
+			desc: $i18n.t('Access GPT-4o, Claude, Gemini, Llama and more through a single unified API endpoint.')
 		},
 		{
 			icon: 'chart',
-			title: 'Real-time Analytics',
-			desc: 'Track token usage, costs, and performance per model with interactive dashboards.'
+			title: $i18n.t('Real-time Analytics'),
+			desc: $i18n.t('Track token usage, costs, and performance per model with interactive dashboards.')
 		},
 		{
 			icon: 'users',
-			title: 'Team Ready',
-			desc: 'Issue multiple API keys, manage credits centrally, and monitor usage across your organization.'
+			title: $i18n.t('Team Ready'),
+			desc: $i18n.t('Issue multiple API keys, manage credits centrally, and monitor usage across your organization.')
 		},
 		{
 			icon: 'sparkles',
-			title: 'Pay-as-you-go',
-			desc: 'Token-level billing with transparent per-model pricing. Only pay for what you actually use.'
+			title: $i18n.t('Pay-as-you-go'),
+			desc: $i18n.t('Token-level billing with transparent per-model pricing. Only pay for what you actually use.')
 		}
 	];
 
-	const steps = [
-		{ num: '01', title: 'Create Account', desc: 'Sign up and get started in seconds. No credit card required initially.' },
-		{ num: '02', title: 'Choose a Plan', desc: 'Pick Starter, Pro, or Business based on your usage needs.' },
-		{ num: '03', title: 'Add Credits', desc: 'Top up via bank transfer, Stripe, VNPay, MoMo, or ZaloPay (VNG).' },
-		{ num: '04', title: 'Start Building', desc: 'Use your API key with any OpenAI-compatible SDK or HTTP client.' }
+	$: steps = [
+		{ num: '01', title: $i18n.t('Create Account'), desc: $i18n.t('Sign up and get started in seconds. No credit card required initially.') },
+		{ num: '02', title: $i18n.t('Choose a Plan'), desc: $i18n.t('Pick Starter, Pro, or Business based on your usage needs.') },
+		{ num: '03', title: $i18n.t('Add Credits'), desc: $i18n.t('Top up via bank transfer, Stripe, VNPay, MoMo, or ZaloPay (VNG).') },
+		{ num: '04', title: $i18n.t('Start Building'), desc: $i18n.t('Use your API key with any OpenAI-compatible SDK or HTTP client.') }
 	];
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+	<!-- Toolbar -->
+	<div class="flex justify-end pt-4">
+		<PageToolbar />
+	</div>
+
 	<!-- Hero -->
 	<div class="text-center py-16 sm:py-24 space-y-6">
 		<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium">
 			<Sparkles className="size-3.5" />
-			OpenAI-Compatible API Platform
+			{$i18n.t('OpenAI-Compatible API Platform')}
 		</div>
 
 		<h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-			Build with AI,<br />
+			{$i18n.t('Build with AI,')}<br />
 			<span class="bg-gradient-to-r from-blue-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-				Scale with Confidence
+				{$i18n.t('Scale with Confidence')}
 			</span>
 		</h1>
 
 		<p class="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-			Access the world's best AI models through a single API. Real-time usage tracking,
-			transparent token-based billing, and enterprise-grade security.
+			{$i18n.t('Access the world\'s best AI models through a single API. Real-time usage tracking, transparent token-based billing, and enterprise-grade security.')}
 		</p>
 
 		<div class="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -93,29 +98,29 @@
 				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium text-sm hover:opacity-90 transition-opacity"
 				on:click={() => goto('/developer/api-keys')}
 			>
-				Get Started
+				{$i18n.t('Get Started')}
 				<ArrowRight className="size-4" />
 			</button>
 			<button
 				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 				on:click={() => goto('/developer/api-keys/pricing')}
 			>
-				View Pricing
+				{$i18n.t('View Pricing')}
 			</button>
 		</div>
 
 		<div class="flex items-center justify-center gap-6 pt-4 text-xs text-gray-400">
-			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> No setup fee</span>
-			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> Pay as you go</span>
-			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> Cancel anytime</span>
+			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('No setup fee')}</span>
+			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Pay as you go')}</span>
+			<span class="flex items-center gap-1.5"><CheckCircle className="size-3.5 text-emerald-500" /> {$i18n.t('Cancel anytime')}</span>
 		</div>
 	</div>
 
 	<!-- Features Grid -->
 	<div class="py-12 space-y-8">
 		<div class="text-center space-y-2">
-			<h2 class="text-2xl sm:text-3xl font-bold">Everything you need to build with AI</h2>
-			<p class="text-gray-500 dark:text-gray-400">Production-ready API platform with built-in billing & analytics</p>
+			<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Everything you need to build with AI')}</h2>
+			<p class="text-gray-500 dark:text-gray-400">{$i18n.t('Production-ready API platform with built-in billing & analytics')}</p>
 		</div>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -147,8 +152,8 @@
 	<!-- How it works -->
 	<div class="py-12 space-y-8">
 		<div class="text-center space-y-2">
-			<h2 class="text-2xl sm:text-3xl font-bold">Get started in minutes</h2>
-			<p class="text-gray-500 dark:text-gray-400">Four simple steps from sign-up to API call</p>
+			<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Get started in minutes')}</h2>
+			<p class="text-gray-500 dark:text-gray-400">{$i18n.t('Four simple steps from sign-up to API call')}</p>
 		</div>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -171,15 +176,15 @@
 	{#if plans.length > 0}
 		<div class="py-12 space-y-8">
 			<div class="text-center space-y-2">
-				<h2 class="text-2xl sm:text-3xl font-bold">Simple, transparent pricing</h2>
-				<p class="text-gray-500 dark:text-gray-400">Choose a plan that fits your needs. Upgrade or downgrade anytime.</p>
+				<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Simple, transparent pricing')}</h2>
+				<p class="text-gray-500 dark:text-gray-400">{$i18n.t('Choose a plan that fits your needs. Upgrade or downgrade anytime.')}</p>
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				{#each plans as plan, i}
 					<div class="rounded-2xl border p-6 space-y-4 {i === 1 ? 'border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/20 relative' : 'border-gray-100 dark:border-gray-800'}">
 						{#if i === 1}
-							<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-semibold uppercase tracking-wide">Popular</div>
+							<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-semibold uppercase tracking-wide">{$i18n.t('Popular')}</div>
 						{/if}
 						<div>
 							<h3 class="text-lg font-semibold">{plan.name}</h3>
@@ -192,19 +197,19 @@
 						<ul class="space-y-2 text-sm">
 							<li class="flex items-center gap-2">
 								<CheckCircle className="size-4 text-emerald-500 flex-shrink-0" />
-								<span>{plan.included_credits.toLocaleString()} credits included</span>
+								<span>{$i18n.t('{{count}} credits included', { count: plan.included_credits.toLocaleString() })}</span>
 							</li>
 							<li class="flex items-center gap-2">
 								<CheckCircle className="size-4 text-emerald-500 flex-shrink-0" />
-								<span>{plan.rpm_limit} requests/minute</span>
+								<span>{$i18n.t('{{count}} requests/minute', { count: plan.rpm_limit })}</span>
 							</li>
 							<li class="flex items-center gap-2">
 								<CheckCircle className="size-4 text-emerald-500 flex-shrink-0" />
-								<span>{plan.support_tier} support</span>
+								<span>{$i18n.t('{{tier}} support', { tier: plan.support_tier })}</span>
 							</li>
 							<li class="flex items-center gap-2">
 								<CheckCircle className="size-4 text-emerald-500 flex-shrink-0" />
-								<span>{formatVND(plan.overage_usd_per_1k_requests)}/1k overage</span>
+								<span>{formatVND(plan.overage_usd_per_1k_requests)}/{$i18n.t('1k overage')}</span>
 							</li>
 						</ul>
 						<button
@@ -212,7 +217,7 @@
 								{i === 1 ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}"
 							on:click={() => goto('/developer/api-keys')}
 						>
-							Get Started
+							{$i18n.t('Get Started')}
 						</button>
 					</div>
 				{/each}
@@ -224,18 +229,18 @@
 	{#if models.length > 0}
 		<div class="py-12 space-y-6">
 			<div class="text-center space-y-2">
-				<h2 class="text-2xl sm:text-3xl font-bold">Per-model token pricing</h2>
-				<p class="text-gray-500 dark:text-gray-400">You only pay for the tokens you consume. Pricing varies by model.</p>
+				<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Per-model token pricing')}</h2>
+				<p class="text-gray-500 dark:text-gray-400">{$i18n.t('You only pay for the tokens you consume. Pricing varies by model.')}</p>
 			</div>
 
 			<div class="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
 				<table class="w-full text-sm">
 					<thead class="bg-gray-50 dark:bg-gray-900/40">
 						<tr>
-							<th class="px-4 py-3 text-left font-medium text-gray-500">Model</th>
-							<th class="px-4 py-3 text-right font-medium text-gray-500">Input / 1K tokens</th>
-							<th class="px-4 py-3 text-right font-medium text-gray-500">Output / 1K tokens</th>
-							<th class="px-4 py-3 text-right font-medium text-gray-500">Per request</th>
+							<th class="px-4 py-3 text-left font-medium text-gray-500">{$i18n.t('Model')}</th>
+							<th class="px-4 py-3 text-right font-medium text-gray-500">{$i18n.t('Input / 1K tokens')}</th>
+							<th class="px-4 py-3 text-right font-medium text-gray-500">{$i18n.t('Output / 1K tokens')}</th>
+							<th class="px-4 py-3 text-right font-medium text-gray-500">{$i18n.t('Per request')}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -261,8 +266,8 @@
 	<!-- Code Example -->
 	<div class="py-12 space-y-6">
 		<div class="text-center space-y-2">
-			<h2 class="text-2xl sm:text-3xl font-bold">Drop-in compatible</h2>
-			<p class="text-gray-500 dark:text-gray-400">Works with any OpenAI SDK. Just change the base URL.</p>
+			<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Drop-in compatible')}</h2>
+			<p class="text-gray-500 dark:text-gray-400">{$i18n.t('Works with any OpenAI SDK. Just change the base URL.')}</p>
 		</div>
 
 		<div class="max-w-2xl mx-auto rounded-2xl bg-gray-950 dark:bg-gray-900 p-5 space-y-1 overflow-x-auto">
@@ -290,13 +295,13 @@ response = client.chat.completions.create(
 
 	<!-- CTA -->
 	<div class="py-16 text-center space-y-4">
-		<h2 class="text-2xl sm:text-3xl font-bold">Ready to start building?</h2>
-		<p class="text-gray-500 dark:text-gray-400">Create your account and make your first API call in under 5 minutes.</p>
+		<h2 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Ready to start building?')}</h2>
+		<p class="text-gray-500 dark:text-gray-400">{$i18n.t('Create your account and make your first API call in under 5 minutes.')}</p>
 		<button
 			class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity"
 			on:click={() => goto('/developer/api-keys')}
 		>
-			Get your API key
+			{$i18n.t('Get your API key')}
 			<ArrowRight className="size-4" />
 		</button>
 	</div>

@@ -900,12 +900,14 @@ class UsersTable:
     ) -> bool:
         try:
             with get_db_context(db) as db:
-                db.query(ApiKey).filter_by(user_id=id).delete()
+                # Only delete the primary key (key_{user_id}), not all user keys
+                primary_key_id = f"key_{id}"
+                db.query(ApiKey).filter_by(id=primary_key_id, user_id=id).delete()
                 db.commit()
 
                 now = int(time.time())
                 new_api_key = ApiKey(
-                    id=f"key_{id}",
+                    id=primary_key_id,
                     user_id=id,
                     key=_key_prefix(api_key),
                     key_hash=_hash_api_key(api_key),

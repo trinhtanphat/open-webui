@@ -566,7 +566,7 @@ async def create_my_api_key(
         "plan_name": base_metadata.get("plan_name", "starter"),
         "monthly_price_usd": base_metadata.get("monthly_price_usd", 0),
         "rpm_limit": base_metadata.get("rpm_limit", 30),
-        "credits_remaining": 0,
+        "credits_remaining": int(base_metadata.get("credits_remaining", 0)),
         "total_requests": 0,
         "monthly_requests": 0,
         "usage_month": time.strftime("%Y-%m", time.gmtime()),
@@ -1432,7 +1432,17 @@ async def create_my_topup_request(
             log.warning(f"Failed to send topup submission email: {e}")
 
     if bool(request.app.state.config.BILLING_AUTO_APPROVE_TOPUPS):
-        credits = max(1, int(float(form_data.amount) * 100))
+        # Convert amount to credits based on currency
+        # VND: 1000 VND = 1 credit (configurable via credit_value_usd)
+        # USD: 1 USD = 1000 credits (at default $0.001/credit)
+        USD_TO_VND_RATE = 25000
+        if form_data.currency.upper() == "VND":
+            # Convert VND to USD first, then to credits
+            usd_amount = float(form_data.amount) / USD_TO_VND_RATE
+            credits = max(1, int(usd_amount / 0.001))
+        else:
+            # Assume USD
+            credits = max(1, int(float(form_data.amount) / 0.001))
         _finalize_topup_approval(
             request_id=row.id,
             credits=credits,

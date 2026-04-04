@@ -7,6 +7,7 @@
 	import { models } from '$lib/stores';
 	import BarChart from '$lib/components/billing/BarChart.svelte';
 	import PaymentProviderIcon from '$lib/components/billing/PaymentProviderIcon.svelte';
+	import PageToolbar from '$lib/components/billing/PageToolbar.svelte';
 	import {
 		getApiKeyPlans,
 		getBillingSettings,
@@ -376,6 +377,7 @@
 			<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{$i18n.t('Manage your API key, credits, and usage')}</p>
 		</div>
 		<div class="flex items-center gap-2">
+			<PageToolbar />
 			<button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" on:click={() => goto('/developer/api-keys/pricing')}>
 				{$i18n.t('Pricing')}
 			</button>
@@ -612,7 +614,7 @@
 							{$i18n.t('Cancel')}
 						</button>
 					</div>
-					<div class="text-[11px] text-gray-400">{$i18n.t('New keys inherit your current plan settings. Credits start at 0 — contact admin or top up.')}</div>
+					<div class="text-[11px] text-gray-400">{$i18n.t('New keys inherit your current plan settings and credit balance.')}</div>
 				</div>
 			{/if}
 
@@ -1076,6 +1078,7 @@
 								<label for="topup-currency" class="text-xs font-medium text-gray-500 mb-1 block">{$i18n.t('Currency')}</label>
 								<select id="topup-currency" class="w-full appearance-none px-3 py-2.5 rounded-xl bg-transparent border border-gray-200 dark:border-gray-700 text-sm" bind:value={topupCurrency}>
 									<option value="VND">🇻🇳 VND (₫)</option>
+									<option value="USD">🇺🇸 USD ($)</option>
 								</select>
 							</div>
 						</div>

@@ -6,6 +6,7 @@
 	import { user } from '$lib/stores';
 	import BarChart from '$lib/components/billing/BarChart.svelte';
 	import PaymentProviderIcon from '$lib/components/billing/PaymentProviderIcon.svelte';
+	import PageToolbar from '$lib/components/billing/PageToolbar.svelte';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import Star from '$lib/components/icons/Star.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
@@ -384,6 +385,7 @@
 			</h1>
 			<p class="text-xs text-gray-500 dark:text-gray-400">{$i18n.t('Manage API keys, model pricing, payments and revenue')}</p>
 		</div>
+		<PageToolbar />
 	</div>
 
 	{#if loading}

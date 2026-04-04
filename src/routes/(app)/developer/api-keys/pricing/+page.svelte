@@ -14,6 +14,7 @@
 	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import Star from '$lib/components/icons/Star.svelte';
+	import PageToolbar from '$lib/components/billing/PageToolbar.svelte';
 
 	const i18n = getContext<any>('i18n');
 
@@ -48,17 +49,20 @@
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 	<!-- Header -->
-	<div class="flex items-center gap-3">
-		<button
-			class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-			on:click={() => goto('/developer/api-keys/landing')}
-		>
-			<ArrowLeft className="size-4" />
-		</button>
-		<div>
-			<h1 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Pricing')}</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400">{$i18n.t('Transparent plans for every stage of your project')}</p>
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-3">
+			<button
+				class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+				on:click={() => goto('/developer/api-keys/landing')}
+			>
+				<ArrowLeft className="size-4" />
+			</button>
+			<div>
+				<h1 class="text-2xl sm:text-3xl font-bold">{$i18n.t('Pricing')}</h1>
+				<p class="text-sm text-gray-500 dark:text-gray-400">{$i18n.t('Transparent plans for every stage of your project')}</p>
+			</div>
 		</div>
+		<PageToolbar />
 	</div>
 
 	{#if loading}

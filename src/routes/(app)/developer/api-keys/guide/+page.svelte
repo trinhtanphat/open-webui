@@ -5,6 +5,7 @@
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import ArrowRight from '$lib/components/icons/ArrowRight.svelte';
+	import PageToolbar from '$lib/components/billing/PageToolbar.svelte';
 
 	const i18n = getContext<any>('i18n');
 	const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com';
@@ -76,20 +77,23 @@ print(response.choices[0].message.content)`;
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 	<!-- Header -->
-	<div class="flex items-center gap-3">
-		<button
-			class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-			on:click={() => goto('/developer/api-keys')}
-		>
-			<ArrowLeft className="size-4" />
-		</button>
-		<div>
-			<h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-				<svg class="size-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
-				{$i18n.t('API Usage Guide')}
-			</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400">{$i18n.t('Everything you need to integrate and manage your API key')}</p>
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-3">
+			<button
+				class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+				on:click={() => goto('/developer/api-keys')}
+			>
+				<ArrowLeft className="size-4" />
+			</button>
+			<div>
+				<h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+					<svg class="size-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+					{$i18n.t('API Usage Guide')}
+				</h1>
+				<p class="text-sm text-gray-500 dark:text-gray-400">{$i18n.t('Everything you need to integrate and manage your API key')}</p>
+			</div>
 		</div>
+		<PageToolbar />
 	</div>
 
 	<!-- Steps -->
