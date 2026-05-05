@@ -69,8 +69,8 @@
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
 
-	const toggleViewMode = () => {
-		onViewModeChange(viewMode === 'linear' ? 'mindmap' : 'linear');
+	const setViewMode = (mode: ChatViewMode) => {
+		onViewModeChange(mode);
 	};
 </script>
 
@@ -185,30 +185,37 @@
 					{/if}
 
 					{#if history?.currentId}
-						<Tooltip
-							content={viewMode === 'linear'
-								? $i18n.t('Mind Map View')
-								: $i18n.t('Linear Chat View')}
+						<div
+							class="mx-1 flex items-center rounded-xl border border-gray-200 bg-white/70 p-0.5 dark:border-gray-800 dark:bg-gray-900/50"
+							role="group"
+							aria-label={$i18n.t('Chat view mode')}
 						>
-							<button
-								class="flex cursor-pointer px-2 py-2 rounded-xl transition {viewMode === 'mindmap'
-									? 'bg-gray-100 text-gray-900 dark:bg-gray-850 dark:text-white'
-									: 'hover:bg-gray-50 dark:hover:bg-gray-850'}"
-								on:click={toggleViewMode}
-								aria-label={viewMode === 'linear'
-									? $i18n.t('Mind Map View')
-									: $i18n.t('Linear Chat View')}
-								aria-pressed={viewMode === 'mindmap'}
-							>
-								<div class="m-auto self-center">
-									{#if viewMode === 'linear'}
-										<Map className="size-4.5" strokeWidth="1.5" />
-									{:else}
-										<ListBullet className="size-4.5" strokeWidth="1.5" />
-									{/if}
-								</div>
-							</button>
-						</Tooltip>
+							<Tooltip content={$i18n.t('Linear Chat View')}>
+								<button
+									class="flex cursor-pointer rounded-lg p-1.5 transition {viewMode === 'linear'
+										? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
+										: 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}"
+									on:click={() => setViewMode('linear')}
+									aria-label={$i18n.t('Linear Chat View')}
+									aria-pressed={viewMode === 'linear'}
+								>
+									<ListBullet className="size-4" strokeWidth="1.5" />
+								</button>
+							</Tooltip>
+
+							<Tooltip content={$i18n.t('Mind Map View')}>
+								<button
+									class="flex cursor-pointer rounded-lg p-1.5 transition {viewMode === 'mindmap'
+										? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
+										: 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}"
+									on:click={() => setViewMode('mindmap')}
+									aria-label={$i18n.t('Mind Map View')}
+									aria-pressed={viewMode === 'mindmap'}
+								>
+									<Map className="size-4" strokeWidth="1.5" />
+								</button>
+							</Tooltip>
+						</div>
 					{/if}
 
 					{#if $mobile && !$temporaryChatEnabled && chat && chat.id}

@@ -51,23 +51,46 @@
 					reduced_motion: false,
 					sidebar_collapsed: false
 				};
-				const LIGHT_VARIANTS = { anthropic: 'anthropic-light', v0: 'vercel-light', 'github-dim': 'github-light' };
+				const LIGHT_VARIANTS = {
+					anthropic: 'anthropic-light',
+					v0: 'vercel-light',
+					'github-dim': 'github-light'
+				};
 				const LIGHT_THEMES = new Set([
-					'light', 'sakura', 'sepia', 'paper', 'arctic', 'pastel-dream', 'porcelain', 'platinum',
-					'spring', 'summer', 'minimal-light', 'stripe', 'notion', 'vercel-light', 'github-light', 'anthropic-light'
+					'light',
+					'sakura',
+					'sepia',
+					'paper',
+					'arctic',
+					'pastel-dream',
+					'porcelain',
+					'platinum',
+					'spring',
+					'summer',
+					'minimal-light',
+					'stripe',
+					'notion',
+					'vercel-light',
+					'github-light',
+					'anthropic-light'
 				]);
 				const metaThemeColorTag = document.querySelector('meta[name="theme-color"]');
-				const systemPrefersLight = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+				const systemPrefersLight = () =>
+					window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
 
 				function loadPrefs() {
 					try {
 						const raw = localStorage.getItem(PREFS_KEY);
 						if (raw) return Object.assign({}, DEFAULT_PREFS, JSON.parse(raw));
 						const legacy = localStorage.getItem('theme');
-						if (legacy === 'light') return Object.assign({}, DEFAULT_PREFS, { theme: 'light', color_scheme: 'light' });
-						if (legacy === 'system') return Object.assign({}, DEFAULT_PREFS, { theme: 'system', color_scheme: 'system' });
-						if (legacy === 'her') return Object.assign({}, DEFAULT_PREFS, { theme: 'rosepine', color_scheme: 'dark' });
-						if (legacy === 'oled-dark') return Object.assign({}, DEFAULT_PREFS, { theme: 'terminal', color_scheme: 'dark' });
+						if (legacy === 'light')
+							return Object.assign({}, DEFAULT_PREFS, { theme: 'light', color_scheme: 'light' });
+						if (legacy === 'system')
+							return Object.assign({}, DEFAULT_PREFS, { theme: 'system', color_scheme: 'system' });
+						if (legacy === 'her')
+							return Object.assign({}, DEFAULT_PREFS, { theme: 'rosepine', color_scheme: 'dark' });
+						if (legacy === 'oled-dark')
+							return Object.assign({}, DEFAULT_PREFS, { theme: 'terminal', color_scheme: 'dark' });
 					} catch (_) {}
 					return Object.assign({}, DEFAULT_PREFS);
 				}
@@ -75,7 +98,8 @@
 				function resolveTheme(prefs) {
 					let theme = prefs.theme || DEFAULT_PREFS.theme;
 					const rawScheme = prefs.color_scheme || DEFAULT_PREFS.color_scheme;
-					const scheme = rawScheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : rawScheme;
+					const scheme =
+						rawScheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : rawScheme;
 					if (theme === 'system') theme = systemPrefersLight() ? 'light' : 'midnight';
 					if (scheme === 'light' && LIGHT_VARIANTS[theme]) theme = LIGHT_VARIANTS[theme];
 					return theme;
@@ -85,28 +109,52 @@
 					const root = document.documentElement;
 					const theme = resolveTheme(prefs);
 					const isLight = LIGHT_THEMES.has(theme);
+					const mergedPrefs = Object.assign({}, DEFAULT_PREFS, prefs);
 					root.setAttribute('data-theme', theme);
-					root.setAttribute('data-density', prefs.density || DEFAULT_PREFS.density);
-					root.lang = prefs.locale || DEFAULT_PREFS.locale;
+					root.setAttribute('data-density', mergedPrefs.density);
+					root.lang = mergedPrefs.locale;
 					if (prefs.reduced_motion) root.setAttribute('data-motion', 'reduced');
 					else root.removeAttribute('data-motion');
 					root.classList.toggle('light-mode', isLight);
 					root.classList.toggle('light', isLight);
 					root.classList.toggle('dark', !isLight);
 					root.classList.remove('her');
-					try { localStorage.setItem('theme', isLight ? 'light' : 'dark'); } catch (_) {}
+					try {
+						localStorage.setItem('theme', isLight ? 'light' : 'dark');
+					} catch (_) {}
 					if (persist) {
-						try { localStorage.setItem(PREFS_KEY, JSON.stringify(Object.assign({}, DEFAULT_PREFS, prefs))); } catch (_) {}
+						try {
+							localStorage.setItem(PREFS_KEY, JSON.stringify(mergedPrefs));
+						} catch (_) {}
 					}
-					if (metaThemeColorTag) metaThemeColorTag.setAttribute('content', isLight ? '#ffffff' : '#171717');
+					if (metaThemeColorTag)
+						metaThemeColorTag.setAttribute('content', isLight ? '#ffffff' : '#171717');
+					try {
+						window.dispatchEvent(
+							new CustomEvent('vnso:theme-change', {
+								detail: Object.assign({}, mergedPrefs, { resolved_theme: theme })
+							})
+						);
+					} catch (_) {}
 					return { theme, isLight };
 				}
 
 				let prefs = loadPrefs();
 				const resolved = applyPrefs(prefs, false);
-				window.__setTheme = (id) => { prefs = Object.assign({}, prefs, { theme: id || 'midnight' }); applyPrefs(prefs, true); };
-				window.__setColorScheme = (scheme) => { prefs = Object.assign({}, prefs, { color_scheme: scheme || 'system' }); applyPrefs(prefs, true); };
-				window.__setLocale = (locale) => { prefs = Object.assign({}, prefs, { locale: locale || 'vi' }); applyPrefs(prefs, true); };
+				window.__getThemePrefs = () =>
+					Object.assign({}, DEFAULT_PREFS, prefs, { resolved_theme: resolveTheme(prefs) });
+				window.__setTheme = (id) => {
+					prefs = Object.assign({}, prefs, { theme: id || 'midnight' });
+					applyPrefs(prefs, true);
+				};
+				window.__setColorScheme = (scheme) => {
+					prefs = Object.assign({}, prefs, { color_scheme: scheme || 'system' });
+					applyPrefs(prefs, true);
+				};
+				window.__setLocale = (locale) => {
+					prefs = Object.assign({}, prefs, { locale: locale || 'vi' });
+					applyPrefs(prefs, true);
+				};
 
 				const preloadHref = resolved.isLight ? '/static/splash.png' : '/static/splash-dark.png';
 				const preload = document.createElement('link');
@@ -119,7 +167,8 @@
 				if (window.matchMedia) {
 					const media = window.matchMedia('(prefers-color-scheme: dark)');
 					const onSystemChange = () => {
-						if (prefs.theme === 'system' || prefs.color_scheme === 'system') applyPrefs(prefs, false);
+						if (prefs.theme === 'system' || prefs.color_scheme === 'system')
+							applyPrefs(prefs, false);
 					};
 					if (media.addEventListener) media.addEventListener('change', onSystemChange);
 					else if (media.addListener) media.addListener(onSystemChange);

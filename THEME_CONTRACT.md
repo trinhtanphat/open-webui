@@ -1,20 +1,32 @@
 # VNSO Cloud — Shared Theme Contract
 
-Canonical design-system contract for VNSO Cloud frontends, copied from `/root/THEME_CONTRACT.md` for this Open WebUI fork.
+Canonical design-system contract for VNSO Cloud frontends, copied from `/root/THEME_CONTRACT.md` and adapted for this Open WebUI fork.
 
-The reference implementation lives in `/root/temp-prj/ProxmoxAI/frontend/src/main.js` and `/root/temp-prj/ProxmoxAI/frontend/src/themes-premium.css`. Open WebUI consumes the contract through [src/app.html](src/app.html), [static/static/custom.css](static/static/custom.css), and [static/static/proxmoxai-themes.css](static/static/proxmoxai-themes.css).
+Reference source:
+
+- ProxmoxAI bootstrap: `/root/temp-prj/ProxmoxAI/frontend/src/main.js`
+- ProxmoxAI premium CSS: `/root/temp-prj/ProxmoxAI/frontend/src/themes-premium.css`
+
+Open WebUI integration:
+
+- [src/app.html](src/app.html) — pre-paint bootstrap; exposes `window.__setTheme`, `window.__setColorScheme`, `window.__setLocale`.
+- [src/lib/components/common/ThemeModeToggle.svelte](src/lib/components/common/ThemeModeToggle.svelte) — theme family picker and light/dark/system controls.
+- [static/static/custom.css](static/static/custom.css) — Open WebUI bridge CSS, served at `/static/custom.css`.
+- [static/static/proxmoxai-themes.css](static/static/proxmoxai-themes.css) — copied ProxmoxAI theme CSS, served at `/static/proxmoxai-themes.css`.
+
+The nested `static/static/*` path is intentional. In this SvelteKit app, files under repository `static/` are served from `/`, so repository `static/static/custom.css` becomes browser path `/static/custom.css`.
 
 ## 1. Storage Contract
 
-| Key                                 | Value type | Owner         | Notes                                                                                           |
-| ----------------------------------- | ---------- | ------------- | ----------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------ |
-| `proxmoxai_prefs`                   | JSON       | shared        | Single source of truth, written by ProxmoxAI; sibling apps read and merge the same shape        |
-| `proxmoxai_prefs.theme`             | string     | shared        | Family id such as `anthropic`, `v0`, `github-dim`, `linear`, `stripe`, `notion`, `vercel-light` |
-| `proxmoxai_prefs.color_scheme`      | `'light'   | 'dark'        | 'system'`                                                                                       | shared                 | Independent axis from `theme` family |
-| `proxmoxai_prefs.locale`            | `'vi'      | 'en'`         | shared                                                                                          | UI language preference |
-| `proxmoxai_prefs.density`           | `'compact' | 'comfortable' | 'cozy'`                                                                                         | shared                 | Layout density                       |
-| `proxmoxai_prefs.reduced_motion`    | boolean    | shared        | Motion reduction flag                                                                           |
-| `proxmoxai_prefs.sidebar_collapsed` | boolean    | shared        | Shared sidebar preference                                                                       |
+| Key                                 | Value type                             | Owner  | Notes                                                                                        |
+| ----------------------------------- | -------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `proxmoxai_prefs`                   | JSON                                   | shared | Single source of truth. Consumers read and merge the same shape.                             |
+| `proxmoxai_prefs.theme`             | string                                 | shared | Family id such as `midnight`, `anthropic`, `v0`, `github-dim`, `linear`, `stripe`, `notion`. |
+| `proxmoxai_prefs.color_scheme`      | `'light' \| 'dark' \| 'system'`        | shared | Independent axis from `theme` family.                                                        |
+| `proxmoxai_prefs.locale`            | `'vi' \| 'en'`                         | shared | UI language preference.                                                                      |
+| `proxmoxai_prefs.density`           | `'compact' \| 'comfortable' \| 'cozy'` | shared | Layout density.                                                                              |
+| `proxmoxai_prefs.reduced_motion`    | boolean                                | shared | Motion reduction flag.                                                                       |
+| `proxmoxai_prefs.sidebar_collapsed` | boolean                                | shared | Shared sidebar preference.                                                                   |
 
 Rule: never invent a new top-level key. Extend `DEFAULT_PREFS` in ProxmoxAI first, then mirror the field in every consumer.
 
@@ -24,10 +36,11 @@ Rule: never invent a new top-level key. Extend `DEFAULT_PREFS` in ProxmoxAI firs
 <html data-theme="anthropic" data-density="comfortable" lang="vi"></html>
 ```
 
-- `data-theme` is the resolved id, including light variants such as `anthropic-light`.
+- `data-theme` is the resolved id, including light variants such as `anthropic-light`, `vercel-light`, or `github-light`.
 - `data-density` is `compact`, `comfortable`, or `cozy`.
-- `data-motion="reduced"` is present only when the user opts into reduced motion.
-- `class="light-mode"` is toggled on `<html>` for legacy CSS rules on light variants.
+- `data-motion="reduced"` is present only when reduced motion is enabled.
+- `class="light-mode"` is toggled on `<html>` for legacy light theme CSS.
+- `class="light"` / `class="dark"` are still maintained for Open WebUI Tailwind dark-mode compatibility.
 
 Every theme block must define:
 
@@ -85,34 +98,54 @@ Sentinel:
 
 ## 4. JS Bootstrap Contract
 
-Every frontend must run a pre-paint snippet before CSS paint to avoid theme flash. Open WebUI's implementation lives in [src/app.html](src/app.html) and exposes:
+Every frontend must run a pre-paint snippet before CSS paint to avoid theme flash. Open WebUI's implementation lives in [src/app.html](src/app.html).
+
+Required public functions:
 
 ```js
-window.__setTheme(id);
-window.__setColorScheme(scheme);
-window.__setLocale(locale);
+window.__setTheme(id); // family id, e.g. 'anthropic' or 'v0'
+window.__setColorScheme(scheme); // 'light' | 'dark' | 'system'
+window.__setLocale(locale); // 'vi' | 'en'
 ```
+
+The bootstrap must:
+
+- Load `proxmoxai_prefs` and merge with `DEFAULT_PREFS`.
+- Resolve light variants from family + color scheme.
+- Set `data-theme`, `data-density`, `data-motion`, `lang`, `light-mode`, `light`, and `dark` before paint.
+- Keep legacy `localStorage.theme` compatible for Open WebUI code that still reads it.
 
 ## 5. Theme Picker UI Contract
 
-A standard picker has:
+Open WebUI's picker implementation is [src/lib/components/common/ThemeModeToggle.svelte](src/lib/components/common/ThemeModeToggle.svelte).
 
-- Trigger button: `id="theme-picker-btn"`, `[data-theme-picker-btn]`, `.theme-swatch`, `.theme-picker-label`.
-- Menu: `id="theme-picker-menu"` with `<li role="option" data-theme="<id>">` rows.
-- Mode toggle buttons with `data-mode="light|dark|system"`.
+Required behavior:
 
-Open WebUI currently consumes the theme but does not add the full picker in this change.
+- A compact trigger with a swatch showing the selected family.
+- Family options for at least `midnight`, `anthropic`, `v0`/Vercel, `github-dim`, `linear`, `stripe`, `notion`, `figma`, `raycast`, `supabase`, `railway`, `rosepine`, `nord`, `tokyo-night`, `dracula`, `terminal`.
+- Mode controls for `light`, `dark`, and `system`.
+- On family selection, write `proxmoxai_prefs.theme` and call `window.__setTheme` when available.
+- On mode selection, write `proxmoxai_prefs.color_scheme`, update the Svelte `theme` store, maintain legacy `localStorage.theme`, and call `window.__setColorScheme` when available.
 
-## 6. Contributing A New Theme
+## 6. Open WebUI CSS Bridge
 
-1. Add a CSS block in ProxmoxAI `frontend/src/themes-premium.css`.
-2. Register `THEME_META[<id>]` in ProxmoxAI `frontend/src/main.js`.
-3. Add the picker row in the ProxmoxAI picker UI.
-4. Add light variant routing if needed.
-5. Smoke test WCAG AA contrast for body and muted text.
-6. Copy the updated CSS into [static/static/proxmoxai-themes.css](static/static/proxmoxai-themes.css) for this Open WebUI fork.
+[static/static/custom.css](static/static/custom.css) bridges Open WebUI classes to VNSO variables. It must:
 
-## 7. Cross-App Sync
+- Import `/static/proxmoxai-themes.css`.
+- Preserve Open WebUI's native `.dark` / `.light` compatibility.
+- Map main surfaces, sidebar, cards, inputs, buttons, borders, code blocks, and selection styles to `--bg`, `--text`, `--primary`, `--border`, and related variables.
+- Avoid introducing product-specific hardcoded palettes outside theme definitions.
+
+## 7. Contributing A New Theme
+
+1. Add the CSS block in ProxmoxAI `frontend/src/themes-premium.css` and define all required variables.
+2. Register metadata in ProxmoxAI `frontend/src/main.js`.
+3. Add the family to [src/lib/components/common/ThemeModeToggle.svelte](src/lib/components/common/ThemeModeToggle.svelte).
+4. If it is a light variant of a dark family, add it to `LIGHT_VARIANTS` in both [src/app.html](src/app.html) and the picker component.
+5. Copy updated CSS into [static/static/proxmoxai-themes.css](static/static/proxmoxai-themes.css).
+6. Smoke test contrast in light/dark mode and verify `<html data-theme="...">` updates live.
+
+## 8. Cross-App Sync
 
 Browser `localStorage` is not shared across subdomains. For cross-subdomain sync, use the VNSO auth preferences API:
 
