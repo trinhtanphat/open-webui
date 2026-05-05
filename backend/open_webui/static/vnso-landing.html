@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Công nghệ VNSO | Cloud Server, Dedicated Server, VPS, CDN, Anti-DDoS</title>
+  <meta name="description" content="Landing page sản phẩm Công nghệ VNSO: Cloud Server, VPS, Dedicated Server, Private Cloud, Cloud Storage, CDN, Anti-DDoS, GPU/AI Cloud và giải pháp chuyển đổi số." />
+  <meta property="og:title" content="Công nghệ VNSO | Hạ tầng Cloud, Server và bảo mật cho doanh nghiệp" />
+  <meta property="og:description" content="Hạ tầng Cloud Server, Dedicated Server, VPS, Private Cloud, Cloud Storage, Anti-DDoS, CDN và GPU/AI Cloud với uptime 99.996%." />
+  <meta property="og:image" content="https://vnso.vn/wp-content/uploads/2025/06/Cong-Nghe-VNSO-Logo-Social-2024.png" />
+  <meta name="theme-color" content="#0a67b1" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <style>
+    :root {
+      --brand-blue: #0868b7;
+      --brand-blue-700: #054f93;
+      --brand-green: #72bd19;
+      --brand-green-700: #4f8f0f;
+      --ink: #101828;
+      --muted: #5f6c7b;
+      --line: rgba(16, 24, 40, 0.12);
+      --paper: #ffffff;
+      --soft: #f4f8fb;
+      --soft-green: #eff9e9;
+      --soft-blue: #eaf4ff;
+      --amber: #ffb800;
+      --shadow: 0 24px 80px rgba(8, 36, 72, 0.16);
+      --radius: 8px;
+      --container: min(1180px, calc(100vw - 40px));
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(8, 104, 183, 0.055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(8, 104, 183, 0.04) 1px, transparent 1px),
+        #ffffff;
+      background-size: 72px 72px;
+      mask-image: linear-gradient(to bottom, transparent 0, #000 220px, #000 100%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--brand-green), var(--brand-blue), var(--amber));
+      box-shadow: 0 0 22px rgba(8, 104, 183, 0.35);
+    }
+
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    .site-header.is-scrolled {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: var(--line);
+      box-shadow: 0 14px 44px rgba(16, 24, 40, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav {
+      width: var(--container);
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 156px;
+    }
+
+    .brand img {
+      width: 154px;
+      height: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(14px);
+      border-radius: 999px;
+    }
+
+    .site-header.is-scrolled .nav-links {
+      border-color: var(--line);
+      background: rgba(244, 248, 251, 0.84);
+    }
+
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 13px;
+      font-weight: 750;
+      padding: 9px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: color 180ms ease, background 180ms ease;
+    }
+
+    .site-header.is-scrolled .nav-links a {
+      color: var(--ink);
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      background: rgba(114, 189, 25, 0.16);
+      color: #ffffff;
+      outline: none;
+    }
+
+    .site-header.is-scrolled .nav-links a:hover,
+    .site-header.is-scrolled .nav-links a:focus-visible {
+      color: var(--brand-blue-700);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-blue));
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 850;
+      box-shadow: 0 14px 38px rgba(8, 104, 183, 0.26);
+      white-space: nowrap;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      color: #ffffff;
+      overflow: hidden;
+      isolation: isolate;
+      display: flex;
+      align-items: stretch;
+      padding-top: 72px;
+    }
+
+    .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+    }
+
+    .hero-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: saturate(1.04) contrast(1.04);
+      transform: scale(1.02);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(100deg, rgba(5, 27, 52, 0.94) 0%, rgba(5, 48, 88, 0.84) 42%, rgba(5, 52, 75, 0.58) 100%),
+        radial-gradient(circle at 82% 18%, rgba(114, 189, 25, 0.28), transparent 34%);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.42;
+      background-image:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 84px 84px;
+      mask-image: linear-gradient(to right, #000, transparent 78%);
+    }
+
+    .hero-inner {
+      width: var(--container);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.78fr);
+      align-items: center;
+      gap: 42px;
+      padding: 44px 0 62px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 36px;
+      height: 2px;
+      background: var(--brand-green);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    .hero h1 {
+      max-width: 760px;
+      margin: 18px 0 20px;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: 0.98;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .hero-lede {
+      max-width: 720px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.62;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions,
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-weight: 850;
+      font-size: 14px;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+      white-space: nowrap;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .button.primary {
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-blue));
+      box-shadow: 0 18px 44px rgba(8, 104, 183, 0.32);
+    }
+
+    .button.secondary {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.38);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+    }
+
+    .button.light {
+      color: var(--brand-blue-700);
+      background: #ffffff;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .button.outline {
+      color: var(--brand-blue-700);
+      background: transparent;
+      border-color: rgba(8, 104, 183, 0.22);
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 26px;
+      max-width: 820px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: var(--radius);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .proof-item {
+      padding: 16px;
+      background: rgba(5, 27, 52, 0.34);
+    }
+
+    .proof-value {
+      display: block;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .proof-label {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .hero-panel {
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 28px 100px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(22px);
+      overflow: hidden;
+    }
+
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.22), transparent 32%),
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
+    }
+
+    .panel-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .panel-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .panel-brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(114, 189, 25, 0.18);
+      color: #dbffd1;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand-green);
+      box-shadow: 0 0 0 7px rgba(114, 189, 25, 0.16);
+    }
+
+    .network-map {
+      position: relative;
+      z-index: 1;
+      min-height: 338px;
+      margin-top: 18px;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(5, 27, 52, 0.86), rgba(5, 79, 147, 0.34)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: auto, 48px 48px, 48px 48px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .node {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22), inset 0 0 24px rgba(255, 255, 255, 0.08);
+      animation: float 7s ease-in-out infinite;
+    }
+
+    .node.primary {
+      width: 112px;
+      height: 112px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-blue));
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    .node.hcm { left: 13%; top: 23%; }
+    .node.hn { right: 10%; top: 17%; animation-delay: 900ms; }
+    .node.dn { left: 17%; bottom: 14%; animation-delay: 1400ms; }
+    .node.edge { right: 12%; bottom: 13%; animation-delay: 1900ms; }
+
+    .link-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(114, 189, 25, 0.8), transparent);
+      transform-origin: left center;
+      animation: scan 2.8s linear infinite;
+    }
+
+    .line-1 { left: 27%; top: 37%; width: 45%; transform: rotate(10deg); }
+    .line-2 { left: 29%; bottom: 31%; width: 42%; transform: rotate(-14deg); animation-delay: 400ms; }
+    .line-3 { right: 25%; top: 37%; width: 35%; transform: rotate(145deg); animation-delay: 900ms; }
+    .line-4 { right: 24%; bottom: 34%; width: 34%; transform: rotate(207deg); animation-delay: 1300ms; }
+
+    .telemetry {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .telemetry div {
+      padding: 12px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .telemetry strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .telemetry span {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .section {
+      padding: 96px 0;
+      position: relative;
+    }
+
+    .section.compact {
+      padding: 70px 0;
+    }
+
+    .section.blue-band {
+      background:
+        linear-gradient(135deg, rgba(8, 104, 183, 0.96), rgba(6, 70, 126, 0.98)),
+        url("https://vnso.vn/wp-content/uploads/2025/06/CDN-giam-thoi-gian-cho-doi-cho-website-app-den-70-VNSO.png") center/cover;
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .section.green-band {
+      background: linear-gradient(135deg, #f6fbf2, #ffffff 48%, #edf7ff);
+    }
+
+    .container {
+      width: var(--container);
+      margin: 0 auto;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(300px, 0.58fr);
+      gap: 48px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--brand-blue-700);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .blue-band .label {
+      color: #bcf6a1;
+    }
+
+    .label::before {
+      content: "";
+      width: 30px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.06;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .section-intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .blue-band .section-intro {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .product-card,
+    .reason-card,
+    .price-card,
+    .faq-item,
+    .contact-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 18px 54px rgba(16, 24, 40, 0.07);
+    }
+
+    .product-card {
+      min-height: 286px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(8, 104, 183, 0.32);
+      box-shadow: var(--shadow);
+    }
+
+    .product-icon {
+      width: 46px;
+      height: 46px;
+      padding: 8px;
+      border-radius: var(--radius);
+      background: var(--soft-blue);
+      border: 1px solid rgba(8, 104, 183, 0.12);
+      object-fit: contain;
+    }
+
+    .product-card:nth-child(2n) .product-icon {
+      background: var(--soft-green);
+    }
+
+    .product-card h3 {
+      margin: 18px 0 10px;
+      font-size: 20px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .product-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .product-meta {
+      margin-top: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: var(--brand-blue-700);
+      background: rgba(8, 104, 183, 0.08);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tag.green {
+      color: var(--brand-green-700);
+      background: rgba(114, 189, 25, 0.12);
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .story-media {
+      position: relative;
+      min-height: 520px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: #061b34;
+    }
+
+    .story-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .story-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 20%, rgba(5, 27, 52, 0.78));
+    }
+
+    .story-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      z-index: 1;
+      color: #ffffff;
+    }
+
+    .story-caption strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.05;
+      margin-bottom: 8px;
+    }
+
+    .story-caption span {
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 14px;
+    }
+
+    .reason-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .reason-card {
+      padding: 24px;
+      min-height: 188px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .reason-card::before {
+      content: attr(data-index);
+      position: absolute;
+      right: 18px;
+      top: 10px;
+      color: rgba(8, 104, 183, 0.08);
+      font-size: 72px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .reason-card h3 {
+      position: relative;
+      margin-bottom: 10px;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    .reason-card p {
+      position: relative;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .price-card {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 300px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg, #ffffff, #f0f8ff);
+      border-color: rgba(8, 104, 183, 0.32);
+      box-shadow: var(--shadow);
+    }
+
+    .price-card h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .price {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--brand-blue-700);
+    }
+
+    .price small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .feature-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .feature-list li {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .feature-list li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--brand-green);
+      box-shadow: 0 0 0 4px rgba(114, 189, 25, 0.14);
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(340px, 1.05fr);
+      gap: 34px;
+      align-items: center;
+    }
+
+    .architecture-copy p {
+      color: rgba(255, 255, 255, 0.78);
+      margin-bottom: 24px;
+    }
+
+    .stack-visual {
+      position: relative;
+      min-height: 430px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 28px 100px rgba(0, 0, 0, 0.24);
+    }
+
+    .stack-row {
+      position: absolute;
+      left: 50%;
+      width: min(76%, 420px);
+      min-height: 74px;
+      transform: translateX(-50%) skewY(-5deg);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      color: #ffffff;
+      font-weight: 900;
+    }
+
+    .stack-row span {
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .stack-row:nth-child(1) { top: 54px; }
+    .stack-row:nth-child(2) { top: 136px; background: linear-gradient(135deg, rgba(114, 189, 25, 0.36), rgba(255, 255, 255, 0.08)); }
+    .stack-row:nth-child(3) { top: 218px; }
+    .stack-row:nth-child(4) { top: 300px; background: linear-gradient(135deg, rgba(255, 184, 0, 0.24), rgba(255, 255, 255, 0.08)); }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      counter-reset: step;
+    }
+
+    .step {
+      position: relative;
+      padding: 24px;
+      min-height: 220px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #ffffff;
+      box-shadow: 0 18px 54px rgba(16, 24, 40, 0.06);
+      counter-increment: step;
+    }
+
+    .step::before {
+      content: counter(step, decimal-leading-zero);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 28px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+      border-radius: 50%;
+      font-weight: 900;
+    }
+
+    .step h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .industry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .industry-card {
+      min-height: 220px;
+      padding: 28px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+    }
+
+    .industry-card h3 {
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .industry-card p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .faq-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
+      gap: 34px;
+      align-items: start;
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .faq-item {
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      text-align: left;
+      padding: 20px 22px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .faq-question span {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--soft-blue);
+      color: var(--brand-blue-700);
+      flex: 0 0 auto;
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 22px 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .faq-item.is-open .faq-answer {
+      display: block;
+    }
+
+    .faq-item.is-open .faq-question span {
+      background: var(--soft-green);
+      color: var(--brand-green-700);
+    }
+
+    .contact-band {
+      background:
+        linear-gradient(135deg, rgba(5, 27, 52, 0.96), rgba(5, 79, 147, 0.9)),
+        url("https://vnso.vn/wp-content/uploads/2025/06/server-gpu-vnso.png") center/cover;
+      color: #ffffff;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(320px, 0.55fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .contact-copy h2 {
+      margin-bottom: 18px;
+    }
+
+    .contact-copy p {
+      max-width: 760px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 17px;
+      margin-bottom: 24px;
+    }
+
+    .contact-card {
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(18px);
+      box-shadow: none;
+    }
+
+    .contact-card h3 {
+      margin-bottom: 14px;
+      color: #ffffff;
+    }
+
+    .contact-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      display: grid;
+      gap: 13px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+    }
+
+    .footer {
+      padding: 34px 0;
+      background: #07111f;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+    }
+
+    .footer-inner {
+      width: var(--container);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer img {
+      width: 128px;
+      filter: brightness(1.08);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(114, 189, 25, 0.24), 0 22px 48px rgba(0, 0, 0, 0.24); }
+      50% { box-shadow: 0 0 0 24px rgba(114, 189, 25, 0), 0 22px 48px rgba(0, 0, 0, 0.24); }
+    }
+
+    @keyframes float {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    @keyframes scan {
+      0% { opacity: 0; filter: brightness(0.8); }
+      35% { opacity: 1; filter: brightness(1.4); }
+      100% { opacity: 0; filter: brightness(0.8); }
+    }
+
+    @media (max-width: 1100px) {
+      :root { --container: min(100vw - 32px, 960px); }
+      .nav-links { display: none; }
+      .hero-inner,
+      .section-head,
+      .story-grid,
+      .architecture,
+      .faq-layout,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-inner { padding-top: 44px; }
+      .hero-panel { display: none; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      :root { --container: min(100vw - 24px, 620px); }
+      .nav { height: 64px; }
+      .brand img { width: 130px; }
+      .nav-cta { min-height: 38px; padding: 0 12px; }
+      .hero { min-height: auto; padding-top: 64px; }
+      .hero-inner { padding: 34px 0 46px; gap: 28px; }
+      .hero h1 { font-size: 44px; }
+      .hero-lede { font-size: 16px; }
+      .proof-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 26px; }
+      .proof-item { padding: 14px; }
+      .hero-panel { padding: 12px; }
+      .network-map { min-height: 300px; }
+      .node { width: 68px; height: 68px; font-size: 11px; }
+      .node.primary { width: 92px; height: 92px; }
+      .telemetry { grid-template-columns: 1fr; position: relative; left: auto; right: auto; bottom: auto; margin: 180px 12px 12px; }
+      .section { padding: 68px 0; }
+      .product-grid,
+      .pricing-grid,
+      .reason-grid,
+      .timeline,
+      .industry-grid { grid-template-columns: 1fr; }
+      .story-media { min-height: 360px; }
+      .stack-visual { min-height: 360px; }
+      .stack-row { width: 86%; padding: 0 16px; }
+      .button { width: 100%; }
+      .hero-actions .button { width: auto; flex: 1 1 calc(50% - 8px); }
+      .hero-actions .button:last-child { flex-basis: 100%; }
+      .cta-row .button { justify-content: center; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="site-header" id="siteHeader">
+    <nav class="nav" aria-label="Điều hướng chính">
+      <a class="brand" href="#top" aria-label="VNSO home">
+        <img src="vnso-wordmark.png" alt="Công nghệ VNSO" width="192" height="45" />
+      </a>
+      <div class="nav-links">
+        <a href="#products">Sản phẩm</a>
+        <a href="#infrastructure">Hạ tầng</a>
+        <a href="#pricing">Giá tham khảo</a>
+        <a href="#security">Bảo mật</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a class="nav-cta" href="https://vnso.vn/dang-ky-dung-thu/">Đăng ký dùng thử</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-media" aria-hidden="true">
+        <img src="https://vnso.vn/wp-content/uploads/2025/06/AI-GPU-RENDERvnso.jpg" alt="" />
+      </div>
+      <div class="hero-inner">
+        <div class="hero-copy reveal">
+          <div class="eyebrow">Cloud, Server, CDN, Anti-DDoS, GPU/AI</div>
+          <h1 id="hero-title">Công nghệ VNSO</h1>
+          <p class="hero-lede">Hệ sinh thái hạ tầng số cho doanh nghiệp Việt: Cloud Server, VPS, Dedicated Server, Private Cloud, Cloud Storage, Hosting, CDN, Anti-DDoS và GPU/AI Cloud trên nền tảng hiệu năng cao, giám sát liên tục và hỗ trợ kỹ thuật giàu kinh nghiệm.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://vnso.vn/dang-ky-dung-thu/">Đăng ký dùng thử</a>
+            <a class="button secondary" href="https://vnso.vn/thue-server/">Tổng hợp máy chủ</a>
+            <a class="button secondary" href="tel:1900636106">1900 636 106</a>
+          </div>
+          <div class="proof-strip" aria-label="Số liệu nổi bật của VNSO">
+            <div class="proof-item"><span class="proof-value">99.996%</span><span class="proof-label">uptime 12 tháng gần nhất</span></div>
+            <div class="proof-item"><span class="proof-value">10+</span><span class="proof-label">năm kinh nghiệm hạ tầng</span></div>
+            <div class="proof-item"><span class="proof-value">3</span><span class="proof-label">văn phòng HCM, Hà Nội, Đà Nẵng</span></div>
+            <div class="proof-item"><span class="proof-value">24/7</span><span class="proof-label">giám sát và hỗ trợ vận hành</span></div>
+          </div>
+        </div>
+
+        <aside class="hero-panel reveal" aria-label="Mô phỏng hệ thống VNSO">
+          <div class="panel-top">
+            <div class="panel-brand"><img src="logo.png" alt="" />VNSO Control Plane</div>
+            <div class="status-pill">Operational</div>
+          </div>
+          <div class="network-map" aria-hidden="true">
+            <span class="link-line line-1"></span>
+            <span class="link-line line-2"></span>
+            <span class="link-line line-3"></span>
+            <span class="link-line line-4"></span>
+            <span class="node hcm">HCM</span>
+            <span class="node hn">HN</span>
+            <span class="node dn">DN</span>
+            <span class="node edge">CDN</span>
+            <span class="node primary">VNSO</span>
+            <div class="telemetry">
+              <div><strong>NVMe</strong><span>high IOPS storage</span></div>
+              <div><strong>AI Shield</strong><span>adaptive Anti-DDoS</span></div>
+              <div><strong>Edge</strong><span>global acceleration</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section green-band" id="products">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <div class="label">Danh mục sản phẩm</div>
+            <h2>Một nền tảng cho toàn bộ vòng đời hạ tầng số.</h2>
+          </div>
+          <p class="section-intro">Từ website doanh nghiệp, hệ thống ERP, thương mại điện tử, game, livestream, AI inference đến private cloud nội bộ, VNSO cung cấp các lớp dịch vụ có thể kết hợp theo nhu cầu tăng trưởng.</p>
+        </div>
+
+        <div class="product-grid">
+          <a class="product-card reveal" href="https://vnso.vn/enterprise-cloud/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/icon_cloud_enterprise.svg" alt="" />
+            <h3>Cloud Server</h3>
+            <p>Máy chủ ảo hiệu năng cao, mở rộng nhanh, phù hợp hệ thống web/app, database, API và môi trường production cần tài nguyên linh hoạt.</p>
+            <div class="product-meta"><span class="tag">từ 250.000đ/tháng</span><span class="tag green">NVMe</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/thue-vps/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/icon_cloud_qtmc.svg" alt="" />
+            <h3>VPS</h3>
+            <p>Máy chủ ảo chi phí tối ưu cho website, staging, automation, microservice nhỏ và dự án cần triển khai nhanh.</p>
+            <div class="product-meta"><span class="tag">từ 99k/tháng</span><span class="tag green">Linux/Windows</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/thue-may-chu-rieng/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/icon-SERVER-DEDICATED.svg" alt="" />
+            <h3>Dedicated Server</h3>
+            <p>Máy chủ vật lý Dell, HPE, IBM chính hãng cho workload nặng, yêu cầu toàn quyền tài nguyên, bảo mật và cấu hình riêng.</p>
+            <div class="product-meta"><span class="tag">từ 3.300.000đ/tháng</span><span class="tag green">Tier 3 DC</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/private-cloud/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/private-cloud.svg" alt="" />
+            <h3>Private Cloud</h3>
+            <p>Cụm tài nguyên riêng cho doanh nghiệp cần tách biệt, kiểm soát cao, triển khai nhiều VM, mạng riêng và chính sách vận hành riêng.</p>
+            <div class="product-meta"><span class="tag">từ 11.024.000đ/tháng</span><span class="tag green">Dedicated resource</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/cloud-storage/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/icon_cloud_storage.svg" alt="" />
+            <h3>Cloud Storage</h3>
+            <p>Lưu trữ đám mây cho backup, media, log, dữ liệu doanh nghiệp và luồng tích hợp cần độ bền dữ liệu cao.</p>
+            <div class="product-meta"><span class="tag">backup ready</span><span class="tag green">scalable</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/hosting-linux/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/Icon_hosting_linux_min.svg" alt="" />
+            <h3>Hosting</h3>
+            <p>Linux, Windows, WordPress Hosting cho website doanh nghiệp, landing page, cổng nội dung và các ứng dụng CMS phổ biến.</p>
+            <div class="product-meta"><span class="tag">từ 30.000đ/tháng</span><span class="tag green">trial</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/anti-ddos/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/icon_security_-AntiDDoS.svg" alt="" />
+            <h3>Anti-DDoS</h3>
+            <p>Lớp bảo vệ cho game, website, API và ứng dụng có nguy cơ tấn công, kết hợp phát hiện tự động và chính sách theo từng dịch vụ.</p>
+            <div class="product-meta"><span class="tag">AI detection</span><span class="tag green">managed</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/cdn-protect-websites-and-applications/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/CDN1-icon.svg" alt="" />
+            <h3>CDN</h3>
+            <p>Tăng tốc phân phối nội dung, giảm thời gian chờ, ổn định truy cập trong nước và quốc tế cho website, app, livestream.</p>
+            <div class="product-meta"><span class="tag">edge cache</span><span class="tag green">global</span></div>
+          </a>
+          <a class="product-card reveal" href="https://gpu.vnso.vn/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/iconservergpu.svg" alt="" />
+            <h3>GPU/AI Cloud</h3>
+            <p>Máy chủ GPU cho AI training, inference, render, phân tích dữ liệu và tác vụ cần khả năng tính toán song song.</p>
+            <div class="product-meta"><span class="tag">GPU theo giờ</span><span class="tag green">AI ready</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/mail-doanh-nghiep/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/mail_business.svg" alt="" />
+            <h3>Mail doanh nghiệp</h3>
+            <p>Hệ thống email chuyên nghiệp cho tên miền riêng, quản trị người dùng, chống spam và tăng độ tin cậy khi giao tiếp khách hàng.</p>
+            <div class="product-meta"><span class="tag">business mail</span><span class="tag green">domain</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/office-365/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/office-365.svg" alt="" />
+            <h3>Bản quyền phần mềm</h3>
+            <p>Phân phối bản quyền uy tín cho Microsoft, Google Workspace, cPanel, Plesk, DirectAdmin và các nền tảng doanh nghiệp.</p>
+            <div class="product-meta"><span class="tag">license</span><span class="tag green">authorized</span></div>
+          </a>
+          <a class="product-card reveal" href="https://vnso.vn/thue-server/">
+            <img class="product-icon" src="https://vnso.vn/wp-content/uploads/2023/06/solution-icon.svg" alt="" />
+            <h3>Giải pháp IT</h3>
+            <p>Tư vấn thiết kế, triển khai và quản trị hạ tầng cho doanh nghiệp cần một đối tác đồng hành dài hạn trong chuyển đổi số.</p>
+            <div class="product-meta"><span class="tag">consulting</span><span class="tag green">managed</span></div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="infrastructure">
+      <div class="container story-grid">
+        <div class="story-media reveal">
+          <img src="https://vnso.vn/wp-content/uploads/2025/06/server-gpu-vnso.png" alt="Máy chủ GPU và hạ tầng VNSO" loading="lazy" />
+          <div class="story-caption"><strong>Hạ tầng thiết kế cho tải thực tế.</strong><span>NVMe, đường truyền tốc độ cao, dự phòng nhiều lớp, giám sát và cảnh báo toàn diện.</span></div>
+        </div>
+        <div>
+          <div class="section-head reveal" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+            <div>
+              <div class="label">Nền tảng vận hành</div>
+              <h2>Từ phần cứng chuyên dụng đến lớp bảo vệ ứng dụng.</h2>
+            </div>
+            <p class="section-intro">VNSO xây dựng dịch vụ trên phần cứng chính hãng, tối ưu mạng, lưu trữ NVMe và các lớp vận hành như backup, monitoring, CDN, Anti-DDoS, hỗ trợ kỹ thuật. Doanh nghiệp có thể bắt đầu nhỏ, sau đó nâng cấp dần sang cụm tài nguyên riêng hoặc máy chủ vật lý.</p>
+          </div>
+          <div class="reason-grid">
+            <div class="reason-card reveal" data-index="01"><h3>Dự phòng nhiều lớp</h3><p>Thiết kế hạ tầng chú trọng tính ổn định, giám sát liên tục, cảnh báo sớm và khả năng xử lý sự cố theo quy trình.</p></div>
+            <div class="reason-card reveal" data-index="02"><h3>Tốc độ truy cập cao</h3><p>Ổ cứng NVMe và đường truyền tốc độ cao giúp giảm độ trễ cho database, website, API và ứng dụng có lượng truy cập lớn.</p></div>
+            <div class="reason-card reveal" data-index="03"><h3>CDN sẵn sàng</h3><p>Phân phối nội dung qua edge, giảm tải origin, tăng tốc trải nghiệm người dùng ở nhiều khu vực truy cập.</p></div>
+            <div class="reason-card reveal" data-index="04"><h3>Kỹ thuật đồng hành</h3><p>Đội ngũ tư vấn và kỹ thuật có kinh nghiệm hỗ trợ lựa chọn cấu hình, triển khai, tối ưu và vận hành dịch vụ.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section blue-band" id="security">
+      <div class="container architecture">
+        <div class="architecture-copy reveal">
+          <div class="label">Bảo mật và hiệu năng</div>
+          <h2>Kiến trúc nhiều lớp cho website, ứng dụng, game và dữ liệu.</h2>
+          <p>VNSO kết hợp hạ tầng server, private network, CDN, Anti-DDoS, backup, giám sát và chính sách vận hành để giảm rủi ro downtime. Từng lớp có thể dùng độc lập hoặc ghép thành một kiến trúc production hoàn chỉnh.</p>
+          <div class="industry-grid">
+            <div class="industry-card"><h3>Website và thương mại điện tử</h3><p>CDN cache, SSL, chống tấn công, hosting/cloud linh hoạt và khả năng mở rộng khi chiến dịch tăng traffic.</p></div>
+            <div class="industry-card"><h3>Game và livestream</h3><p>Dedicated Server, GPU, Anti-DDoS, mạng ổn định và cấu hình riêng cho workload thời gian thực.</p></div>
+            <div class="industry-card"><h3>ERP, CRM, database</h3><p>Cloud Server hoặc Private Cloud có tài nguyên kiểm soát, backup và khả năng phân tách môi trường.</p></div>
+            <div class="industry-card"><h3>AI và xử lý dữ liệu</h3><p>GPU/AI Cloud, lưu trữ dữ liệu và hạ tầng mở rộng cho pipeline training, inference, render.</p></div>
+          </div>
+        </div>
+        <div class="stack-visual reveal" aria-label="Lớp kiến trúc VNSO">
+          <div class="stack-row"><strong>Application Layer</strong><span>Website, API, Game, AI</span></div>
+          <div class="stack-row"><strong>Protection Layer</strong><span>CDN, SSL, Anti-DDoS</span></div>
+          <div class="stack-row"><strong>Compute Layer</strong><span>Cloud, VPS, Dedicated, GPU</span></div>
+          <div class="stack-row"><strong>Data Layer</strong><span>NVMe, Storage, Backup</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section green-band" id="pricing">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <div class="label">Giá tham khảo</div>
+            <h2>Dễ bắt đầu, đủ đường nâng cấp khi hệ thống tăng trưởng.</h2>
+          </div>
+          <p class="section-intro">Các mức giá dưới đây lấy theo thông tin công khai từ VNSO và dùng làm điểm khởi đầu để đội kỹ thuật tư vấn cấu hình phù hợp hơn với workload thực tế.</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="price-card reveal">
+            <h3>Hosting</h3>
+            <p class="price">30.000đ<small>/tháng</small></p>
+            <ul class="feature-list">
+              <li>Linux, Windows, WordPress</li>
+              <li>Phù hợp website giới thiệu, landing, CMS</li>
+              <li>Dùng thử miễn phí theo chương trình</li>
+            </ul>
+            <a class="button outline" href="https://vnso.vn/hosting-linux/">Xem gói Hosting</a>
+          </article>
+          <article class="price-card reveal featured">
+            <h3>Cloud Server</h3>
+            <p class="price">250.000đ<small>/tháng</small></p>
+            <ul class="feature-list">
+              <li>Máy chủ ảo hiệu năng cao</li>
+              <li>Mở rộng tài nguyên linh hoạt</li>
+              <li>Phù hợp app, API, database</li>
+            </ul>
+            <a class="button primary" href="https://vnso.vn/enterprise-cloud/">Tư vấn Cloud</a>
+          </article>
+          <article class="price-card reveal">
+            <h3>VPS</h3>
+            <p class="price">99k<small>/tháng</small></p>
+            <ul class="feature-list">
+              <li>Triển khai nhanh</li>
+              <li>Chi phí tối ưu cho dự án nhỏ</li>
+              <li>Linux hoặc Windows tùy nhu cầu</li>
+            </ul>
+            <a class="button outline" href="https://vnso.vn/thue-vps/">Xem VPS</a>
+          </article>
+          <article class="price-card reveal">
+            <h3>Private Cloud</h3>
+            <p class="price">11.024.000đ<small>/tháng</small></p>
+            <ul class="feature-list">
+              <li>Tài nguyên riêng cho doanh nghiệp</li>
+              <li>Phù hợp multi-VM và workload nội bộ</li>
+              <li>Kiểm soát cao về vận hành</li>
+            </ul>
+            <a class="button outline" href="https://vnso.vn/private-cloud/">Xem Private Cloud</a>
+          </article>
+          <article class="price-card reveal">
+            <h3>Dedicated Server</h3>
+            <p class="price">3.300.000đ<small>/tháng</small></p>
+            <ul class="feature-list">
+              <li>Máy chủ vật lý riêng</li>
+              <li>Dell, HPE, IBM chính hãng</li>
+              <li>Phù hợp workload nặng</li>
+            </ul>
+            <a class="button outline" href="https://vnso.vn/thue-may-chu-rieng/">Xem Server</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <div class="label">Triển khai</div>
+            <h2>Quy trình gọn cho cả đội kỹ thuật và đội kinh doanh.</h2>
+          </div>
+          <p class="section-intro">Một dự án hạ tầng tốt không chỉ là cấu hình máy chủ. VNSO tập trung vào đúng nhu cầu tải, dữ liệu, bảo mật, vận hành và lộ trình nâng cấp.</p>
+        </div>
+        <div class="timeline">
+          <article class="step reveal"><h3>Khảo sát workload</h3><p>Rà soát ứng dụng, traffic, database, dữ liệu, vùng người dùng, SLA và ràng buộc bảo mật.</p></article>
+          <article class="step reveal"><h3>Thiết kế kiến trúc</h3><p>Đề xuất Cloud, VPS, Dedicated, CDN, Anti-DDoS, backup và network theo mô hình phù hợp ngân sách.</p></article>
+          <article class="step reveal"><h3>Triển khai và kiểm thử</h3><p>Cài đặt hệ điều hành, dịch vụ, bảo mật cơ bản, domain/SSL, migration dữ liệu và kiểm tra truy cập.</p></article>
+          <article class="step reveal"><h3>Vận hành và tối ưu</h3><p>Theo dõi tài nguyên, phản hồi sự cố, nâng cấp cấu hình, tinh chỉnh bảo mật và tối ưu chi phí định kỳ.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section green-band" id="faq">
+      <div class="container faq-layout">
+        <div class="reveal">
+          <div class="label">Câu hỏi thường gặp</div>
+          <h2>Những điểm cần chốt trước khi chọn dịch vụ.</h2>
+          <p class="section-intro">Nếu cần cấu hình chính xác cho hệ thống production, đội VNSO có thể tư vấn theo ứng dụng, ngân sách, yêu cầu bảo mật và kế hoạch tăng trưởng.</p>
+          <div class="cta-row" style="margin-top: 24px;">
+            <a class="button primary" href="https://vnso.vn/lien-he">Liên hệ tư vấn</a>
+            <a class="button outline" href="mailto:cskh@vnso.vn">cskh@vnso.vn</a>
+          </div>
+        </div>
+        <div class="faq-list reveal">
+          <article class="faq-item is-open">
+            <button class="faq-question" type="button">VNSO cung cấp những dịch vụ gì? <span>+</span></button>
+            <div class="faq-answer">VNSO cung cấp Hosting, VPS, Cloud Server, Dedicated Server, Private Cloud, Cloud Storage, CDN, Anti-DDoS, GPU/AI Cloud, Mail doanh nghiệp, bản quyền phần mềm và giải pháp IT cho doanh nghiệp.</div>
+          </article>
+          <article class="faq-item">
+            <button class="faq-question" type="button">Nên chọn VPS, Cloud Server hay Dedicated Server? <span>+</span></button>
+            <div class="faq-answer">VPS phù hợp dự án nhỏ hoặc staging. Cloud Server phù hợp ứng dụng cần mở rộng linh hoạt. Dedicated Server phù hợp workload nặng, cần tài nguyên vật lý riêng và quyền kiểm soát cao.</div>
+          </article>
+          <article class="faq-item">
+            <button class="faq-question" type="button">CDN và Anti-DDoS có dùng riêng được không? <span>+</span></button>
+            <div class="faq-answer">Có. CDN giúp tăng tốc và giảm tải origin, Anti-DDoS giúp giảm rủi ro tấn công. Hai lớp này có thể dùng riêng hoặc kết hợp với Cloud, VPS, Dedicated Server.</div>
+          </article>
+          <article class="faq-item">
+            <button class="faq-question" type="button">VNSO có hỗ trợ triển khai và nâng cấp không? <span>+</span></button>
+            <div class="faq-answer">VNSO có đội tư vấn và kỹ thuật hỗ trợ lựa chọn cấu hình, triển khai ban đầu, nâng cấp tài nguyên, tối ưu hạ tầng và xử lý yêu cầu vận hành.</div>
+          </article>
+          <article class="faq-item">
+            <button class="faq-question" type="button">Có văn phòng và kênh hỗ trợ ở đâu? <span>+</span></button>
+            <div class="faq-answer">VNSO có văn phòng tại TP.HCM, Hà Nội, Đà Nẵng, hotline 1900 636 106, số 028 7309 5999 và email cskh@vnso.vn.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact-band" id="contact">
+      <div class="container contact-grid">
+        <div class="contact-copy reveal">
+          <div class="label">Liên hệ VNSO</div>
+          <h2>Sẵn sàng thiết kế hạ tầng cho sản phẩm tiếp theo của bạn.</h2>
+          <p>Đội ngũ VNSO có thể tư vấn cấu hình Cloud Server, Dedicated Server, CDN, Anti-DDoS, Private Cloud hoặc GPU/AI Cloud theo yêu cầu tải thực tế, mức độ bảo mật, kế hoạch backup và ngân sách.</p>
+          <div class="cta-row">
+            <a class="button primary" href="https://vnso.vn/dang-ky-dung-thu/">Đăng ký trải nghiệm</a>
+            <a class="button secondary" href="tel:02873095999">028 7309 5999</a>
+            <a class="button secondary" href="https://zalo.me/3360793218296838628">Chat Zalo</a>
+          </div>
+        </div>
+        <aside class="contact-card reveal">
+          <h3>Công ty Cổ phần Công nghệ VNSO</h3>
+          <ul class="contact-list">
+            <li>MST/ĐKKD/QDT: 0313258141</li>
+            <li>Email: info@vnso.vn, cskh@vnso.vn</li>
+            <li>Hotline: 1900 636 106</li>
+            <li>Văn phòng phía Nam: Lô O, số 10, Đ.15, KDC Miếu Nổi, Phường Gia Định, TP. HCM</li>
+            <li>Văn phòng phía Bắc: 132 Vũ Phạm Hàm, Phường Yên Hoà, Hà Nội</li>
+            <li>Văn phòng miền Trung: 30 Nguyễn Hữu Thọ, Phường Hải Châu, Đà Nẵng</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <img src="vnso-wordmark.png" alt="Công nghệ VNSO" width="192" height="45" />
+      <div>© 2026 VNSO. Hạ tầng Cloud, Server, CDN và bảo mật cho doanh nghiệp.</div>
+      <div class="footer-links">
+        <a href="https://vnso.vn/ve-vnso">Về VNSO</a>
+        <a href="https://vnso.vn/lien-he">Liên hệ</a>
+        <a href="https://vnso.vn/blog">Tin tức</a>
+        <a href="https://vnso.vn/chinh-sach-rieng-tu">Chính sách riêng tư</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const header = document.querySelector('#siteHeader');
+    const progress = document.querySelector('.scroll-progress');
+    const revealItems = document.querySelectorAll('.reveal');
+
+    function updateChrome() {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      header.classList.toggle('is-scrolled', scrollY > 24);
+      progress.style.width = `${Math.min(100, (scrollY / maxScroll) * 100)}%`;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    revealItems.forEach((item) => observer.observe(item));
+    window.addEventListener('scroll', updateChrome, { passive: true });
+    updateChrome();
+
+    document.querySelectorAll('.faq-question').forEach((button) => {
+      button.addEventListener('click', () => {
+        const item = button.closest('.faq-item');
+        const isOpen = item.classList.contains('is-open');
+        document.querySelectorAll('.faq-item').forEach((faq) => faq.classList.remove('is-open'));
+        if (!isOpen) item.classList.add('is-open');
+      });
+    });
+  </script>
+</body>
+</html>
