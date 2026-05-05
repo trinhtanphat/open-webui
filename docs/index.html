@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,7 +9,7 @@
   <meta property="og:description" content="A cinematic landing page for Open WebUI: unified AI chat, model gateway, knowledge RAG, agents, tools, governance, and high-availability deployment." />
   <meta property="og:image" content="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=86" />
   <meta name="theme-color" content="#07130f" />
-  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="icon" href="assets/favicon.ico" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -42,11 +42,37 @@
       color-scheme: dark;
     }
 
+    html[data-theme="light"] {
+      --background: #f6faf7;
+      --foreground: #0c1411;
+      --cloud: rgba(248, 252, 249, 0.92);
+      --cloud-soft: #edf7f2;
+      --muted: #52635b;
+      --line-dark: rgba(11, 24, 18, 0.14);
+      --glass: rgba(255, 255, 255, 0.62);
+      --glass-strong: rgba(255, 255, 255, 0.78);
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: light) {
+      html[data-theme="system"] {
+        --background: #f6faf7;
+        --foreground: #0c1411;
+        --cloud: rgba(248, 252, 249, 0.92);
+        --cloud-soft: #edf7f2;
+        --muted: #52635b;
+        --line-dark: rgba(11, 24, 18, 0.14);
+        --glass: rgba(255, 255, 255, 0.62);
+        --glass-strong: rgba(255, 255, 255, 0.78);
+        color-scheme: light;
+      }
+    }
+
     * { box-sizing: border-box; }
 
     html {
       scroll-behavior: smooth;
-      background: var(--background);
+      background: #06110d;
     }
 
     body {
@@ -68,6 +94,55 @@
     a { color: inherit; text-decoration: none; }
     img, video { display: block; max-width: 100%; }
     button, input { font: inherit; }
+
+    .global-scene {
+      position: fixed;
+      inset: -12vh -8vw;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      perspective: 1600px;
+      transform-style: preserve-3d;
+      background: #06110d;
+    }
+
+    .global-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      will-change: transform, opacity, filter;
+    }
+
+    .global-layer.sky {
+      opacity: 0.34;
+      background-image: linear-gradient(180deg, rgba(6, 17, 13, 0.06), rgba(6, 17, 13, 0.84)), url("https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=2400&q=84");
+      filter: saturate(1.04) contrast(1.02);
+    }
+
+    .global-layer.fog {
+      opacity: 0.42;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.22), transparent 26%),
+        radial-gradient(circle at 72% 58%, rgba(123, 216, 70, 0.13), transparent 30%),
+        linear-gradient(120deg, rgba(44, 136, 217, 0.12), transparent 48%);
+      filter: blur(10px);
+    }
+
+    .global-layer.grid {
+      opacity: 0.16;
+      background-image:
+        linear-gradient(90deg, rgba(123, 216, 70, 0.16) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(84, 199, 255, 0.13) 1px, transparent 1px);
+      background-size: 92px 92px;
+      mask-image: radial-gradient(circle at 50% 28%, #000 0, transparent 70%);
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+    }
 
     .progress {
       position: fixed;
@@ -128,11 +203,27 @@
     }
 
     .brand img {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
+      width: 128px;
+      height: 30px;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
+      box-shadow: none;
+    }
+
+    .site-nav.cinematic-nav {
+      width: auto;
+      grid-template-columns: auto;
+      padding: 10px 14px;
+      background: rgba(4, 14, 10, 0.16);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .site-nav.cinematic-nav .brand span,
+    .site-nav.cinematic-nav .nav-links,
+    .site-nav.cinematic-nav .nav-actions {
+      display: none;
     }
 
     .nav-links {
@@ -166,6 +257,45 @@
       display: flex;
       gap: 8px;
       justify-content: end;
+    }
+
+    .theme-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-height: 44px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+    }
+
+    .theme-button {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      color: rgba(247, 251, 248, 0.72);
+      background: transparent;
+      cursor: pointer;
+      transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .theme-button:hover,
+    .theme-button:focus-visible,
+    .theme-button.is-active {
+      color: #07130f;
+      background: var(--green);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .theme-button i {
+      width: 17px;
+      height: 17px;
     }
 
     .button {
@@ -206,8 +336,8 @@
 
     .hero-journey {
       position: relative;
-      height: 320vh;
-      min-height: 2100px;
+      height: 460vh;
+      min-height: 3000px;
       isolation: isolate;
     }
 
@@ -220,6 +350,57 @@
       perspective: 1280px;
       transform-style: preserve-3d;
       background: #06110d;
+    }
+
+    .cinematic-intro {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      display: grid;
+      place-items: end center;
+      padding-bottom: 9vh;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 160ms linear;
+    }
+
+    .scroll-glyph {
+      position: relative;
+      width: 2px;
+      height: 72px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.82), transparent);
+      overflow: visible;
+    }
+
+    .scroll-glyph::before,
+    .scroll-glyph::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+    }
+
+    .scroll-glyph::before {
+      top: 0;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.74);
+      animation: driftDot 2.4s ease-in-out infinite;
+    }
+
+    .scroll-glyph::after {
+      bottom: -7px;
+      width: 16px;
+      height: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+    }
+
+    @keyframes driftDot {
+      0%, 100% { transform: translate(-50%, 0); opacity: 0.36; }
+      50% { transform: translate(-50%, 54px); opacity: 1; }
     }
 
     .scene-media,
@@ -238,15 +419,14 @@
 
     .scene-video,
     .scene-poster {
-      width: 115%;
-      height: 115%;
-      left: -7.5%;
-      top: -4%;
+      inset: -18vh -18vw;
+      width: auto;
+      height: auto;
       object-fit: cover;
       object-position: center top;
       opacity: 0;
       filter: saturate(1.05) contrast(1.04) brightness(0.9);
-      transform: translateZ(-180px) scale(1.17);
+      transform: translate3d(0, 0, 0) scale(1.17);
       will-change: transform, opacity;
     }
 
@@ -258,6 +438,7 @@
     }
 
     .scene-layer {
+      inset: -10vh -8vw;
       z-index: 1;
       background-size: cover;
       background-position: center;
@@ -288,8 +469,31 @@
       mask-image: radial-gradient(circle at 52% 46%, #000 0, transparent 70%);
     }
 
-    .scene-overlay {
+    .layer-clouds {
       z-index: 2;
+      opacity: 0.5;
+      background:
+        radial-gradient(ellipse at 28% 28%, rgba(255, 255, 255, 0.38), transparent 34%),
+        radial-gradient(ellipse at 68% 40%, rgba(255, 255, 255, 0.22), transparent 30%),
+        radial-gradient(ellipse at 46% 76%, rgba(123, 216, 70, 0.14), transparent 34%);
+      filter: blur(18px);
+      mix-blend-mode: screen;
+    }
+
+    .layer-forest {
+      z-index: 3;
+      opacity: 0.62;
+      background-image:
+        radial-gradient(ellipse at 50% 74%, rgba(16, 44, 31, 0.7) 0, rgba(12, 32, 24, 0.34) 32%, transparent 66%),
+        linear-gradient(180deg, transparent 0, transparent 46%, rgba(6, 17, 13, 0.32) 64%, rgba(6, 17, 13, 0.92) 100%),
+        linear-gradient(100deg, transparent 0 12%, rgba(7, 26, 18, 0.46) 12% 13%, transparent 13% 24%, rgba(7, 26, 18, 0.38) 24% 25%, transparent 25% 38%, rgba(7, 26, 18, 0.5) 38% 39%, transparent 39% 56%, rgba(7, 26, 18, 0.42) 56% 57%, transparent 57% 100%);
+      background-position: center bottom;
+      filter: blur(0.4px) saturate(1.08) contrast(1.05);
+      mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.16) 34%, #000 64%, #000 100%);
+    }
+
+    .scene-overlay {
+      z-index: 4;
       background:
         radial-gradient(circle at 72% 22%, rgba(123, 216, 70, 0.22), transparent 26%),
         radial-gradient(circle at 28% 70%, rgba(44, 136, 217, 0.26), transparent 30%),
@@ -306,14 +510,16 @@
       margin: 0 auto;
       display: grid;
       grid-template-columns: minmax(0, 0.88fr) minmax(410px, 0.72fr);
-      align-items: center;
+      align-items: end;
       gap: 48px;
       padding-top: 92px;
+      padding-bottom: 13vh;
       transform-style: preserve-3d;
     }
 
     .hero-copy {
       max-width: 760px;
+      opacity: 0;
       will-change: transform, opacity, filter;
     }
 
@@ -411,6 +617,7 @@
     .ai-deck {
       position: relative;
       transform-style: preserve-3d;
+      opacity: 0;
       will-change: transform, opacity, filter;
     }
 
@@ -466,10 +673,11 @@
     }
 
     .deck-id img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #ffffff;
+      width: 118px;
+      height: 28px;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
     }
 
     .deck-status {
@@ -655,14 +863,23 @@
     .section {
       position: relative;
       padding: 110px 0;
-      background: var(--cloud);
+      background: rgba(247, 251, 248, 0.88);
       color: var(--ink);
+      overflow: hidden;
+      perspective: 1300px;
+      transform-style: preserve-3d;
     }
 
     .section.dark {
-      background: #06110d;
+      background: rgba(6, 17, 13, 0.9);
       color: var(--foreground);
       overflow: hidden;
+    }
+
+    html[data-theme="light"] .section.dark,
+    html[data-theme="system"] .section.dark.theme-adaptive {
+      background: rgba(247, 251, 248, 0.9);
+      color: var(--ink);
     }
 
     .section.dark::before {
@@ -683,6 +900,36 @@
       width: var(--container);
       margin: 0 auto;
     }
+
+    .section-depth {
+      position: absolute;
+      inset: -12% -8%;
+      z-index: 0;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      opacity: 0.82;
+    }
+
+    .depth-shape {
+      position: absolute;
+      display: block;
+      border: 1px solid rgba(44, 136, 217, 0.18);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.28);
+      box-shadow: 0 24px 90px rgba(11, 24, 18, 0.08);
+      backdrop-filter: blur(12px);
+      will-change: transform, opacity;
+    }
+
+    .dark .depth-shape {
+      border-color: rgba(255, 255, 255, 0.13);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 28px 100px rgba(0, 0, 0, 0.24);
+    }
+
+    .depth-shape.one { width: 240px; height: 170px; left: 2%; top: 18%; }
+    .depth-shape.two { width: 190px; height: 190px; right: 4%; top: 8%; border-radius: 50%; }
+    .depth-shape.three { width: 320px; height: 120px; right: 18%; bottom: 8%; transform: rotate(-8deg); }
 
     .section-head {
       display: grid;
@@ -747,6 +994,7 @@
       background: #ffffff;
       box-shadow: 0 18px 60px rgba(11, 24, 18, 0.08);
       transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+      will-change: transform;
     }
 
     .capability-card:hover {
@@ -878,9 +1126,10 @@
     }
 
     .orbit-core img {
-      width: 88px;
-      height: 88px;
+      width: 92px;
+      height: 92px;
       border-radius: 50%;
+      object-fit: cover;
     }
 
     .orbit-node {
@@ -925,6 +1174,7 @@
       border-radius: var(--radius);
       background: #ffffff;
       box-shadow: 0 18px 60px rgba(11, 24, 18, 0.07);
+      will-change: transform;
     }
 
     .deploy-card strong {
@@ -1029,11 +1279,15 @@
     }
 
     .cta {
+      position: relative;
       padding: 120px 0;
       background:
         linear-gradient(135deg, rgba(6, 17, 13, 0.95), rgba(6, 17, 13, 0.78)),
         url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=86") center/cover;
       color: var(--foreground);
+      overflow: hidden;
+      perspective: 1300px;
+      transform-style: preserve-3d;
     }
 
     .cta-box {
@@ -1083,10 +1337,11 @@
     }
 
     .footer-brand img {
-      width: 30px;
+      width: 128px;
       height: 30px;
-      border-radius: 50%;
-      background: #ffffff;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
     }
 
     .footer-links {
@@ -1156,10 +1411,15 @@
 <body>
   <div class="progress" id="progressBar" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
+  <div class="global-scene" aria-hidden="true">
+    <div class="global-layer sky" data-global-depth="0.08"></div>
+    <div class="global-layer fog" data-global-depth="0.18"></div>
+    <div class="global-layer grid" data-global-depth="0.34"></div>
+  </div>
 
-  <header class="site-nav" id="siteNav">
+  <header class="site-nav cinematic-nav" id="siteNav">
     <a class="brand" href="#top" aria-label="Open WebUI home">
-      <img src="assets/openwebui-mark.png" alt="" width="34" height="34" />
+      <img src="assets/logo.png" alt="" width="128" height="30" />
       <span>Open WebUI</span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
@@ -1169,12 +1429,17 @@
       <a href="#security">Governance</a>
     </nav>
     <div class="nav-actions">
+      <div class="theme-switcher" aria-label="Theme mode">
+        <button class="theme-button" type="button" data-theme-choice="dark" aria-label="Dark mode"><i data-lucide="moon"></i></button>
+        <button class="theme-button" type="button" data-theme-choice="light" aria-label="Light mode"><i data-lucide="sun"></i></button>
+        <button class="theme-button" type="button" data-theme-choice="system" aria-label="System mode"><i data-lucide="monitor"></i></button>
+      </div>
       <a class="button ghost" href="https://github.com/open-webui/open-webui">GitHub</a>
       <a class="button primary" href="#workspace">Explore</a>
     </div>
   </header>
 
-  <main id="top">
+  <main id="top" class="page-shell">
     <section class="hero-journey" id="journey" aria-labelledby="heroTitle">
       <div class="depth-stage" id="depthStage">
         <div class="scene-media" aria-hidden="true">
@@ -1185,7 +1450,13 @@
           <div class="scene-layer layer-mountains" data-scene-layer="mountains"></div>
           <div class="scene-layer layer-valley" data-scene-layer="valley"></div>
           <div class="scene-layer layer-grid" data-scene-layer="grid"></div>
+          <div class="scene-layer layer-clouds" data-scene-layer="clouds"></div>
+          <div class="scene-layer layer-forest" data-scene-layer="forest"></div>
           <div class="scene-overlay"></div>
+        </div>
+
+        <div class="cinematic-intro" id="cinematicIntro" aria-hidden="true">
+          <div class="scroll-glyph"></div>
         </div>
 
         <div class="depth-content">
@@ -1208,7 +1479,7 @@
             <div class="deck-shell">
               <div class="deck-window">
                 <div class="deck-top">
-                  <div class="deck-id"><img src="assets/openwebui-mark.png" alt="" />Open WebUI Command Deck</div>
+                  <div class="deck-id"><img src="assets/logo.png" alt="" />Command Deck</div>
                   <div class="deck-status">Models online</div>
                 </div>
                 <div class="chat-flow">
@@ -1247,6 +1518,11 @@
     </section>
 
     <section class="section" id="workspace">
+      <div class="section-depth" aria-hidden="true">
+        <span class="depth-shape one" data-section-depth="0.10"></span>
+        <span class="depth-shape two" data-section-depth="0.22"></span>
+        <span class="depth-shape three" data-section-depth="0.34"></span>
+      </div>
       <div class="container">
         <div class="section-head reveal">
           <div>
@@ -1267,6 +1543,11 @@
     </section>
 
     <section class="section dark" id="architecture">
+      <div class="section-depth" aria-hidden="true">
+        <span class="depth-shape one" data-section-depth="0.16"></span>
+        <span class="depth-shape two" data-section-depth="0.28"></span>
+        <span class="depth-shape three" data-section-depth="0.40"></span>
+      </div>
       <div class="container architecture-grid">
         <div class="architecture-copy reveal">
           <div class="label">3D platform map</div>
@@ -1279,7 +1560,7 @@
           </div>
         </div>
         <div class="stack-orbit reveal" aria-label="Open WebUI architecture layers">
-          <div class="orbit-core"><img src="assets/openwebui-mark.png" alt="Open WebUI mark" /></div>
+          <div class="orbit-core"><img src="assets/favicon.ico" alt="Open WebUI mark" /></div>
           <div class="orbit-node"><b>Model APIs</b><span>Ollama, OpenAI-compatible, cloud providers</span></div>
           <div class="orbit-node"><b>Knowledge</b><span>Files, embeddings, collections, citations</span></div>
           <div class="orbit-node"><b>Tools</b><span>Functions, pipelines, internal actions</span></div>
@@ -1289,6 +1570,11 @@
     </section>
 
     <section class="section" id="deployment">
+      <div class="section-depth" aria-hidden="true">
+        <span class="depth-shape one" data-section-depth="0.12"></span>
+        <span class="depth-shape two" data-section-depth="0.25"></span>
+        <span class="depth-shape three" data-section-depth="0.38"></span>
+      </div>
       <div class="container">
         <div class="section-head reveal">
           <div>
@@ -1307,6 +1593,11 @@
     </section>
 
     <section class="section dark" id="security">
+      <div class="section-depth" aria-hidden="true">
+        <span class="depth-shape one" data-section-depth="0.14"></span>
+        <span class="depth-shape two" data-section-depth="0.30"></span>
+        <span class="depth-shape three" data-section-depth="0.44"></span>
+      </div>
       <div class="container">
         <div class="security-panel reveal">
           <div class="security-copy">
@@ -1331,6 +1622,11 @@
     </section>
 
     <section class="cta">
+      <div class="section-depth" aria-hidden="true">
+        <span class="depth-shape one" data-section-depth="0.18"></span>
+        <span class="depth-shape two" data-section-depth="0.30"></span>
+        <span class="depth-shape three" data-section-depth="0.48"></span>
+      </div>
       <div class="container cta-box reveal">
         <div>
           <h2>Give every team one calm place to work with AI.</h2>
@@ -1346,7 +1642,7 @@
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-brand"><img src="assets/openwebui-mark.png" alt="" />Open WebUI Enterprise</div>
+      <div class="footer-brand"><img src="assets/logo.png" alt="" /></div>
       <div>Immersive GitHub Pages landing for the Open WebUI product surface.</div>
       <div class="footer-links">
         <a href="#workspace">Workspace</a>
@@ -1358,43 +1654,85 @@
   </footer>
 
   <script>
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     const progressBar = document.querySelector('#progressBar');
     const nav = document.querySelector('#siteNav');
     const journey = document.querySelector('#journey');
+    const cinematicIntro = document.querySelector('#cinematicIntro');
     const heroCopy = document.querySelector('#heroCopy');
     const aiDeck = document.querySelector('#aiDeck');
     const depthCards = [...document.querySelectorAll('[data-depth-card]')];
+    const globalLayers = [...document.querySelectorAll('[data-global-depth]')];
+    const sectionDepthLayers = [...document.querySelectorAll('[data-section-depth]')];
+    const themeButtons = [...document.querySelectorAll('[data-theme-choice]')];
     const sceneVideo = document.querySelector('#sceneVideo');
     const scenePoster = document.querySelector('#scenePoster');
     const sceneLayers = {
       mountains: document.querySelector('[data-scene-layer="mountains"]'),
       valley: document.querySelector('[data-scene-layer="valley"]'),
-      grid: document.querySelector('[data-scene-layer="grid"]')
+      grid: document.querySelector('[data-scene-layer="grid"]'),
+      clouds: document.querySelector('[data-scene-layer="clouds"]'),
+      forest: document.querySelector('[data-scene-layer="forest"]')
     };
 
     const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
     let ticking = false;
 
+    function setTheme(theme) {
+      const nextTheme = ['dark', 'light', 'system'].includes(theme) ? theme : 'system';
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem('openwebui-landing-theme', nextTheme);
+      themeButtons.forEach((button) => {
+        button.classList.toggle('is-active', button.dataset.themeChoice === nextTheme);
+      });
+    }
+
     function setScene(progress) {
       const zoom = progress * progress;
-      scenePoster.style.transform = `translate3d(0, ${-80 * progress}px, -220px) scale(${1.18 + zoom * 0.22})`;
-      sceneVideo.style.transform = `translate3d(0, ${-95 * progress}px, -210px) scale(${1.17 + zoom * 0.24})`;
-      sceneLayers.mountains.style.transform = `translate3d(0, ${-150 * progress}px, -80px) scale(${1.04 + progress * 0.28})`;
-      sceneLayers.valley.style.transform = `translate3d(0, ${-260 * progress}px, 40px) scale(${1.02 + progress * 0.5})`;
-      sceneLayers.grid.style.transform = `translate3d(0, ${-60 * progress}px, 160px) scale(${1 + progress * 0.34}) rotateX(${progress * 10}deg)`;
+      const contentIn = clamp((progress - 0.22) / 0.16);
+      const contentOut = clamp((0.84 - progress) / 0.18);
+      const contentVisibility = Math.min(contentIn, contentOut);
+      const deckIn = clamp((progress - 0.36) / 0.18);
+      const introVisibility = clamp(1 - progress / 0.18);
+      const videoVisibility = clamp((progress - 0.08) / 0.18) * clamp((0.92 - progress) / 0.2);
 
-      heroCopy.style.opacity = String(clamp(1 - progress * 1.35));
-      heroCopy.style.filter = `blur(${progress * 10}px)`;
-      heroCopy.style.transform = `translate3d(0, ${-110 * progress}px, ${-180 * progress}px) scale(${1 - progress * 0.08})`;
+      scenePoster.style.transform = `translate3d(0, ${-135 * progress}px, 0) scale(${1.12 + zoom * 0.34})`;
+      sceneVideo.style.transform = `translate3d(0, ${-150 * progress}px, 0) scale(${1.12 + zoom * 0.36})`;
+      sceneVideo.style.opacity = String(0.5 * videoVisibility);
+      scenePoster.style.opacity = String(1 - videoVisibility * 0.12);
+      sceneLayers.mountains.style.transform = `translate3d(0, ${-220 * progress}px, -120px) scale(${1.05 + progress * 0.36})`;
+      sceneLayers.mountains.style.opacity = String(0.78 * videoVisibility);
+      sceneLayers.valley.style.transform = `translate3d(0, ${-360 * progress}px, 70px) scale(${1.04 + progress * 0.62})`;
+      sceneLayers.valley.style.opacity = String(0.68 * videoVisibility);
+      sceneLayers.grid.style.transform = `translate3d(0, ${-95 * progress}px, 180px) scale(${1 + progress * 0.42}) rotateX(${progress * 14}deg)`;
+      sceneLayers.grid.style.opacity = String(0.1 + 0.24 * videoVisibility);
+      sceneLayers.clouds.style.transform = `translate3d(${36 * progress}px, ${-190 * progress}px, 240px) scale(${1.04 + progress * 0.5})`;
+      sceneLayers.clouds.style.opacity = String(clamp(0.58 - progress * 0.26));
+      sceneLayers.forest.style.transform = `translate3d(0, ${-460 * progress}px, 310px) scale(${1.1 + progress * 0.72})`;
+      sceneLayers.forest.style.filter = `blur(${progress * 2.5}px)`;
+
+      cinematicIntro.style.opacity = String(introVisibility);
+      nav.classList.toggle('cinematic-nav', progress < 0.2);
+
+      heroCopy.style.opacity = String(contentVisibility);
+      heroCopy.style.pointerEvents = contentVisibility > 0.12 ? 'auto' : 'none';
+      heroCopy.style.visibility = contentVisibility > 0.03 ? 'visible' : 'hidden';
+      heroCopy.style.filter = `blur(${(1 - contentVisibility) * 9 + Math.max(0, progress - 0.78) * 12}px)`;
+      heroCopy.style.transform = `translate3d(0, ${(1 - contentIn) * 120 - progress * 120}px, ${-260 + contentIn * 260 - progress * 120}px) scale(${0.92 + contentIn * 0.08})`;
 
       if (aiDeck) {
-        aiDeck.style.opacity = String(clamp(1 - Math.max(0, progress - 0.72) * 2.8));
-        aiDeck.style.transform = `translate3d(0, ${-180 * progress}px, ${120 * progress}px) rotateX(${8 - progress * 18}deg) rotateY(${-10 + progress * 18}deg) scale(${1 + progress * 0.08})`;
+        const deckVisibility = Math.min(deckIn, clamp((0.9 - progress) / 0.18));
+        aiDeck.style.opacity = String(deckVisibility);
+        aiDeck.style.visibility = deckVisibility > 0.03 ? 'visible' : 'hidden';
+        aiDeck.style.transform = `translate3d(0, ${(1 - deckIn) * 160 - 210 * progress}px, ${-120 + 280 * deckIn + 140 * progress}px) rotateX(${12 - progress * 22}deg) rotateY(${-14 + progress * 22}deg) scale(${0.94 + deckIn * 0.12})`;
       }
 
       depthCards.forEach((card) => {
         const anchor = Number(card.dataset.depthCard);
-        const visible = Math.abs(progress - anchor) < 0.16;
+        const visible = Math.abs(progress - anchor) < 0.13 && progress > 0.24;
         card.classList.toggle('is-visible', visible);
         const offset = (progress - anchor) * -120;
         card.style.transform = visible
@@ -1403,11 +1741,32 @@
       });
     }
 
+    function updateGlobalScene(scrollY) {
+      globalLayers.forEach((layer) => {
+        const depth = Number(layer.dataset.globalDepth);
+        layer.style.transform = `translate3d(0, ${scrollY * depth * -0.22}px, ${depth * -220}px) scale(${1 + depth * 0.26})`;
+      });
+    }
+
+    function updateSectionDepth() {
+      sectionDepthLayers.forEach((layer) => {
+        const depth = Number(layer.dataset.sectionDepth);
+        const rect = layer.closest('section').getBoundingClientRect();
+        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        const y = centerOffset * depth * -220;
+        const z = depth * 280;
+        layer.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 11}deg) rotateY(${centerOffset * depth * -13}deg)`;
+        layer.style.opacity = String(clamp(0.92 - Math.abs(centerOffset) * 0.52, 0.18, 0.92));
+      });
+    }
+
     function update() {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       progressBar.style.width = `${(scrollY / maxScroll) * 100}%`;
       nav.classList.toggle('is-scrolled', scrollY > 24);
+      updateGlobalScene(scrollY);
+      updateSectionDepth();
 
       const journeyStart = journey.offsetTop;
       const journeyLength = journey.offsetHeight - window.innerHeight;
@@ -1425,6 +1784,10 @@
 
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate);
+    themeButtons.forEach((button) => {
+      button.addEventListener('click', () => setTheme(button.dataset.themeChoice));
+    });
+    setTheme(localStorage.getItem('openwebui-landing-theme') || 'dark');
     requestUpdate();
 
     const revealObserver = new IntersectionObserver((entries) => {
@@ -1463,8 +1826,8 @@
     function playVideo() {
       if (!sceneVideo) return;
       sceneVideo.play().then(() => {
-        scenePoster.style.opacity = '0.9';
-        fadeVideo(0.58);
+        scenePoster.style.opacity = '1';
+        sceneVideo.style.opacity = '0';
       }).catch(() => {
         sceneVideo.style.opacity = '0';
         scenePoster.style.opacity = '1';
@@ -1486,7 +1849,6 @@
           sceneVideo.currentTime = 0;
           sceneVideo.play().then(() => {
             fadingOut = false;
-            fadeVideo(0.58);
           }).catch(() => {
             fadingOut = false;
           });
@@ -1500,6 +1862,7 @@
 
     window.addEventListener('load', () => {
       if (window.lucide) window.lucide.createIcons();
+      if (!window.location.hash) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       playVideo();
       update();
     });
