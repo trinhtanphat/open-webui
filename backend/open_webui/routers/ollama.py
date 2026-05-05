@@ -1058,6 +1058,8 @@ class GenerateChatCompletionForm(BaseModel):
 
 
 async def get_ollama_url(request: Request, model: str, url_idx: Optional[int] = None):
+    base_urls = request.app.state.config.OLLAMA_BASE_URLS or []
+
     if url_idx is None:
         models = request.app.state.OLLAMA_MODELS
         if model not in models:
@@ -1065,8 +1067,21 @@ async def get_ollama_url(request: Request, model: str, url_idx: Optional[int] = 
                 status_code=400,
                 detail=ERROR_MESSAGES.MODEL_NOT_FOUND(model),
             )
-        url_idx = random.choice(models[model].get('urls', []))
-    url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
+        model_urls = models[model].get('urls', []) or []
+        if not model_urls:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Ollama provider is not configured for model: {model}',
+            )
+        url_idx = random.choice(model_urls)
+
+    if not isinstance(url_idx, int) or url_idx < 0 or url_idx >= len(base_urls):
+        raise HTTPException(
+            status_code=400,
+            detail=f'Ollama provider is not configured for model: {model}',
+        )
+
+    url = base_urls[url_idx]
     return url, url_idx
 
 

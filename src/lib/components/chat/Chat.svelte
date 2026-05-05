@@ -2726,6 +2726,10 @@
 	};
 
 	const saveChatHandler = async (_chatId, history) => {
+		if (!_chatId || `${_chatId}`.startsWith('local:')) {
+			return;
+		}
+
 		if ($chatId == _chatId) {
 			if (!$temporaryChatEnabled) {
 				chat = await updateChatById(localStorage.token, _chatId, {

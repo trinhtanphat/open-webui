@@ -131,6 +131,11 @@
 	const systemPrefersLight = () =>
 		browser && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
 
+	const resolveColorScheme = (prefs) => {
+		const scheme = prefs.color_scheme || DEFAULT_PREFS.color_scheme;
+		return scheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : scheme;
+	};
+
 	const loadPrefs = () => {
 		if (!browser) return { ...DEFAULT_PREFS };
 
@@ -155,12 +160,7 @@
 
 	const resolveTheme = (prefs) => {
 		let resolvedTheme = prefs.theme || DEFAULT_PREFS.theme;
-		const scheme =
-			prefs.color_scheme === 'system'
-				? systemPrefersLight()
-					? 'light'
-					: 'dark'
-				: prefs.color_scheme;
+		const scheme = resolveColorScheme(prefs);
 
 		if (resolvedTheme === 'system') {
 			resolvedTheme = systemPrefersLight() ? 'light' : 'midnight';
@@ -176,7 +176,7 @@
 	const applyPrefsFallback = (prefs) => {
 		const root = document.documentElement;
 		const resolvedTheme = resolveTheme(prefs);
-		const isLight = LIGHT_THEMES.has(resolvedTheme);
+		const isLight = resolveColorScheme(prefs) === 'light';
 
 		root.setAttribute('data-theme', resolvedTheme);
 		root.setAttribute('data-density', prefs.density || DEFAULT_PREFS.density);
@@ -218,11 +218,7 @@
 	};
 
 	const setThemeFamily = (id: string) => {
-		const option = themeOptions.find((themeOption) => themeOption.id === id);
-		applyPrefs({
-			theme: id,
-			...(option?.preferredMode ? { color_scheme: option.preferredMode } : {})
-		});
+		applyPrefs({ theme: id });
 	};
 
 	const setThemeMode = (mode: ColorScheme) => {

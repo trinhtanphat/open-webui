@@ -1,6 +1,25 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import { getTimeRange } from '$lib/utils';
 
+const parseChatResponse = async (res: Response) => {
+	const text = await res.text();
+	let body: any = null;
+
+	if (text) {
+		try {
+			body = JSON.parse(text);
+		} catch {
+			body = { detail: text };
+		}
+	}
+
+	if (!res.ok) {
+		throw body ?? { detail: res.statusText || 'Request failed' };
+	}
+
+	return body;
+};
+
 export const createNewChat = async (token: string, chat: object, folderId: string | null) => {
 	let error = null;
 
@@ -16,10 +35,7 @@ export const createNewChat = async (token: string, chat: object, folderId: strin
 			folder_id: folderId ?? null
 		})
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.catch((err) => {
 			error = err;
 			console.error(err);
@@ -44,10 +60,7 @@ export const unarchiveAllChats = async (token: string) => {
 			...(token && { authorization: `Bearer ${token}` })
 		}
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.then((json) => {
 			return json;
 		})
@@ -79,10 +92,7 @@ export const importChats = async (token: string, chats: object[]) => {
 			chats
 		})
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.catch((err) => {
 			error = err;
 			console.error(err);
@@ -125,10 +135,7 @@ export const getChatList = async (
 			...(token && { authorization: `Bearer ${token}` })
 		}
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.then((json) => {
 			return json;
 		})
@@ -146,7 +153,7 @@ export const getChatList = async (
 		return [];
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -200,7 +207,7 @@ export const getChatListByUserId = async (
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -232,10 +239,7 @@ export const getArchivedChatList = async (
 			...(token && { authorization: `Bearer ${token}` })
 		}
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.then((json) => {
 			return json;
 		})
@@ -249,7 +253,7 @@ export const getArchivedChatList = async (
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -294,7 +298,7 @@ export const getSharedChatList = async (token: string = '', page: number = 1, fi
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -363,7 +367,7 @@ export const getChatListBySearchText = async (token: string, text: string, page:
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -543,10 +547,7 @@ export const getPinnedChatList = async (token: string = '') => {
 			...(token && { authorization: `Bearer ${token}` })
 		}
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.then((json) => {
 			return json;
 		})
@@ -560,7 +561,7 @@ export const getPinnedChatList = async (token: string = '') => {
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -597,7 +598,7 @@ export const getChatListByTagName = async (token: string = '', tagName: string) 
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: any) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -1034,10 +1035,7 @@ export const updateChatById = async (token: string, id: string, chat: object) =>
 			chat: chat
 		})
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
+		.then(parseChatResponse)
 		.then((json) => {
 			return json;
 		})

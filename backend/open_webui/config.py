@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 import requests
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column, DateTime, Integer, func
+from sqlalchemy import JSON, Column, DateTime, Integer, func, inspect, text
 from authlib.integrations.starlette_client import OAuth
 
 
@@ -36,7 +36,7 @@ from open_webui.env import (
     WEBUI_NAME,
     log,
 )
-from open_webui.internal.db import Base, get_db, get_async_db
+from open_webui.internal.db import Base, engine, get_db, get_async_db
 from open_webui.utils.redis import get_redis_connection
 
 
@@ -66,13 +66,51 @@ def run_migrations():
         migrations_path = OPEN_WEBUI_DIR / 'migrations'
         alembic_cfg.set_main_option('script_location', str(migrations_path))
 
-        command.upgrade(alembic_cfg, 'head')
+        command.upgrade(alembic_cfg, 'heads')
     except Exception as e:
         log.exception(f'Error running migrations: {e}')
 
 
+def ensure_chat_schema_columns():
+    try:
+        with engine.begin() as connection:
+            inspector = inspect(connection)
+            if 'chat' not in inspector.get_table_names():
+                return
+
+            existing_columns = {column['name'] for column in inspector.get_columns('chat')}
+            dialect = connection.dialect.name
+            statements = []
+
+            if dialect == 'sqlite':
+                if 'tasks' not in existing_columns:
+                    statements.append('ALTER TABLE chat ADD COLUMN tasks JSON')
+                if 'summary' not in existing_columns:
+                    statements.append('ALTER TABLE chat ADD COLUMN summary TEXT')
+                if 'last_read_at' not in existing_columns:
+                    statements.append('ALTER TABLE chat ADD COLUMN last_read_at BIGINT')
+                    statements.append('UPDATE chat SET last_read_at = updated_at WHERE last_read_at IS NULL')
+            elif dialect == 'postgresql':
+                statements.extend(
+                    [
+                        'ALTER TABLE chat ADD COLUMN IF NOT EXISTS tasks JSON',
+                        'ALTER TABLE chat ADD COLUMN IF NOT EXISTS summary TEXT',
+                        'ALTER TABLE chat ADD COLUMN IF NOT EXISTS last_read_at BIGINT',
+                        'UPDATE chat SET last_read_at = updated_at WHERE last_read_at IS NULL',
+                    ]
+                )
+            else:
+                return
+
+            for statement in statements:
+                connection.execute(text(statement))
+    except Exception as e:
+        log.exception(f'Error repairing chat schema columns: {e}')
+
+
 if ENABLE_DB_MIGRATIONS:
     run_migrations()
+    ensure_chat_schema_columns()
 
 
 class Config(Base):

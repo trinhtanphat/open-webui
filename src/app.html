@@ -97,18 +97,21 @@
 
 				function resolveTheme(prefs) {
 					let theme = prefs.theme || DEFAULT_PREFS.theme;
-					const rawScheme = prefs.color_scheme || DEFAULT_PREFS.color_scheme;
-					const scheme =
-						rawScheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : rawScheme;
+					const scheme = resolveColorScheme(prefs);
 					if (theme === 'system') theme = systemPrefersLight() ? 'light' : 'midnight';
 					if (scheme === 'light' && LIGHT_VARIANTS[theme]) theme = LIGHT_VARIANTS[theme];
 					return theme;
 				}
 
+				function resolveColorScheme(prefs) {
+					const rawScheme = prefs.color_scheme || DEFAULT_PREFS.color_scheme;
+					return rawScheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : rawScheme;
+				}
+
 				function applyPrefs(prefs, persist) {
 					const root = document.documentElement;
 					const theme = resolveTheme(prefs);
-					const isLight = LIGHT_THEMES.has(theme);
+					const isLight = resolveColorScheme(prefs) === 'light';
 					const mergedPrefs = Object.assign({}, DEFAULT_PREFS, prefs);
 					root.setAttribute('data-theme', theme);
 					root.setAttribute('data-density', mergedPrefs.density);
@@ -142,7 +145,10 @@
 				let prefs = loadPrefs();
 				const resolved = applyPrefs(prefs, false);
 				window.__getThemePrefs = () =>
-					Object.assign({}, DEFAULT_PREFS, prefs, { resolved_theme: resolveTheme(prefs) });
+					Object.assign({}, DEFAULT_PREFS, prefs, {
+						resolved_theme: resolveTheme(prefs),
+						resolved_scheme: resolveColorScheme(prefs)
+					});
 				window.__setTheme = (id) => {
 					prefs = Object.assign({}, prefs, { theme: id || 'midnight' });
 					applyPrefs(prefs, true);

@@ -1098,12 +1098,21 @@ async def generate_chat_completion(
             detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
         )
 
+    base_urls = request.app.state.config.OPENAI_API_BASE_URLS or []
+    api_keys = request.app.state.config.OPENAI_API_KEYS or []
+    if not isinstance(idx, int) or idx < 0 or idx >= len(base_urls):
+        raise HTTPException(
+            status_code=400,
+            detail=f'OpenAI provider is not configured for model: {model_id}',
+        )
+
+    url = base_urls[idx]
+    key = api_keys[idx] if idx < len(api_keys) else None
+
     # Get the API config for the model
     api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
         str(idx),
-        request.app.state.config.OPENAI_API_CONFIGS.get(
-            request.app.state.config.OPENAI_API_BASE_URLS[idx], {}
-        ),  # Legacy support
+        request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
     )
 
     prefix_id = api_config.get('prefix_id', None)
@@ -1118,9 +1127,6 @@ async def generate_chat_completion(
             'email': user.email,
             'role': user.role,
         }
-
-    url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
-    key = request.app.state.config.OPENAI_API_KEYS[idx]
 
     # Check if model is a reasoning model that needs special handling
     if is_openai_new_model(payload['model']):
