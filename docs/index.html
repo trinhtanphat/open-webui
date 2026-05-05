@@ -1,0 +1,1508 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open WebUI Enterprise | 3D AI Workspace</title>
+  <meta name="description" content="Open WebUI Enterprise landing page with immersive 3D scroll depth, model gateway, RAG knowledge, agents, governance, and HA-ready deployment." />
+  <meta property="og:title" content="Open WebUI Enterprise | 3D AI Workspace" />
+  <meta property="og:description" content="A cinematic landing page for Open WebUI: unified AI chat, model gateway, knowledge RAG, agents, tools, governance, and high-availability deployment." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=86" />
+  <meta name="theme-color" content="#07130f" />
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fustat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+  <style>
+    :root {
+      --font-heading: "Fustat", "Schibsted Grotesk", Inter, system-ui, sans-serif;
+      --font-body: Inter, "Noto Sans", system-ui, sans-serif;
+      --font-ui: "Schibsted Grotesk", Inter, system-ui, sans-serif;
+      --background: #06110d;
+      --foreground: #f7fbf8;
+      --ink: #0c1411;
+      --muted: #65746d;
+      --cloud: #f7fbf8;
+      --cloud-soft: #eef6f1;
+      --stone: #d8e3dd;
+      --line: rgba(246, 251, 248, 0.16);
+      --line-dark: rgba(11, 24, 18, 0.12);
+      --blue: #2c88d9;
+      --blue-strong: #0c5ea8;
+      --green: #7bd846;
+      --green-strong: #42a514;
+      --gold: #f0ba58;
+      --glass: rgba(255, 255, 255, 0.11);
+      --glass-strong: rgba(255, 255, 255, 0.18);
+      --shadow-soft: 0 24px 90px rgba(0, 0, 0, 0.22);
+      --shadow-strong: 0 34px 120px rgba(0, 0, 0, 0.42);
+      --radius: 8px;
+      --container: min(1180px, calc(100vw - 40px));
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--background);
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--foreground);
+      background: var(--background);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      overflow-x: hidden;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::selection {
+      color: #07130f;
+      background: var(--green);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img, video { display: block; max-width: 100%; }
+    button, input { font: inherit; }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 120;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--gold));
+      box-shadow: 0 0 22px rgba(123, 216, 70, 0.42);
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0.08;
+      mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+    }
+
+    .site-nav {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      z-index: 80;
+      width: min(1180px, calc(100vw - 32px));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      background: rgba(4, 14, 10, 0.5);
+      box-shadow: 0 18px 70px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(22px);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    .site-nav.is-scrolled {
+      background: rgba(4, 14, 10, 0.76);
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: max-content;
+      padding-left: 4px;
+      font-family: var(--font-ui);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 13px;
+      color: rgba(247, 251, 248, 0.82);
+      border-radius: 999px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 180ms ease, background 180ms ease;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.11);
+      outline: none;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: end;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .button.primary {
+      color: #07130f;
+      background: linear-gradient(135deg, #b5ff8d, var(--green) 36%, #54c7ff 100%);
+      box-shadow: 0 18px 50px rgba(123, 216, 70, 0.26);
+    }
+
+    .button.ghost {
+      color: rgba(247, 251, 248, 0.9);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero-journey {
+      position: relative;
+      height: 320vh;
+      min-height: 2100px;
+      isolation: isolate;
+    }
+
+    .depth-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-height: 720px;
+      overflow: hidden;
+      perspective: 1280px;
+      transform-style: preserve-3d;
+      background: #06110d;
+    }
+
+    .scene-media,
+    .scene-video,
+    .scene-poster,
+    .scene-layer,
+    .scene-overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    .scene-media {
+      z-index: 0;
+      transform-style: preserve-3d;
+    }
+
+    .scene-video,
+    .scene-poster {
+      width: 115%;
+      height: 115%;
+      left: -7.5%;
+      top: -4%;
+      object-fit: cover;
+      object-position: center top;
+      opacity: 0;
+      filter: saturate(1.05) contrast(1.04) brightness(0.9);
+      transform: translateZ(-180px) scale(1.17);
+      will-change: transform, opacity;
+    }
+
+    .scene-poster {
+      opacity: 1;
+      background-image: url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2400&q=88");
+      background-size: cover;
+      background-position: center top;
+    }
+
+    .scene-layer {
+      z-index: 1;
+      background-size: cover;
+      background-position: center;
+      will-change: transform, opacity, filter;
+      pointer-events: none;
+    }
+
+    .layer-mountains {
+      opacity: 0.88;
+      mix-blend-mode: screen;
+      background-image: linear-gradient(180deg, transparent 35%, rgba(6, 17, 13, 0.52) 100%), url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2200&q=82");
+      mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 86%, transparent 100%);
+    }
+
+    .layer-valley {
+      opacity: 0.74;
+      background-image: linear-gradient(180deg, transparent 28%, rgba(6, 17, 13, 0.68) 85%), url("https://images.unsplash.com/photo-1470770903676-69b98201ea1c?auto=format&fit=crop&w=2200&q=82");
+      mask-image: linear-gradient(180deg, transparent 0, #000 48%, #000 100%);
+      background-position: center bottom;
+    }
+
+    .layer-grid {
+      opacity: 0.34;
+      background-image:
+        linear-gradient(90deg, rgba(181, 255, 141, 0.18) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(84, 199, 255, 0.14) 1px, transparent 1px);
+      background-size: 78px 78px;
+      mask-image: radial-gradient(circle at 52% 46%, #000 0, transparent 70%);
+    }
+
+    .scene-overlay {
+      z-index: 2;
+      background:
+        radial-gradient(circle at 72% 22%, rgba(123, 216, 70, 0.22), transparent 26%),
+        radial-gradient(circle at 28% 70%, rgba(44, 136, 217, 0.26), transparent 30%),
+        linear-gradient(90deg, rgba(4, 12, 8, 0.82) 0%, rgba(4, 12, 8, 0.58) 42%, rgba(4, 12, 8, 0.74) 100%),
+        linear-gradient(180deg, rgba(4, 12, 8, 0.18) 0%, rgba(4, 12, 8, 0.26) 48%, #06110d 100%);
+      pointer-events: none;
+    }
+
+    .depth-content {
+      position: relative;
+      z-index: 8;
+      width: var(--container);
+      height: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 0.88fr) minmax(410px, 0.72fr);
+      align-items: center;
+      gap: 48px;
+      padding-top: 92px;
+      transform-style: preserve-3d;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      will-change: transform, opacity, filter;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(18px);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(247, 251, 248, 0.9);
+    }
+
+    .eyebrow span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: #07130f;
+      background: var(--green);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1, h2, h3 {
+      font-family: var(--font-heading);
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 24px 0 20px;
+      font-size: clamp(56px, 8vw, 110px);
+      line-height: 0.88;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+
+    .hero-copy p {
+      max-width: 690px;
+      margin-bottom: 28px;
+      color: rgba(247, 251, 248, 0.78);
+      font-size: clamp(17px, 1.7vw, 21px);
+    }
+
+    .hero-actions,
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .proof-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      max-width: 690px;
+      margin-top: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(18px);
+    }
+
+    .proof {
+      padding: 16px;
+      background: rgba(4, 14, 10, 0.42);
+    }
+
+    .proof strong {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: 29px;
+      line-height: 1;
+    }
+
+    .proof span {
+      display: block;
+      margin-top: 7px;
+      color: rgba(247, 251, 248, 0.66);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ai-deck {
+      position: relative;
+      transform-style: preserve-3d;
+      will-change: transform, opacity, filter;
+    }
+
+    .deck-shell {
+      position: relative;
+      min-height: 520px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07));
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: blur(28px);
+      overflow: hidden;
+    }
+
+    .deck-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.24), transparent 32%),
+        radial-gradient(circle at 78% 16%, rgba(123, 216, 70, 0.2), transparent 30%);
+    }
+
+    .deck-window {
+      position: relative;
+      z-index: 1;
+      min-height: 484px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      background: rgba(4, 14, 10, 0.72);
+      overflow: hidden;
+    }
+
+    .deck-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .deck-id {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .deck-id img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    .deck-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(123, 216, 70, 0.12);
+      color: #d7ffc5;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .deck-status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 7px rgba(123, 216, 70, 0.12);
+    }
+
+    .chat-flow {
+      padding: 22px 18px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .message {
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .message.user {
+      margin-left: 44px;
+      background: rgba(123, 216, 70, 0.14);
+    }
+
+    .message strong {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: rgba(247, 251, 248, 0.7);
+    }
+
+    .message p {
+      margin: 0;
+      color: rgba(247, 251, 248, 0.92);
+      font-size: 14px;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+
+    .tool-chip {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .tool-chip i {
+      width: 17px;
+      height: 17px;
+      color: var(--green);
+    }
+
+    .tool-chip b {
+      display: block;
+      margin-top: 8px;
+      font-family: var(--font-ui);
+      font-size: 12px;
+    }
+
+    .tool-chip span {
+      display: block;
+      margin-top: 3px;
+      color: rgba(247, 251, 248, 0.58);
+      font-size: 11px;
+    }
+
+    .prompt-box {
+      margin: 0 18px 18px;
+      min-height: 96px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #ffffff;
+      color: rgba(12, 20, 17, 0.72);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2);
+    }
+
+    .prompt-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: rgba(12, 20, 17, 0.62);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .prompt-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 13px;
+    }
+
+    .prompt-input span {
+      color: rgba(12, 20, 17, 0.55);
+      font-size: 15px;
+    }
+
+    .send-button {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      color: #ffffff;
+      background: #07130f;
+    }
+
+    .send-button i {
+      width: 17px;
+      height: 17px;
+    }
+
+    .depth-cards {
+      position: absolute;
+      left: 50%;
+      bottom: 8vh;
+      z-index: 9;
+      width: min(820px, calc(100vw - 40px));
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .depth-card {
+      position: absolute;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      padding: 20px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius);
+      background: rgba(4, 14, 10, 0.66);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(24px);
+      opacity: 0;
+      transform: translate3d(0, 40px, 0) scale(0.96);
+      transition: opacity 220ms linear, transform 220ms linear;
+    }
+
+    .depth-card.is-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .depth-card h3 {
+      margin-bottom: 8px;
+      font-size: 24px;
+      line-height: 1.08;
+    }
+
+    .depth-card p {
+      margin: 0;
+      color: rgba(247, 251, 248, 0.74);
+    }
+
+    .section {
+      position: relative;
+      padding: 110px 0;
+      background: var(--cloud);
+      color: var(--ink);
+    }
+
+    .section.dark {
+      background: #06110d;
+      color: var(--foreground);
+      overflow: hidden;
+    }
+
+    .section.dark::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(123, 216, 70, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(44, 136, 217, 0.08) 1px, transparent 1px);
+      background-size: 86px 86px;
+      mask-image: radial-gradient(circle at 50% 0%, #000 0, transparent 72%);
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: var(--container);
+      margin: 0 auto;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(300px, 0.55fr);
+      gap: 46px;
+      align-items: end;
+      margin-bottom: 36px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--blue-strong);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .dark .label {
+      color: #b5ff8d;
+    }
+
+    .label::before {
+      content: "";
+      width: 34px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(34px, 4.2vw, 62px);
+      line-height: 1.02;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+
+    .section-intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .dark .section-intro {
+      color: rgba(247, 251, 248, 0.72);
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .capability-card {
+      min-height: 290px;
+      padding: 24px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 18px 60px rgba(11, 24, 18, 0.08);
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    .capability-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(44, 136, 217, 0.24);
+      box-shadow: 0 26px 90px rgba(11, 24, 18, 0.14);
+    }
+
+    .card-icon {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius);
+      color: var(--blue-strong);
+      background: #eaf5ff;
+      border: 1px solid rgba(44, 136, 217, 0.14);
+    }
+
+    .capability-card:nth-child(2n) .card-icon {
+      color: var(--green-strong);
+      background: #effbe9;
+      border-color: rgba(66, 165, 20, 0.16);
+    }
+
+    .card-icon i {
+      width: 21px;
+      height: 21px;
+    }
+
+    .capability-card h3 {
+      margin: 20px 0 10px;
+      font-size: 22px;
+      line-height: 1.12;
+    }
+
+    .capability-card p {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: var(--blue-strong);
+      background: rgba(44, 136, 217, 0.08);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tag.green {
+      color: var(--green-strong);
+      background: rgba(66, 165, 20, 0.12);
+    }
+
+    .architecture-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1fr);
+      gap: 34px;
+      align-items: center;
+    }
+
+    .architecture-copy p {
+      color: rgba(247, 251, 248, 0.72);
+      font-size: 16px;
+    }
+
+    .arch-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .stack-orbit {
+      position: relative;
+      min-height: 540px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 50% 44%, rgba(123, 216, 70, 0.18), transparent 32%),
+        radial-gradient(circle at 35% 80%, rgba(44, 136, 217, 0.2), transparent 34%),
+        rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: blur(26px);
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+
+    .stack-orbit::before,
+    .stack-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 50%;
+      transform: rotateX(64deg) rotateZ(-18deg);
+    }
+
+    .stack-orbit::after {
+      inset: 25%;
+      border-color: rgba(123, 216, 70, 0.26);
+      transform: rotateX(64deg) rotateZ(28deg);
+    }
+
+    .orbit-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 132px;
+      height: 132px;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.32);
+    }
+
+    .orbit-core img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+    }
+
+    .orbit-node {
+      position: absolute;
+      width: 150px;
+      min-height: 88px;
+      padding: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius);
+      background: rgba(4, 14, 10, 0.56);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 54px rgba(0, 0, 0, 0.22);
+    }
+
+    .orbit-node b {
+      display: block;
+      margin-bottom: 5px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+    }
+
+    .orbit-node span {
+      color: rgba(247, 251, 248, 0.62);
+      font-size: 12px;
+    }
+
+    .orbit-node:nth-child(2) { left: 8%; top: 16%; }
+    .orbit-node:nth-child(3) { right: 8%; top: 18%; }
+    .orbit-node:nth-child(4) { left: 9%; bottom: 16%; }
+    .orbit-node:nth-child(5) { right: 9%; bottom: 15%; }
+
+    .deploy-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .deploy-card {
+      min-height: 230px;
+      padding: 22px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 18px 60px rgba(11, 24, 18, 0.07);
+    }
+
+    .deploy-card strong {
+      display: block;
+      margin-bottom: 12px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      line-height: 1.12;
+    }
+
+    .deploy-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .security-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(380px, 0.64fr);
+      gap: 20px;
+      align-items: stretch;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)),
+        url("https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1800&q=82") center/cover;
+      box-shadow: var(--shadow-strong);
+      overflow: hidden;
+    }
+
+    .security-copy {
+      min-height: 420px;
+      padding: 28px;
+      border-radius: var(--radius);
+      background: rgba(4, 14, 10, 0.62);
+      backdrop-filter: blur(24px);
+    }
+
+    .security-copy h2 {
+      max-width: 700px;
+      margin-bottom: 18px;
+    }
+
+    .security-copy p {
+      color: rgba(247, 251, 248, 0.74);
+    }
+
+    .policy-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .policy-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 13px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(247, 251, 248, 0.82);
+      font-size: 14px;
+    }
+
+    .policy-item i {
+      width: 18px;
+      height: 18px;
+      color: var(--green);
+      margin-top: 2px;
+    }
+
+    .metrics-card {
+      padding: 24px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+      align-self: stretch;
+    }
+
+    .metric {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line-dark);
+    }
+
+    .metric:last-child { border-bottom: 0; }
+
+    .metric strong {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .cta {
+      padding: 120px 0;
+      background:
+        linear-gradient(135deg, rgba(6, 17, 13, 0.95), rgba(6, 17, 13, 0.78)),
+        url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=86") center/cover;
+      color: var(--foreground);
+    }
+
+    .cta-box {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) auto;
+      gap: 24px;
+      align-items: center;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: blur(22px);
+    }
+
+    .cta-box h2 { margin-bottom: 12px; }
+
+    .cta-box p {
+      margin: 0;
+      max-width: 780px;
+      color: rgba(247, 251, 248, 0.72);
+    }
+
+    .footer {
+      padding: 34px 0;
+      background: #030806;
+      color: rgba(247, 251, 248, 0.62);
+      font-size: 13px;
+    }
+
+    .footer-inner {
+      width: var(--container);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .footer-brand img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1080px) {
+      :root { --container: min(100vw - 32px, 940px); }
+      .site-nav { grid-template-columns: auto auto; }
+      .nav-links { display: none; }
+      .depth-content, .section-head, .architecture-grid, .security-panel, .cta-box { grid-template-columns: 1fr; }
+      .depth-stage { min-height: 780px; }
+      .ai-deck { display: none; }
+      .capability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .deploy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stack-orbit { min-height: 500px; }
+    }
+
+    @media (max-width: 720px) {
+      :root { --container: min(100vw - 24px, 620px); }
+      .site-nav { top: 12px; width: calc(100vw - 20px); padding: 8px; }
+      .brand span { display: none; }
+      .nav-actions .button.ghost { display: none; }
+      .button { width: 100%; }
+      .nav-actions .button { width: auto; }
+      .depth-stage { min-height: 720px; }
+      .depth-content { padding-top: 86px; align-items: center; }
+      h1 { font-size: clamp(46px, 15vw, 68px); }
+      .proof-row, .capability-grid, .deploy-grid { grid-template-columns: 1fr; }
+      .depth-cards { bottom: 32px; }
+      .depth-card { padding: 16px; }
+      .section { padding: 76px 0; }
+      .stack-orbit { min-height: 520px; }
+      .orbit-node { width: 132px; }
+      .orbit-node:nth-child(2) { left: 5%; top: 10%; }
+      .orbit-node:nth-child(3) { right: 5%; top: 20%; }
+      .orbit-node:nth-child(4) { left: 5%; bottom: 20%; }
+      .orbit-node:nth-child(5) { right: 5%; bottom: 10%; }
+      .security-copy { padding: 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+      .scene-video { opacity: 0 !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progressBar" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-nav" id="siteNav">
+    <a class="brand" href="#top" aria-label="Open WebUI home">
+      <img src="assets/openwebui-mark.png" alt="" width="34" height="34" />
+      <span>Open WebUI</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#workspace">Workspace</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#deployment">Deploy</a>
+      <a href="#security">Governance</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="button ghost" href="https://github.com/open-webui/open-webui">GitHub</a>
+      <a class="button primary" href="#workspace">Explore</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero-journey" id="journey" aria-labelledby="heroTitle">
+      <div class="depth-stage" id="depthStage">
+        <div class="scene-media" aria-hidden="true">
+          <div class="scene-poster" id="scenePoster"></div>
+          <video class="scene-video" id="sceneVideo" muted playsinline preload="metadata" poster="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=88">
+            <source src="https://videos.pexels.com/video-files/34650821/14686937_640_360_30fps.mp4" type="video/mp4" />
+          </video>
+          <div class="scene-layer layer-mountains" data-scene-layer="mountains"></div>
+          <div class="scene-layer layer-valley" data-scene-layer="valley"></div>
+          <div class="scene-layer layer-grid" data-scene-layer="grid"></div>
+          <div class="scene-overlay"></div>
+        </div>
+
+        <div class="depth-content">
+          <section class="hero-copy" id="heroCopy">
+            <div class="eyebrow"><span><i data-lucide="sparkles"></i> New</span> Enterprise AI workspace</div>
+            <h1 id="heroTitle">Transform AI work into one living canvas.</h1>
+            <p>Open WebUI brings models, knowledge, prompts, tools, agents, users, and governance into a single operational AI workspace. The interface feels simple for teams, but the platform underneath is built for serious deployment.</p>
+            <div class="hero-actions">
+              <a class="button primary" href="#workspace"><i data-lucide="arrow-down-right"></i> View platform</a>
+              <a class="button ghost" href="#deployment"><i data-lucide="server"></i> Deployment stack</a>
+            </div>
+            <div class="proof-row" aria-label="Open WebUI highlights">
+              <div class="proof"><strong>Multi-model</strong><span>Ollama, OpenAI-compatible, cloud and local</span></div>
+              <div class="proof"><strong>RAG</strong><span>knowledge, files, collections, citations</span></div>
+              <div class="proof"><strong>Admin</strong><span>users, roles, groups, audit-ready controls</span></div>
+            </div>
+          </section>
+
+          <aside class="ai-deck" id="aiDeck" aria-label="Open WebUI command deck preview">
+            <div class="deck-shell">
+              <div class="deck-window">
+                <div class="deck-top">
+                  <div class="deck-id"><img src="assets/openwebui-mark.png" alt="" />Open WebUI Command Deck</div>
+                  <div class="deck-status">Models online</div>
+                </div>
+                <div class="chat-flow">
+                  <div class="message user"><strong><i data-lucide="user-round"></i> Operator</strong><p>Summarize support tickets, search our runbooks, then draft the deployment checklist.</p></div>
+                  <div class="message"><strong><i data-lucide="bot"></i> Workspace AI</strong><p>I found 42 related notes, matched them to your infrastructure policy, and prepared a safe rollout sequence.</p></div>
+                </div>
+                <div class="tool-grid">
+                  <div class="tool-chip"><i data-lucide="database"></i><b>Knowledge</b><span>RAG and files</span></div>
+                  <div class="tool-chip"><i data-lucide="wrench"></i><b>Tools</b><span>Actions and APIs</span></div>
+                  <div class="tool-chip"><i data-lucide="shield-check"></i><b>Control</b><span>Roles and policy</span></div>
+                </div>
+                <div class="prompt-box">
+                  <div class="prompt-top"><span>80/450 credits</span><span>Powered by GPT-4o, Ollama, Claude, Gemini</span></div>
+                  <div class="prompt-input"><span>Ask across models, docs, tools, and teams...</span><button class="send-button" type="button" aria-label="Submit prompt"><i data-lucide="arrow-up"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="depth-cards" aria-hidden="true">
+          <article class="depth-card" data-depth-card="0.18">
+            <h3>Model gateway in the foreground.</h3>
+            <p>Route conversations through local Ollama models, OpenAI-compatible providers, and enterprise keys without forcing every team into a different UI.</p>
+          </article>
+          <article class="depth-card" data-depth-card="0.47">
+            <h3>Knowledge appears as terrain.</h3>
+            <p>Files, collections, notes, prompts, and tools become searchable context that travels with the conversation.</p>
+          </article>
+          <article class="depth-card" data-depth-card="0.76">
+            <h3>Governance holds the horizon.</h3>
+            <p>Admins manage access, workspaces, model visibility, billing controls, and operational guardrails from one console.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workspace">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <div class="label">Workspace primitives</div>
+            <h2>Everything teams expect from a modern AI surface.</h2>
+          </div>
+          <p class="section-intro">Open WebUI is not only a chat screen. It is a model router, a knowledge workspace, a prompt library, an admin console, and a bridge between AI providers and real business workflows.</p>
+        </div>
+        <div class="capability-grid">
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="message-square-text"></i></div><h3>Linear chat and rich sessions</h3><p>Persistent conversations, attachments, notes, markdown, code, citations, branches, and team-friendly history keep AI work easy to revisit.</p><div class="tag-row"><span class="tag">chat</span><span class="tag green">files</span></div></article>
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="route"></i></div><h3>Multi-provider model gateway</h3><p>Connect local models, OpenAI-compatible endpoints, hosted providers, and custom routing while keeping the user experience consistent.</p><div class="tag-row"><span class="tag">Ollama</span><span class="tag green">OpenAI API</span></div></article>
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="book-open-check"></i></div><h3>Knowledge and RAG</h3><p>Upload internal documents, create knowledge collections, retrieve context, and ground answers in the material your team already trusts.</p><div class="tag-row"><span class="tag">RAG</span><span class="tag green">citations</span></div></article>
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="bot"></i></div><h3>Agents, tools, and functions</h3><p>Extend the workspace with tools, function calling, pipelines, actions, automations, and controlled integrations with internal systems.</p><div class="tag-row"><span class="tag">agents</span><span class="tag green">tools</span></div></article>
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="image-plus"></i></div><h3>Multimodal creation</h3><p>Support text, files, images, audio workflows, code output, structured responses, and model-specific capabilities from one interface.</p><div class="tag-row"><span class="tag">multimodal</span><span class="tag green">creative</span></div></article>
+          <article class="capability-card reveal"><div class="card-icon"><i data-lucide="users-round"></i></div><h3>Admin and team control</h3><p>Manage users, groups, roles, workspaces, model permissions, API keys, rate limits, and operational preferences without scattering policy.</p><div class="tag-row"><span class="tag">RBAC</span><span class="tag green">governance</span></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dark" id="architecture">
+      <div class="container architecture-grid">
+        <div class="architecture-copy reveal">
+          <div class="label">3D platform map</div>
+          <h2>One interface, many layers beneath it.</h2>
+          <p>The Open WebUI experience can sit in front of local GPU boxes, hosted model APIs, vector stores, object storage, identity systems, and internal tools. The goal is a quiet front door for users and a composable control plane for operators.</p>
+          <p>Use it as a personal AI workspace, a department assistant portal, or a company-wide AI operations console. The same primitives scale from a single Docker host to HA infrastructure.</p>
+          <div class="arch-actions">
+            <a class="button primary" href="#deployment"><i data-lucide="box"></i> Deployment blueprint</a>
+            <a class="button ghost" href="#security"><i data-lucide="shield"></i> Governance model</a>
+          </div>
+        </div>
+        <div class="stack-orbit reveal" aria-label="Open WebUI architecture layers">
+          <div class="orbit-core"><img src="assets/openwebui-mark.png" alt="Open WebUI mark" /></div>
+          <div class="orbit-node"><b>Model APIs</b><span>Ollama, OpenAI-compatible, cloud providers</span></div>
+          <div class="orbit-node"><b>Knowledge</b><span>Files, embeddings, collections, citations</span></div>
+          <div class="orbit-node"><b>Tools</b><span>Functions, pipelines, internal actions</span></div>
+          <div class="orbit-node"><b>Operations</b><span>Users, billing, observability, policies</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="deployment">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <div class="label">Deployment and HA</div>
+            <h2>Built to leave localhost and run like a real service.</h2>
+          </div>
+          <p class="section-intro">For production, Open WebUI can be deployed with external Postgres, object storage, reverse proxy, backups, provider health checks, and model isolation. The landing is pretty; the stack still needs to be boring in the best way.</p>
+        </div>
+        <div class="deploy-grid">
+          <article class="deploy-card reveal"><strong>Container first</strong><p>Run with Docker or compose, then promote to orchestrated infrastructure when concurrency, redundancy, or team boundaries grow.</p></article>
+          <article class="deploy-card reveal"><strong>State outside the app</strong><p>Use Postgres, Redis-compatible cache where needed, mounted storage, and backup policy instead of treating app containers as the source of truth.</p></article>
+          <article class="deploy-card reveal"><strong>Provider resilience</strong><p>Guard model endpoints, rotate API keys, monitor provider health, and fail gracefully when a model backend is unavailable.</p></article>
+          <article class="deploy-card reveal"><strong>Edge and access</strong><p>Place TLS, domain routing, auth policy, rate limits, and logging at the edge so user traffic reaches the workspace predictably.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dark" id="security">
+      <div class="container">
+        <div class="security-panel reveal">
+          <div class="security-copy">
+            <div class="label">Governance</div>
+            <h2>Control who can use which models, tools, and data.</h2>
+            <p>Enterprise AI work becomes risky when every team brings a different app, key, and prompt history. Open WebUI centralizes the surface so admins can reason about access, model visibility, shared knowledge, and operational workflows.</p>
+            <div class="policy-list">
+              <div class="policy-item"><i data-lucide="key-round"></i><span>API key management for internal apps, automation, billing, and usage boundaries.</span></div>
+              <div class="policy-item"><i data-lucide="scan-eye"></i><span>Shared workspace patterns for teams that need visibility without leaking sensitive context.</span></div>
+              <div class="policy-item"><i data-lucide="file-lock-2"></i><span>Knowledge collections that keep retrieval context aligned with access policy and business ownership.</span></div>
+              <div class="policy-item"><i data-lucide="activity"></i><span>Operational monitoring hooks for uptime, provider errors, latency, and incident response.</span></div>
+            </div>
+          </div>
+          <aside class="metrics-card" aria-label="Governance metrics">
+            <div class="metric"><strong>RBAC</strong><span>users, roles, groups, workspace permissions</span></div>
+            <div class="metric"><strong>Audit</strong><span>usage history, API key naming, operational traces</span></div>
+            <div class="metric"><strong>Policy</strong><span>model visibility, tool controls, provider boundaries</span></div>
+            <div class="metric"><strong>HA-ready</strong><span>external database, storage, proxy, backup strategy</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container cta-box reveal">
+        <div>
+          <h2>Give every team one calm place to work with AI.</h2>
+          <p>Open WebUI can be the front door for local models, hosted providers, internal knowledge, tools, and governance. The visual layer feels cinematic; the product layer is practical enough for daily operations.</p>
+        </div>
+        <div class="cta-row">
+          <a class="button primary" href="https://github.com/open-webui/open-webui"><i data-lucide="code-2"></i> View source</a>
+          <a class="button ghost" href="#top"><i data-lucide="arrow-up"></i> Back to top</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand"><img src="assets/openwebui-mark.png" alt="" />Open WebUI Enterprise</div>
+      <div>Immersive GitHub Pages landing for the Open WebUI product surface.</div>
+      <div class="footer-links">
+        <a href="#workspace">Workspace</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#deployment">Deploy</a>
+        <a href="#security">Governance</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const progressBar = document.querySelector('#progressBar');
+    const nav = document.querySelector('#siteNav');
+    const journey = document.querySelector('#journey');
+    const heroCopy = document.querySelector('#heroCopy');
+    const aiDeck = document.querySelector('#aiDeck');
+    const depthCards = [...document.querySelectorAll('[data-depth-card]')];
+    const sceneVideo = document.querySelector('#sceneVideo');
+    const scenePoster = document.querySelector('#scenePoster');
+    const sceneLayers = {
+      mountains: document.querySelector('[data-scene-layer="mountains"]'),
+      valley: document.querySelector('[data-scene-layer="valley"]'),
+      grid: document.querySelector('[data-scene-layer="grid"]')
+    };
+
+    const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+    let ticking = false;
+
+    function setScene(progress) {
+      const zoom = progress * progress;
+      scenePoster.style.transform = `translate3d(0, ${-80 * progress}px, -220px) scale(${1.18 + zoom * 0.22})`;
+      sceneVideo.style.transform = `translate3d(0, ${-95 * progress}px, -210px) scale(${1.17 + zoom * 0.24})`;
+      sceneLayers.mountains.style.transform = `translate3d(0, ${-150 * progress}px, -80px) scale(${1.04 + progress * 0.28})`;
+      sceneLayers.valley.style.transform = `translate3d(0, ${-260 * progress}px, 40px) scale(${1.02 + progress * 0.5})`;
+      sceneLayers.grid.style.transform = `translate3d(0, ${-60 * progress}px, 160px) scale(${1 + progress * 0.34}) rotateX(${progress * 10}deg)`;
+
+      heroCopy.style.opacity = String(clamp(1 - progress * 1.35));
+      heroCopy.style.filter = `blur(${progress * 10}px)`;
+      heroCopy.style.transform = `translate3d(0, ${-110 * progress}px, ${-180 * progress}px) scale(${1 - progress * 0.08})`;
+
+      if (aiDeck) {
+        aiDeck.style.opacity = String(clamp(1 - Math.max(0, progress - 0.72) * 2.8));
+        aiDeck.style.transform = `translate3d(0, ${-180 * progress}px, ${120 * progress}px) rotateX(${8 - progress * 18}deg) rotateY(${-10 + progress * 18}deg) scale(${1 + progress * 0.08})`;
+      }
+
+      depthCards.forEach((card) => {
+        const anchor = Number(card.dataset.depthCard);
+        const visible = Math.abs(progress - anchor) < 0.16;
+        card.classList.toggle('is-visible', visible);
+        const offset = (progress - anchor) * -120;
+        card.style.transform = visible
+          ? `translate3d(0, ${offset}px, 0) scale(1)`
+          : `translate3d(0, ${40 + offset}px, 0) scale(0.96)`;
+      });
+    }
+
+    function update() {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      progressBar.style.width = `${(scrollY / maxScroll) * 100}%`;
+      nav.classList.toggle('is-scrolled', scrollY > 24);
+
+      const journeyStart = journey.offsetTop;
+      const journeyLength = journey.offsetHeight - window.innerHeight;
+      const progress = clamp((scrollY - journeyStart) / Math.max(1, journeyLength));
+      setScene(progress);
+      ticking = false;
+    }
+
+    function requestUpdate() {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    requestUpdate();
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16 });
+
+    document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
+
+    let fadeFrame = 0;
+    let fadingOut = false;
+
+    function fadeVideo(targetOpacity, duration = 250, done) {
+      window.cancelAnimationFrame(fadeFrame);
+      const startOpacity = Number.parseFloat(sceneVideo.style.opacity || '0');
+      const startedAt = performance.now();
+
+      function step(now) {
+        const progress = clamp((now - startedAt) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        sceneVideo.style.opacity = String(startOpacity + (targetOpacity - startOpacity) * eased);
+        if (progress < 1) {
+          fadeFrame = window.requestAnimationFrame(step);
+        } else if (done) {
+          done();
+        }
+      }
+
+      fadeFrame = window.requestAnimationFrame(step);
+    }
+
+    function playVideo() {
+      if (!sceneVideo) return;
+      sceneVideo.play().then(() => {
+        scenePoster.style.opacity = '0.9';
+        fadeVideo(0.58);
+      }).catch(() => {
+        sceneVideo.style.opacity = '0';
+        scenePoster.style.opacity = '1';
+      });
+    }
+
+    if (sceneVideo) {
+      sceneVideo.addEventListener('canplay', playVideo, { once: true });
+      sceneVideo.addEventListener('timeupdate', () => {
+        if (!sceneVideo.duration || fadingOut) return;
+        if (sceneVideo.duration - sceneVideo.currentTime <= 0.55) {
+          fadingOut = true;
+          fadeVideo(0, 250);
+        }
+      });
+      sceneVideo.addEventListener('ended', () => {
+        sceneVideo.style.opacity = '0';
+        window.setTimeout(() => {
+          sceneVideo.currentTime = 0;
+          sceneVideo.play().then(() => {
+            fadingOut = false;
+            fadeVideo(0.58);
+          }).catch(() => {
+            fadingOut = false;
+          });
+        }, 100);
+      });
+      sceneVideo.addEventListener('error', () => {
+        sceneVideo.style.opacity = '0';
+        scenePoster.style.opacity = '1';
+      });
+    }
+
+    window.addEventListener('load', () => {
+      if (window.lucide) window.lucide.createIcons();
+      playVideo();
+      update();
+    });
+  </script>
+</body>
+</html>
