@@ -1,18 +1,25 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
 	import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
 
-	import { flyAndScale } from '$lib/utils/transitions';
 	import { goto } from '$app/navigation';
 	import { fade, slide } from 'svelte/transition';
 
 	import { getUsage } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 
-	import { showSettings, mobile, showSidebar, showShortcuts, user, config } from '$lib/stores';
+	import {
+		showSettings,
+		mobile,
+		showSidebar,
+		showShortcuts,
+		user,
+		config,
+		settings
+	} from '$lib/stores';
 
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
+	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
 	import QuestionMarkCircle from '$lib/components/icons/QuestionMarkCircle.svelte';
@@ -22,17 +29,18 @@
 	import Settings from '$lib/components/icons/Settings.svelte';
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
-	import Bolt from '$lib/components/icons/Bolt.svelte';
-	import Star from '$lib/components/icons/Star.svelte';
 	import SignOut from '$lib/components/icons/SignOut.svelte';
 	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
 	import UserStatusModal from './UserStatusModal.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import { updateUserStatus } from '$lib/apis/users';
+	import Note from '$lib/components/icons/Note.svelte';
+	import Pin from '$lib/components/icons/Pin.svelte';
+	import PinSlash from '$lib/components/icons/PinSlash.svelte';
+	import { updateUserStatus, updateUserSettings } from '$lib/apis/users';
 	import { toast } from 'svelte-sonner';
 
-	const i18n: any = getContext('i18n');
+	const i18n = getContext('i18n');
 
 	export let show = false;
 	export let role = '';
@@ -40,16 +48,36 @@
 	export let profile = false;
 	export let help = false;
 
-	export let className = 'max-w-[240px]';
-	export let align: any = 'end';
+	export let className = 'w-[240px]';
+	export let align = 'end';
 
 	export let showActiveUsers = true;
 
 	let showUserStatusModal = false;
+	let shiftKey = false;
 
 	const dispatch = createEventDispatcher();
 
-	let usage: any = null;
+	const DEFAULT_PINNED_ITEMS = ['notes', 'workspace'];
+
+	$: pinnedItems = $settings?.pinnedMenuItems ?? DEFAULT_PINNED_ITEMS;
+
+	const isPinned = (id: string) => {
+		return pinnedItems.includes(id);
+	};
+
+	const togglePin = async (id: string) => {
+		let updated;
+		if (isPinned(id)) {
+			updated = pinnedItems.filter((item) => item !== id);
+		} else {
+			updated = [...pinnedItems, id];
+		}
+		await settings.set({ ...$settings, pinnedMenuItems: updated });
+		await updateUserSettings(localStorage.token, { ui: $settings });
+	};
+
+	let usage = null;
 	const getUsageInfo = async () => {
 		const res = await getUsage(localStorage.token).catch((error) => {
 			console.error('Error fetching usage info:', error);
@@ -62,7 +90,7 @@
 		}
 	};
 
-	const handleDropdownChange = (state: boolean) => {
+	const handleDropdownChange = (state) => {
 		dispatch('change', state);
 
 		// Fetch usage info when dropdown opens, if user has permission
@@ -71,6 +99,15 @@
 		}
 	};
 </script>
+
+<svelte:window
+	on:keydown={(e) => {
+		if (e.key === 'Shift') shiftKey = true;
+	}}
+	on:keyup={(e) => {
+		if (e.key === 'Shift') shiftKey = false;
+	}}
+/>
 
 <ShortcutsModal bind:show={$showShortcuts} />
 <UserStatusModal
@@ -81,17 +118,12 @@
 />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<DropdownMenu.Root bind:open={show} onOpenChange={handleDropdownChange}>
-	<DropdownMenu.Trigger>
-		<slot />
-	</DropdownMenu.Trigger>
+<Dropdown bind:show onOpenChange={handleDropdownChange} {align}>
+	<slot />
 
-	<slot name="content">
-		<DropdownMenu.Content
-			class="w-full {className}  rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
-			sideOffset={4}
-			side="top"
-			{align}
+	<div slot="content">
+		<div
+			class="{className} rounded-2xl px-1 py-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
 		>
 			{#if profile}
 				<div class=" flex gap-3.5 w-full p-2.5 items-center">
@@ -105,14 +137,14 @@
 
 					<div class=" flex flex-col w-full flex-1">
 						<div class="font-medium line-clamp-1 pr-2">
-							{$user?.name}
+							{$user.name}
 						</div>
 
 						<div class=" flex items-center gap-2">
 							{#if $user?.is_active ?? true}
 								<div>
 									<span class="relative flex size-2">
-										<span class="relative inline-flex rounded-full size-2 bg-green-500"></span>
+										<span class="relative inline-flex rounded-full size-2 bg-green-500" />
 									</span>
 								</div>
 
@@ -120,7 +152,7 @@
 							{:else}
 								<div>
 									<span class="relative flex size-2">
-										<span class="relative inline-flex rounded-full size-2 bg-gray-500"></span>
+										<span class="relative inline-flex rounded-full size-2 bg-gray-500" />
 									</span>
 								</div>
 
@@ -202,9 +234,10 @@
 				<hr class=" border-gray-50/30 dark:border-gray-800/30 my-1.5 p-0" />
 			{/if}
 
-			<DropdownMenu.Item
+			<button
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				onSelect={async () => {
+				type="button"
+				on:click={async () => {
 					show = false;
 
 					await showSettings.set(true);
@@ -219,11 +252,37 @@
 					<Settings className="w-5 h-5" strokeWidth="1.5" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Settings')}</div>
-			</DropdownMenu.Item>
+			</button>
 
-			<DropdownMenu.Item
+			{#if role === 'admin'}
+				<a
+					href="/admin"
+					draggable="false"
+					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+					on:click={async (e) => {
+						if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+							return;
+						}
+						e.preventDefault();
+						show = false;
+						goto('/admin');
+						if ($mobile) {
+							await tick();
+							showSidebar.set(false);
+						}
+					}}
+				>
+					<div class=" self-center mr-3">
+						<UserGroup className="w-5 h-5" strokeWidth="1.5" />
+					</div>
+					<div class=" self-center truncate">{$i18n.t('Admin Panel')}</div>
+				</a>
+			{/if}
+
+			<button
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				onSelect={async () => {
+				type="button"
+				on:click={async () => {
 					show = false;
 
 					dispatch('show', 'archived-chat');
@@ -239,85 +298,263 @@
 					<ArchiveBox className="size-5" strokeWidth="1.5" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Archived Chats')}</div>
-			</DropdownMenu.Item>
+			</button>
 
-			{#if ($config?.features?.enable_api_keys ?? true) && (role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
-				<DropdownMenu.Item
-					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					onSelect={async () => {
-						show = false;
+			<hr class=" border-gray-50/30 dark:border-gray-800/30 my-1 p-0" />
 
-						if ($mobile) {
-							await tick();
-							showSidebar.set(false);
-						}
+			{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
+				<div class="flex items-center w-full">
+					<a
+						href="/workspace"
+						draggable="false"
+						class="flex flex-1 rounded-xl py-1.5 px-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+						on:click={async (e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+							e.preventDefault();
+							show = false;
+							goto('/workspace');
+							if ($mobile) {
+								await tick();
+								showSidebar.set(false);
+							}
+						}}
+					>
+						<div class="self-center mr-3">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="size-5"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 0 0 2.25-2.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v2.25A2.25 2.25 0 0 0 6 10.5Zm0 9.75h2.25A2.25 2.25 0 0 0 10.5 18v-2.25a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25V18A2.25 2.25 0 0 0 6 20.25Zm9.75-9.75H18a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 18 3.75h-2.25A2.25 2.25 0 0 0 13.5 6v2.25a2.25 2.25 0 0 0 2.25 2.25Z"
+								/>
+							</svg>
+						</div>
+						<div class="self-center truncate">{$i18n.t('Workspace')}</div>
+					</a>
+					{#if shiftKey}
+						<Tooltip
+							content={isPinned('workspace')
+								? $i18n.t('Unpin from Sidebar')
+								: $i18n.t('Pin to Sidebar')}
+						>
+							<button
+								type="button"
+								class="p-1 mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+								on:click|preventDefault|stopPropagation={() => togglePin('workspace')}
+							>
+								{#if isPinned('workspace')}
+									<PinSlash className="size-3.5" strokeWidth="1.5" />
+								{:else}
+									<Pin className="size-3.5" strokeWidth="1.5" />
+								{/if}
+							</button>
+						</Tooltip>
+					{/if}
+				</div>
+			{/if}
 
-						await goto('/developer/api-keys/landing');
-					}}
-				>
-					<div class=" self-center mr-3">
-						<Bolt className="size-5" />
-					</div>
-					<div class=" self-center truncate">{$i18n.t('API Platform')}</div>
-				</DropdownMenu.Item>
+			{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
+				<div class="flex items-center w-full">
+					<a
+						href="/notes"
+						draggable="false"
+						class="flex flex-1 rounded-xl py-1.5 px-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+						on:click={async (e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+							e.preventDefault();
+							show = false;
+							goto('/notes');
+							if ($mobile) {
+								await tick();
+								showSidebar.set(false);
+							}
+						}}
+					>
+						<div class="self-center mr-3">
+							<Note className="size-5" strokeWidth="1.5" />
+						</div>
+						<div class="self-center truncate">{$i18n.t('Notes')}</div>
+					</a>
+					{#if shiftKey}
+						<Tooltip
+							content={isPinned('notes')
+								? $i18n.t('Unpin from Sidebar')
+								: $i18n.t('Pin to Sidebar')}
+						>
+							<button
+								type="button"
+								class="p-1 mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+								on:click|preventDefault|stopPropagation={() => togglePin('notes')}
+							>
+								{#if isPinned('notes')}
+									<PinSlash className="size-3.5" strokeWidth="1.5" />
+								{:else}
+									<Pin className="size-3.5" strokeWidth="1.5" />
+								{/if}
+							</button>
+						</Tooltip>
+					{/if}
+				</div>
+			{/if}
 
-				<DropdownMenu.Item
-					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					onSelect={async () => {
-						show = false;
+			{#if $config?.features?.enable_calendar && ($user?.role === 'admin' || $user?.permissions?.features?.calendar)}
+				<div class="flex items-center w-full">
+					<a
+						href="/calendar"
+						draggable="false"
+						class="flex flex-1 rounded-xl py-1.5 px-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+						on:click={async (e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+							e.preventDefault();
+							show = false;
+							goto('/calendar');
+						}}
+					>
+						<div class="self-center mr-3">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="size-5"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+								/>
+							</svg>
+						</div>
+						<div class="self-center truncate">{$i18n.t('Calendar')}</div>
+					</a>
+					{#if shiftKey}
+						<Tooltip
+							content={isPinned('calendar')
+								? $i18n.t('Unpin from Sidebar')
+								: $i18n.t('Pin to Sidebar')}
+						>
+							<button
+								type="button"
+								class="p-1 mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+								on:click|preventDefault|stopPropagation={() => togglePin('calendar')}
+							>
+								{#if isPinned('calendar')}
+									<PinSlash className="size-3.5" strokeWidth="1.5" />
+								{:else}
+									<Pin className="size-3.5" strokeWidth="1.5" />
+								{/if}
+							</button>
+						</Tooltip>
+					{/if}
+				</div>
+			{/if}
 
-						if ($mobile) {
-							await tick();
-							showSidebar.set(false);
-						}
-
-						await goto('/developer/api-keys/pricing');
-					}}
-				>
-					<div class=" self-center mr-3">
-						<Star className="size-5" strokeWidth="1.5" />
-					</div>
-					<div class=" self-center truncate">{$i18n.t('Pricing')}</div>
-				</DropdownMenu.Item>
+			{#if $config?.features?.enable_automations && ($user?.role === 'admin' || $user?.permissions?.features?.automations)}
+				<div class="flex items-center w-full">
+					<a
+						href="/automations"
+						draggable="false"
+						class="flex flex-1 rounded-xl py-1.5 px-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+						on:click={async (e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+							e.preventDefault();
+							show = false;
+							goto('/automations');
+							if ($mobile) {
+								await tick();
+								showSidebar.set(false);
+							}
+						}}
+					>
+						<div class="self-center mr-3">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="size-5"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+								/>
+							</svg>
+						</div>
+						<div class="self-center truncate">{$i18n.t('Automations')}</div>
+					</a>
+					{#if shiftKey}
+						<Tooltip
+							content={isPinned('automations')
+								? $i18n.t('Unpin from Sidebar')
+								: $i18n.t('Pin to Sidebar')}
+						>
+							<button
+								type="button"
+								class="p-1 mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+								on:click|preventDefault|stopPropagation={() => togglePin('automations')}
+							>
+								{#if isPinned('automations')}
+									<PinSlash className="size-3.5" strokeWidth="1.5" />
+								{:else}
+									<Pin className="size-3.5" strokeWidth="1.5" />
+								{/if}
+							</button>
+						</Tooltip>
+					{/if}
+				</div>
 			{/if}
 
 			{#if role === 'admin'}
-				<DropdownMenu.Item
-					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					onSelect={async () => {
-						show = false;
-
-						if ($mobile) {
-							await tick();
-							showSidebar.set(false);
-						}
-
-						await goto('/playground');
-					}}
-				>
-					<div class=" self-center mr-3">
-						<Code className="size-5" strokeWidth="1.5" />
-					</div>
-					<div class=" self-center truncate">{$i18n.t('Playground')}</div>
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					onSelect={async () => {
-						show = false;
-
-						if ($mobile) {
-							await tick();
-							showSidebar.set(false);
-						}
-
-						await goto('/admin');
-					}}
-				>
-					<div class=" self-center mr-3">
-						<UserGroup className="w-5 h-5" strokeWidth="1.5" />
-					</div>
-					<div class=" self-center truncate">{$i18n.t('Admin Panel')}</div>
-				</DropdownMenu.Item>
+				<div class="flex items-center w-full">
+					<a
+						href="/playground"
+						draggable="false"
+						class="flex flex-1 rounded-xl py-1.5 px-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+						on:click={async (e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+							e.preventDefault();
+							show = false;
+							goto('/playground');
+							if ($mobile) {
+								await tick();
+								showSidebar.set(false);
+							}
+						}}
+					>
+						<div class="self-center mr-3">
+							<Code className="size-5" strokeWidth="1.5" />
+						</div>
+						<div class="self-center truncate">{$i18n.t('Playground')}</div>
+					</a>
+					{#if shiftKey}
+						<Tooltip
+							content={isPinned('playground')
+								? $i18n.t('Unpin from Sidebar')
+								: $i18n.t('Pin to Sidebar')}
+						>
+							<button
+								type="button"
+								class="p-1 mr-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+								on:click|preventDefault|stopPropagation={() => togglePin('playground')}
+							>
+								{#if isPinned('playground')}
+									<PinSlash className="size-3.5" strokeWidth="1.5" />
+								{:else}
+									<Pin className="size-3.5" strokeWidth="1.5" />
+								{/if}
+							</button>
+						</Tooltip>
+					{/if}
+				</div>
 			{/if}
 
 			{#if help}
@@ -326,38 +563,45 @@
 				<!-- {$i18n.t('Help')} -->
 
 				{#if $user?.role === 'admin'}
-					<DropdownMenu.Item
+					<a
+						href="https://docs.openwebui.com"
+						target="_blank"
+						draggable="false"
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
-						onSelect={() => {
-							window.open('https://docs.openwebui.com', '_blank', 'noopener,noreferrer');
+						on:click={() => {
+							show = false;
 						}}
 					>
 						<div class=" self-center mr-3">
 							<QuestionMarkCircle className="size-5" />
 						</div>
 						<div class=" self-center truncate">{$i18n.t('Documentation')}</div>
-					</DropdownMenu.Item>
+					</a>
 
 					<!-- Releases -->
-					<DropdownMenu.Item
+					<a
+						href="https://github.com/open-webui/open-webui/releases"
+						target="_blank"
+						draggable="false"
 						class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 						id="chat-share-button"
-						onSelect={() => {
-							window.open('https://github.com/open-webui/open-webui/releases', '_blank', 'noopener,noreferrer');
+						on:click={() => {
+							show = false;
 						}}
 					>
 						<div class=" self-center mr-3">
 							<Map className="size-5" />
 						</div>
 						<div class=" self-center truncate">{$i18n.t('Releases')}</div>
-					</DropdownMenu.Item>
+					</a>
 				{/if}
 
-				<DropdownMenu.Item
+				<button
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+					type="button"
 					id="chat-share-button"
-					onSelect={async () => {
+					on:click={async () => {
 						show = false;
 						showShortcuts.set(!$showShortcuts);
 
@@ -371,28 +615,28 @@
 						<Keyboard className="size-5" />
 					</div>
 					<div class=" self-center truncate">{$i18n.t('Keyboard shortcuts')}</div>
-				</DropdownMenu.Item>
+				</button>
 			{/if}
 
 			<hr class=" border-gray-50/30 dark:border-gray-800/30 my-1 p-0" />
 
-			<DropdownMenu.Item
+			<button
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				onSelect={async () => {
-					show = false;
-
+				type="button"
+				on:click={async () => {
 					const res = await userSignOut();
-					user.set(undefined);
+					user.set(null);
 					localStorage.removeItem('token');
 
 					location.href = res?.redirect_url ?? '/auth';
+					show = false;
 				}}
 			>
 				<div class=" self-center mr-3">
 					<SignOut className="w-5 h-5" strokeWidth="1.5" />
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Sign Out')}</div>
-			</DropdownMenu.Item>
+			</button>
 
 			{#if showActiveUsers && ($config?.features?.enable_public_active_users_count || role === 'admin') && usage}
 				{#if usage?.user_count}
@@ -413,7 +657,7 @@
 						>
 							<div class=" flex items-center">
 								<span class="relative flex size-2">
-								<span class="relative inline-flex rounded-full size-2 bg-green-500"></span>
+									<span class="relative inline-flex rounded-full size-2 bg-green-500" />
 								</span>
 							</div>
 
@@ -429,10 +673,6 @@
 					</Tooltip>
 				{/if}
 			{/if}
-
-			<!-- <DropdownMenu.Item class="flex items-center py-1.5 px-3 text-sm ">
-				<div class="flex items-center">Profile</div>
-			</DropdownMenu.Item> -->
-		</DropdownMenu.Content>
-	</slot>
-</DropdownMenu.Root>
+		</div>
+	</div>
+</Dropdown>

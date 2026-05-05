@@ -29,6 +29,7 @@ export const MODEL_DOWNLOAD_POOL = writable({});
 export const mobile = writable(false);
 
 export const socket: Writable<null | Socket> = writable(null);
+export const socketConnected: Writable<boolean> = writable(true);
 export const activeUserIds: Writable<null | string[]> = writable(null);
 export const activeChatIds: Writable<Set<string>> = writable(new Set());
 export const USAGE_POOL: Writable<null | string[]> = writable(null);
@@ -54,13 +55,14 @@ export const TTSWorker = writable(null);
 export const chatId = writable('');
 export const chatTitle = writable('');
 
-export const channels = writable<any[]>([]);
+export const channels = writable([]);
 export const channelId = writable(null);
 
-export const chats: Writable<any[] | null> = writable(null);
-export const pinnedChats = writable<any[]>([]);
-export const tags = writable<any[]>([]);
-export const folders = writable<any[]>([]);
+export const chats = writable(null);
+export const pinnedChats = writable([]);
+export const pinnedNotes = writable([]);
+export const tags = writable([]);
+export const folders = writable([]);
 
 export const selectedFolder = writable(null);
 
@@ -71,8 +73,8 @@ export const tools = writable(null);
 export const skills = writable(null);
 export const functions = writable(null);
 
-export const toolServers = writable<any[]>([]);
-export const terminalServers = writable<any[]>([]);
+export const toolServers = writable([]);
+export const terminalServers = writable([]);
 
 // Persistent Pyodide worker for code interpreter FS
 export const pyodideWorker: Writable<Worker | null> = writable(null);
@@ -111,6 +113,15 @@ export const artifactContents = writable(null);
 export const embed = writable(null);
 
 export const temporaryChatEnabled = writable(false);
+
+// Transient one-shot event from the desktop shell (Spotlight, drag-and-drop, etc.).
+// Set by +layout.svelte, consumed and cleared by Chat.svelte.
+export type DesktopEventFile = { name: string; mimeType: string; dataUrl: string };
+export type DesktopEvent = {
+	type: string;
+	data?: any;
+};
+export const desktopEvent: Writable<DesktopEvent | null> = writable(null);
 export const scrollPaginationEnabled = writable(false);
 export const currentChatPage = writable(1);
 
@@ -168,9 +179,8 @@ type OllamaModelDetails = {
 };
 
 type Settings = {
-	pinnedModels?: string[];
-	toolServers?: Array<{ url: string; auth_type?: string; key?: string; path?: string }>;
-	terminalServers?: Array<{ url: string; auth_type?: string; key?: string; path?: string }>;
+	pinnedModels?: never[];
+	toolServers?: never[];
 	detectArtifacts?: boolean;
 	showUpdateToast?: boolean;
 	showChangelog?: boolean;
@@ -203,11 +213,7 @@ type Settings = {
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
 	scrollOnBranchChange?: boolean;
-	directConnections?: {
-		OPENAI_API_BASE_URLS?: string[];
-		OPENAI_API_KEYS?: string[];
-		OPENAI_API_CONFIGS?: any[];
-	} | null;
+	directConnections?: null;
 	chatBubble?: boolean;
 	copyFormatted?: boolean;
 	models?: string[];
@@ -224,6 +230,8 @@ type Settings = {
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
 	ctrlEnterToSend?: boolean;
 	renderMarkdownInPreviews?: boolean;
+	recentEmojis?: string[];
+	pinnedMenuItems?: string[];
 
 	system?: string;
 	seed?: number;
@@ -272,7 +280,6 @@ type Config = {
 	version: string;
 	default_locale: string;
 	default_models: string;
-	default_pinned_models?: string[];
 	default_prompt_suggestions: PromptSuggestion[];
 	features: {
 		auth: boolean;
@@ -292,13 +299,6 @@ type Config = {
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;
-		enable_channels?: boolean;
-		enable_folders?: boolean;
-		enable_notes?: boolean;
-		enable_user_status?: boolean;
-		enable_user_webhooks?: boolean;
-		enable_websocket?: boolean;
-		enable_public_active_users_count?: boolean;
 		folder_max_file_count?: number;
 	};
 	oauth: {
@@ -324,9 +324,4 @@ export type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
-	token?: string;
-	expires_at?: number;
-	is_active?: boolean;
-	status_emoji?: string;
-	status_message?: string;
 };
