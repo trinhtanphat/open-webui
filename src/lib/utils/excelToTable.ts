@@ -9,6 +9,7 @@
  */
 
 import type { WorkSheet } from 'xlsx';
+import { MAX_EXCEL_PREVIEW_COLS, MAX_EXCEL_PREVIEW_ROWS } from './excelPreview';
 
 /** Convert column index (0-based) to Excel-style letter (A, B, …, Z, AA, AB, …) */
 const colLetter = (i: number): string => {
@@ -39,7 +40,10 @@ export interface ExcelTableResult {
  */
 export async function excelToTable(worksheet: WorkSheet): Promise<ExcelTableResult> {
 	const XLSX = await import('xlsx');
-	const rows: unknown[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+	const rows: unknown[][] = XLSX.utils
+		.sheet_to_json(worksheet, { header: 1, defval: '', blankrows: false, raw: true })
+		.slice(0, MAX_EXCEL_PREVIEW_ROWS)
+		.map((row: unknown[]) => row.slice(0, MAX_EXCEL_PREVIEW_COLS));
 
 	if (rows.length === 0) {
 		return {

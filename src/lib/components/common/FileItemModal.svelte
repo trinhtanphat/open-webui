@@ -5,6 +5,7 @@
 	import { getContext, onMount, tick } from 'svelte';
 
 	import { formatFileSize, getLineCount } from '$lib/utils';
+	import { readExcelWorkbook } from '$lib/utils/excelPreview';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 	import { settings } from '$lib/stores';
 	import { getKnowledgeById } from '$lib/apis/knowledge';
@@ -152,11 +153,12 @@
 	const loadExcelContent = async () => {
 		try {
 			excelError = '';
-			const [arrayBuffer, { read }] = await Promise.all([
-				getFileContentById(item.id),
-				import('xlsx')
-			]);
-			excelWorkbook = read(arrayBuffer, { type: 'array' });
+			const arrayBuffer = await getFileContentById(item.id);
+			if (!arrayBuffer) {
+				throw new Error('File content is empty.');
+			}
+
+			excelWorkbook = await readExcelWorkbook(arrayBuffer);
 			excelSheetNames = excelWorkbook.SheetNames;
 
 			if (excelSheetNames.length > 0) {

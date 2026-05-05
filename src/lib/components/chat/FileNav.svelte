@@ -28,6 +28,7 @@
 		type FileEntry
 	} from '$lib/apis/terminal';
 	import { isCodeFile } from '$lib/utils/codeHighlight';
+	import { readExcelWorkbook } from '$lib/utils/excelPreview';
 	import Folder from '../icons/Folder.svelte';
 	import Document from '../icons/Document.svelte';
 	import PenAlt from '../icons/PenAlt.svelte';
@@ -373,8 +374,7 @@
 						const DOMPurify = (await import('dompurify')).default;
 						fileOfficeHtml = DOMPurify.sanitize(res.value);
 					} else if (ext === 'xlsx') {
-						const XLSX = await import('xlsx');
-						const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+						const wb = await readExcelWorkbook(arrayBuffer);
 						excelWorkbook = wb;
 						excelSheetNames = wb.SheetNames;
 						if (excelSheetNames.length > 0) {
