@@ -1,0 +1,265 @@
+/* ============================================================================
+   ⭐ THEMES SET 4 — Premium dev-tool inspired (10 palettes)
+   Heavily polished, contrast-audited (WCAG AA on body text + AA on muted).
+   Naming reflects the source product so devs recognise them instantly.
+   ============================================================================ */
+
+/* ─── Linear (sleek purple-on-charcoal) ─── */
+html[data-theme="linear"] {
+  --bg:#08090a; --bg-secondary:#101113; --bg-tertiary:#181a1c;
+  --card-bg:#101113; --sidebar-bg:#08090a;
+  --text:#f4f4f5; --text-muted:#9b9ba1;
+  --primary:#5e6ad2; --primary-dim:rgba(94,106,210,.12); --primary-glow:rgba(94,106,210,.45);
+  --accent:#7170ff; --success:#4cb782; --warning:#f2c94c; --danger:#eb5757;
+  --border:rgba(255,255,255,.08); --border-glow:rgba(94,106,210,.40);
+  --radius:6px;
+}
+
+/* ─── Stripe (LIGHT · indigo on white-ish) ─── */
+html[data-theme="stripe"] {
+  --bg:#ffffff; --bg-secondary:#f6f9fc; --bg-tertiary:#ebeef3;
+  --card-bg:#ffffff; --sidebar-bg:#f6f9fc;
+  --text:#0a2540; --text-muted:#425466;
+  --primary:#635bff; --primary-dim:rgba(99,91,255,.10); --primary-glow:rgba(99,91,255,.30);
+  --accent:#00d4ff; --success:#00d924; --warning:#ffae42; --danger:#df1b41;
+  --border:rgba(10,37,64,.10); --border-glow:rgba(99,91,255,.30);
+  --radius:8px;
+}
+html[data-theme="stripe"] body,
+html[data-theme="stripe"] .main-content { background:var(--bg); color:var(--text); }
+html[data-theme="stripe"] table td,
+html[data-theme="stripe"] table th { color:var(--text)!important; border-color:rgba(10,37,64,.10)!important; }
+html[data-theme="stripe"] input,
+html[data-theme="stripe"] select,
+html[data-theme="stripe"] textarea { background:#fff; color:var(--text); border:1px solid var(--border); }
+
+/* ─── Notion (LIGHT · warm beige minimal) ─── */
+html[data-theme="notion"] {
+  --bg:#ffffff; --bg-secondary:#f7f6f3; --bg-tertiary:#ebeae5;
+  --card-bg:#ffffff; --sidebar-bg:#f7f6f3;
+  --text:#37352f; --text-muted:#787774;
+  --primary:#0070f3; --primary-dim:rgba(0,112,243,.08); --primary-glow:rgba(0,112,243,.25);
+  --accent:#9065b0; --success:#0f7b6c; --warning:#cb912f; --danger:#e03e3e;
+  --border:rgba(55,53,47,.12); --border-glow:rgba(0,112,243,.30);
+  --radius:6px;
+}
+html[data-theme="notion"] body,
+html[data-theme="notion"] .main-content { background:var(--bg); color:var(--text); }
+html[data-theme="notion"] table td,
+html[data-theme="notion"] table th { color:var(--text)!important; border-color:rgba(55,53,47,.12)!important; }
+html[data-theme="notion"] input,
+html[data-theme="notion"] select,
+html[data-theme="notion"] textarea { background:#fff; color:var(--text); border:1px solid var(--border); }
+
+/* ─── Figma (dark · teal accent) ─── */
+html[data-theme="figma"] {
+  --bg:#1e1e1e; --bg-secondary:#2c2c2c; --bg-tertiary:#383838;
+  --card-bg:#2c2c2c; --sidebar-bg:#1e1e1e;
+  --text:#ffffff; --text-muted:#b3b3b3;
+  --primary:#0d99ff; --primary-dim:rgba(13,153,255,.12); --primary-glow:rgba(13,153,255,.40);
+  --accent:#a259ff; --success:#14ae5c; --warning:#f5a623; --danger:#f24822;
+  --border:rgba(255,255,255,.10); --border-glow:rgba(13,153,255,.40);
+  --radius:6px;
+}
+
+/* ─── Raycast (warm peach on dark) ─── */
+html[data-theme="raycast"] {
+  --bg:#0d0d0d; --bg-secondary:#161616; --bg-tertiary:#1f1f1f;
+  --card-bg:#161616; --sidebar-bg:#0a0a0a;
+  --text:#fafafa; --text-muted:#a1a1a1;
+  --primary:#ff6363; --primary-dim:rgba(255,99,99,.12); --primary-glow:rgba(255,99,99,.45);
+  --accent:#ff8c42; --success:#52c41a; --warning:#faad14; --danger:#ff4d4f;
+  --border:rgba(255,255,255,.08); --border-glow:rgba(255,99,99,.40);
+  --radius:8px;
+}
+
+/* ─── Supabase (emerald on rich dark) ─── */
+html[data-theme="supabase"] {
+  --bg:#1c1c1c; --bg-secondary:#202020; --bg-tertiary:#262626;
+  --card-bg:#202020; --sidebar-bg:#171717;
+  --text:#ededed; --text-muted:#a0a0a0;
+  --primary:#3ecf8e; --primary-dim:rgba(62,207,142,.12); --primary-glow:rgba(62,207,142,.45);
+  --accent:#34d399; --success:#3ecf8e; --warning:#f5a524; --danger:#f31260;
+  --border:rgba(255,255,255,.08); --border-glow:rgba(62,207,142,.40);
+  --radius:6px;
+}
+
+/* ─── Railway (electric purple-pink on near-black) ─── */
+html[data-theme="railway"] {
+  --bg:#13111c; --bg-secondary:#1c1830; --bg-tertiary:#252040;
+  --card-bg:#1c1830; --sidebar-bg:#0e0c18;
+  --text:#fbfbfb; --text-muted:#a7a3c6;
+  --primary:#9333ea; --primary-dim:rgba(147,51,234,.14); --primary-glow:rgba(147,51,234,.50);
+  --accent:#c026d3; --success:#22c55e; --warning:#facc15; --danger:#ef4444;
+  --border:rgba(251,251,251,.08); --border-glow:rgba(147,51,234,.45);
+  --radius:8px;
+}
+
+/* ─── Vercel Light (true monochrome on white) ─── */
+html[data-theme="vercel-light"] {
+  --bg:#ffffff; --bg-secondary:#fafafa; --bg-tertiary:#f4f4f5;
+  --card-bg:#ffffff; --sidebar-bg:#fafafa;
+  --text:#0a0a0a; --text-muted:#666666;
+  --primary:#000000; --primary-dim:rgba(0,0,0,.06); --primary-glow:rgba(0,0,0,.25);
+  --accent:#0070f3; --success:#0070f3; --warning:#f5a623; --danger:#e00;
+  --border:rgba(0,0,0,.10); --border-glow:rgba(0,0,0,.30);
+  --radius:6px;
+}
+html[data-theme="vercel-light"] body,
+html[data-theme="vercel-light"] .main-content { background:var(--bg); color:var(--text); }
+html[data-theme="vercel-light"] table td,
+html[data-theme="vercel-light"] table th { color:var(--text)!important; border-color:rgba(0,0,0,.10)!important; }
+html[data-theme="vercel-light"] input,
+html[data-theme="vercel-light"] select,
+html[data-theme="vercel-light"] textarea { background:#fff; color:var(--text); border:1px solid var(--border); }
+
+/* ─── GitHub Light (Primer palette) ─── */
+html[data-theme="github-light"] {
+  --bg:#ffffff; --bg-secondary:#f6f8fa; --bg-tertiary:#eaeef2;
+  --card-bg:#ffffff; --sidebar-bg:#f6f8fa;
+  --text:#1f2328; --text-muted:#656d76;
+  --primary:#0969da; --primary-dim:rgba(9,105,218,.08); --primary-glow:rgba(9,105,218,.30);
+  --accent:#8250df; --success:#1a7f37; --warning:#bf8700; --danger:#cf222e;
+  --border:rgba(31,35,40,.15); --border-glow:rgba(9,105,218,.30);
+  --radius:6px;
+}
+html[data-theme="github-light"] body,
+html[data-theme="github-light"] .main-content { background:var(--bg); color:var(--text); }
+html[data-theme="github-light"] table td,
+html[data-theme="github-light"] table th { color:var(--text)!important; border-color:rgba(31,35,40,.15)!important; }
+html[data-theme="github-light"] input,
+html[data-theme="github-light"] select,
+html[data-theme="github-light"] textarea { background:#fff; color:var(--text); border:1px solid var(--border); }
+
+/* ─── Anthropic Light (warm cream · Claude.ai tone) ───
+   Polished 2026-04: stronger contrast on cards, badges, code blocks,
+   muted text, and inputs. The previous palette put #c08a00 (mustard)
+   on a #f5f3ee cream background which produced a 3.4:1 ratio — below
+   WCAG AA. We now use saturated complementary tones plus per-element
+   surface elevation. */
+html[data-theme="anthropic-light"] {
+  --bg:#f5f3ee; --bg-2:#ede9e0; --bg-tertiary:#e2dccd;
+  --bg-card:#ffffff; --bg-card-hov:#fdfaf5; --bg-elev:#ffffff; --bg-input:#ffffff;
+  --card-bg:#ffffff; --sidebar-bg:#1f1e1d; --bg-sidebar:#1f1e1d;
+  --text:#1a1815; --text-muted:#574f44; --text-dim:#6b665e;
+  --primary:#cc785c; --primary-dim:rgba(204,120,92,.12); --primary-glow:rgba(204,120,92,.34);
+  --accent:#a85e44; --accent-dim:rgba(168,94,68,.14);
+  --success:#1d6f3e; --warning:#a35c00; --danger:#a72020;
+  --border:rgba(31,30,29,.16); --border-glow:rgba(204,120,92,.42);
+  --code-bg:#f3efe5; --shadow-card:0 2px 14px rgba(31,30,29,.08);
+  --radius:8px;
+}
+html[data-theme="anthropic-light"] body,
+html[data-theme="anthropic-light"] .main-content { background:var(--bg); color:var(--text); }
+/* Sidebar is dark on the cream theme — flip text inside it for legibility. */
+html[data-theme="anthropic-light"] .sidebar,
+html[data-theme="anthropic-light"] .sidebar a,
+html[data-theme="anthropic-light"] .sidebar .nav-label,
+html[data-theme="anthropic-light"] .sidebar .nav-icon,
+html[data-theme="anthropic-light"] #user-email,
+html[data-theme="anthropic-light"] #user-balance,
+html[data-theme="anthropic-light"] .theme-picker-label { color:#f5f3ee !important; }
+html[data-theme="anthropic-light"] .card,
+html[data-theme="anthropic-light"] .stat-card,
+html[data-theme="anthropic-light"] .pve-shell,
+html[data-theme="anthropic-light"] .pve-tree,
+html[data-theme="anthropic-light"] .pve-main { background:var(--bg-card)!important; color:var(--text)!important; box-shadow:var(--shadow-card); }
+html[data-theme="anthropic-light"] table td,
+html[data-theme="anthropic-light"] table th { color:var(--text)!important; border-color:rgba(31,30,29,.12)!important; }
+html[data-theme="anthropic-light"] table th { background:#f3efe5!important; color:#3a3530!important; }
+html[data-theme="anthropic-light"] input,
+html[data-theme="anthropic-light"] select,
+html[data-theme="anthropic-light"] textarea { background:#fff!important; color:var(--text)!important; border:1px solid rgba(31,30,29,.22)!important; }
+html[data-theme="anthropic-light"] code,
+html[data-theme="anthropic-light"] pre { background:var(--code-bg)!important; color:#3a2820!important; border:1px solid rgba(31,30,29,.10); }
+html[data-theme="anthropic-light"] .badge,
+html[data-theme="anthropic-light"] .pve-badge { background:#ede9e0; color:#3a3530; border-color:rgba(31,30,29,.16); }
+html[data-theme="anthropic-light"] .pve-badge--ok    { background:#dceadd; color:#1d6f3e; border-color:#9ec6a7; }
+html[data-theme="anthropic-light"] .pve-badge--warn  { background:#f6e7c8; color:#a35c00; border-color:#e0c79c; }
+html[data-theme="anthropic-light"] .pve-badge--err   { background:#f6d8d4; color:#a72020; border-color:#e8aaa3; }
+html[data-theme="anthropic-light"] .pve-badge--muted { background:#ede9e0; color:#574f44; }
+html[data-theme="anthropic-light"] .text-muted,
+html[data-theme="anthropic-light"] .page-subtitle,
+html[data-theme="anthropic-light"] .stat-card .label,
+html[data-theme="anthropic-light"] .stat-card .sub { color:#574f44!important; }
+html[data-theme="anthropic-light"] .radio-card { background:#fff; border-color:rgba(31,30,29,.16); }
+html[data-theme="anthropic-light"] .radio-card:has(input[type="radio"]:checked) {
+  background:#fbece5; border-color:var(--primary);
+  box-shadow:0 0 0 1px var(--primary) inset, 0 4px 14px rgba(204,120,92,.22);
+}
+html[data-theme="anthropic-light"] a { color:#a85e44; }
+html[data-theme="anthropic-light"] a:hover { color:#7a3f2c; }
+
+/* ============================================================================
+   Swatches
+   ============================================================================ */
+.sw-linear            { background: linear-gradient(135deg,#08090a 50%,#5e6ad2 50%); }
+.sw-stripe            { background: linear-gradient(135deg,#fff 50%,#635bff 50%); border:1px solid rgba(0,0,0,.10); }
+.sw-notion            { background: linear-gradient(135deg,#fff 50%,#37352f 50%); border:1px solid rgba(0,0,0,.10); }
+.sw-figma             { background: linear-gradient(135deg,#1e1e1e 33%,#0d99ff 33% 66%,#a259ff 66%); }
+.sw-raycast           { background: linear-gradient(135deg,#0d0d0d 50%,#ff6363 50%); }
+.sw-supabase          { background: linear-gradient(135deg,#1c1c1c 50%,#3ecf8e 50%); }
+.sw-railway           { background: linear-gradient(135deg,#13111c 50%,#9333ea 50%); }
+.sw-vercel-light      { background: linear-gradient(135deg,#fff 50%,#000 50%); border:1px solid rgba(0,0,0,.15); }
+.sw-github-light      { background: linear-gradient(135deg,#fff 50%,#0969da 50%); border:1px solid rgba(0,0,0,.10); }
+.sw-anthropic-light   { background: linear-gradient(135deg,#f5f3ee 50%,#cc785c 50%); border:1px solid rgba(0,0,0,.10); }
+
+/* ============================================================================
+   ⚙ Contrast audit overrides — apply to ALL light themes universally so we
+   never end up with washed-out body text or near-invisible muted text.
+   These selectors complement the per-theme blocks above.
+   ============================================================================ */
+html.light-mode { color-scheme: light; }
+html.light-mode .stat-card,
+html.light-mode .card {
+  background: var(--card-bg) !important;
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+}
+html.light-mode .stat-card .label,
+html.light-mode .stat-card .sub,
+html.light-mode .form-hint,
+html.light-mode .hint,
+html.light-mode small { color: var(--text-muted) !important; }
+html.light-mode .stat-card .value,
+html.light-mode h1, html.light-mode h2, html.light-mode h3,
+html.light-mode h4, html.light-mode h5 { color: var(--text) !important; }
+html.light-mode .btn,
+html.light-mode button:not(.btn-primary):not(.btn-danger):not(.btn-success) {
+  color: var(--text);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+/* html.light-mode .btn-primary { color:#fff; } */
+html.light-mode .status-badge { color:#fff; }
+html.light-mode .status-badge.status-stopped { color:#fff; }
+html.light-mode code,
+html.light-mode pre { background: var(--bg-tertiary); color: var(--text); }
+
+/* ============================================================
+   Per-theme swatches for the .theme-swatch button next to the
+   picker label. Without these, the swatch falls back to the
+   generic --primary/--accent gradient and looks identical for
+   every brand. The data-theme-preview attribute is set in JS
+   to the *family* id (e.g. 'anthropic'), so each rule below
+   anchors a brand-accurate two-tone gradient.
+   ============================================================ */
+.theme-swatch[data-theme-preview="anthropic"]      { background: linear-gradient(135deg, #1f1e1d 50%, #cc785c 50%); }
+.theme-swatch[data-theme-preview="anthropic-light"]{ background: linear-gradient(135deg, #f5f3ee 50%, #cc785c 50%); }
+.theme-swatch[data-theme-preview="v0"]             { background: linear-gradient(135deg, #000 50%, #fff 50%); }
+.theme-swatch[data-theme-preview="vercel-light"]   { background: linear-gradient(135deg, #fff 50%, #000 50%); border:1px solid rgba(0,0,0,.15); }
+.theme-swatch[data-theme-preview="github-dim"]     { background: linear-gradient(135deg, #22272e 50%, #539bf5 50%); }
+.theme-swatch[data-theme-preview="github-light"]   { background: linear-gradient(135deg, #fff 50%, #0969da 50%); border:1px solid rgba(0,0,0,.10); }
+.theme-swatch[data-theme-preview="cursor"]         { background: linear-gradient(135deg, #0f1115 50%, #6366f1 50%); }
+.theme-swatch[data-theme-preview="midnight"]       { background: linear-gradient(135deg, #0a0e1a 50%, #3b82f6 50%); }
+.theme-swatch[data-theme-preview="perplexity"]     { background: linear-gradient(135deg, #20313c 50%, #20a4a4 50%); }
+.theme-swatch[data-theme-preview="linear"]         { background: linear-gradient(135deg, #0f1014 50%, #5e6ad2 50%); }
+.theme-swatch[data-theme-preview="stripe"]         { background: linear-gradient(135deg, #fff 50%, #635bff 50%); border:1px solid rgba(0,0,0,.10); }
+.theme-swatch[data-theme-preview="notion"]         { background: linear-gradient(135deg, #fff 50%, #2e2e2e 50%); border:1px solid rgba(0,0,0,.10); }
+.theme-swatch[data-theme-preview="figma"]          { background: linear-gradient(135deg, #1e1e1e 50%, #f24e1e 50%); }
+.theme-swatch[data-theme-preview="raycast"]        { background: linear-gradient(135deg, #1a1a1a 50%, #ff5c1f 50%); }
+.theme-swatch[data-theme-preview="supabase"]       { background: linear-gradient(135deg, #1c1c1c 50%, #3ecf8e 50%); }
+.theme-swatch[data-theme-preview="railway"]        { background: linear-gradient(135deg, #13111c 50%, #b266ff 50%); }
+.theme-swatch[data-theme-preview="light"]          { background: linear-gradient(135deg, #fff 50%, #1f2937 50%); border:1px solid rgba(0,0,0,.10); }
+.theme-swatch[data-theme-preview="system"]         { background: linear-gradient(135deg, #0b1220 50%, #f8fafc 50%); }

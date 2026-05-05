@@ -1,0 +1,215 @@
+/* VNSO Cloud shared theme contract bridge for Open WebUI.
+   Source contract: /root/THEME_CONTRACT.md. The app still uses its native
+   light/dark classes; this file maps the shared data-theme variables onto the
+   main Open WebUI surfaces without replacing application components. */
+
+@import url('/static/proxmoxai-themes.css');
+
+html[data-theme] {
+	--bg: #0b0f17;
+	--bg-secondary: #111827;
+	--bg-tertiary: #1f2937;
+	--card-bg: #111827;
+	--sidebar-bg: #0b0f17;
+	--text: #eef2ff;
+	--text-muted: #9ca3af;
+	--primary: #3b82f6;
+	--primary-dim: rgba(59, 130, 246, 0.14);
+	--primary-glow: rgba(59, 130, 246, 0.36);
+	--accent: #14b8a6;
+	--success: #22c55e;
+	--warning: #f59e0b;
+	--danger: #ef4444;
+	--border: rgba(148, 163, 184, 0.18);
+	--border-glow: rgba(59, 130, 246, 0.34);
+	--radius: 8px;
+	--bg-card: var(--card-bg);
+	--bg-card-hov: #172033;
+	--bg-elev: #162033;
+	--bg-input: #0f172a;
+	--shadow-card: 0 18px 44px rgba(0, 0, 0, 0.24);
+	--code-bg: #0f172a;
+	--text-dim: #cbd5e1;
+	color-scheme: dark;
+}
+
+html[data-theme='light'],
+html[data-theme='sakura'],
+html[data-theme='sepia'],
+html[data-theme='paper'],
+html[data-theme='arctic'],
+html[data-theme='pastel-dream'],
+html[data-theme='porcelain'],
+html[data-theme='platinum'],
+html[data-theme='spring'],
+html[data-theme='summer'],
+html[data-theme='minimal-light'],
+html[data-theme='stripe'],
+html[data-theme='notion'],
+html[data-theme='vercel-light'],
+html[data-theme='github-light'],
+html[data-theme='anthropic-light'] {
+	--bg: #ffffff;
+	--bg-secondary: #f7f9fc;
+	--bg-tertiary: #e8edf4;
+	--card-bg: #ffffff;
+	--sidebar-bg: #f2f5f9;
+	--text: #111827;
+	--text-muted: #526071;
+	--primary: #2563eb;
+	--primary-dim: rgba(37, 99, 235, 0.1);
+	--primary-glow: rgba(37, 99, 235, 0.24);
+	--accent: #0f766e;
+	--success: #15803d;
+	--warning: #b45309;
+	--danger: #b91c1c;
+	--border: rgba(17, 24, 39, 0.13);
+	--border-glow: rgba(37, 99, 235, 0.28);
+	--bg-card: #ffffff;
+	--bg-card-hov: #f8fafc;
+	--bg-elev: #ffffff;
+	--bg-input: #ffffff;
+	--shadow-card: 0 14px 36px rgba(15, 23, 42, 0.09);
+	--code-bg: #eef2f7;
+	--text-dim: #374151;
+	color-scheme: light;
+}
+
+html[data-theme='cursor'] { --primary: #6366f1; --accent: #22d3ee; }
+html[data-theme='anthropic'] { --bg: #141311; --bg-secondary: #1f1e1b; --card-bg: #24221f; --sidebar-bg: #171512; --primary: #cc785c; --accent: #e3a98f; }
+html[data-theme='anthropic-light'] { --bg: #f5f3ee; --bg-secondary: #ede9e0; --bg-tertiary: #e2dccd; --text: #1a1815; --text-muted: #574f44; --primary: #cc785c; --accent: #a85e44; }
+html[data-theme='v0'] { --bg: #000000; --bg-secondary: #111111; --card-bg: #161616; --primary: #ffffff; --accent: #0070f3; }
+html[data-theme='vercel-light'] { --primary: #000000; --accent: #0070f3; }
+html[data-theme='github-dim'] { --bg: #22272e; --bg-secondary: #2d333b; --card-bg: #2d333b; --text: #adbac7; --text-muted: #768390; --primary: #539bf5; --accent: #dcbdfb; }
+html[data-theme='github-light'] { --bg-secondary: #f6f8fa; --bg-tertiary: #eaeef2; --text: #1f2328; --text-muted: #656d76; --primary: #0969da; --accent: #8250df; }
+html[data-theme='linear'] { --bg: #08090a; --bg-secondary: #101113; --card-bg: #101113; --primary: #5e6ad2; --accent: #7170ff; --radius: 6px; }
+html[data-theme='stripe'] { --text: #0a2540; --text-muted: #425466; --primary: #635bff; --accent: #00d4ff; }
+html[data-theme='notion'] { --bg-secondary: #f7f6f3; --bg-tertiary: #ebeae5; --text: #37352f; --text-muted: #787774; --primary: #0070f3; --accent: #9065b0; --radius: 6px; }
+html[data-theme='figma'] { --bg: #1e1e1e; --bg-secondary: #2c2c2c; --card-bg: #2c2c2c; --primary: #0d99ff; --accent: #a259ff; }
+html[data-theme='raycast'] { --bg: #0d0d0d; --bg-secondary: #161616; --card-bg: #161616; --primary: #ff6363; --accent: #ff8c42; }
+html[data-theme='supabase'] { --bg: #1c1c1c; --bg-secondary: #202020; --card-bg: #202020; --primary: #3ecf8e; --accent: #34d399; }
+html[data-theme='railway'] { --bg: #13111c; --bg-secondary: #1c1830; --card-bg: #1c1830; --primary: #9333ea; --accent: #c026d3; }
+html[data-theme='rosepine'] { --bg: #191724; --bg-secondary: #1f1d2e; --card-bg: #26233a; --text: #e0def4; --text-muted: #908caa; --primary: #c4a7e7; --accent: #ebbcba; }
+html[data-theme='nord'] { --bg: #242933; --bg-secondary: #2e3440; --card-bg: #343c4a; --text: #eceff4; --text-muted: #d8dee9; --primary: #88c0d0; --accent: #81a1c1; }
+html[data-theme='tokyo-night'] { --bg: #11121d; --bg-secondary: #1a1b26; --card-bg: #1f2335; --primary: #7aa2f7; --accent: #bb9af7; }
+html[data-theme='dracula'] { --bg: #1e1f29; --bg-secondary: #282a36; --card-bg: #303241; --primary: #bd93f9; --accent: #ff79c6; }
+html[data-theme='terminal'] { --bg: #020403; --bg-secondary: #07110c; --card-bg: #0b1a12; --text: #d1fae5; --primary: #22c55e; --accent: #84cc16; }
+
+html[data-density='compact'] { --owui-density-y: 0.82; }
+html[data-density='comfortable'] { --owui-density-y: 1; }
+html[data-density='cozy'] { --owui-density-y: 1.14; }
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	scroll-behavior: auto !important;
+	transition-duration: 0.01ms !important;
+}
+
+html[data-theme] body,
+html[data-theme] .app,
+html[data-theme] main {
+	background: var(--bg) !important;
+	color: var(--text) !important;
+}
+
+html[data-theme] #splash-screen {
+	background: var(--bg) !important;
+}
+
+html[data-theme] #nav,
+html[data-theme] aside,
+html[data-theme] .sidebar,
+html[data-theme] .py-2\.5.my-auto.flex.flex-col.justify-between.h-screen {
+	background: var(--sidebar-bg) !important;
+	color: var(--text) !important;
+}
+
+html[data-theme] .bg-white,
+html[data-theme] .bg-gray-50,
+html[data-theme] .dark\:bg-gray-800,
+html[data-theme] .dark\:bg-gray-850,
+html[data-theme] .dark\:bg-gray-900,
+html[data-theme] .dark\:bg-gray-950 {
+	background-color: var(--card-bg) !important;
+}
+
+html[data-theme] .text-gray-500,
+html[data-theme] .text-gray-600,
+html[data-theme] .text-gray-700,
+html[data-theme] .dark\:text-gray-300,
+html[data-theme] .dark\:text-gray-400,
+html[data-theme] .dark\:text-gray-500 {
+	color: var(--text-muted) !important;
+}
+
+html[data-theme] .text-black,
+html[data-theme] .text-gray-900,
+html[data-theme] .dark\:text-white,
+html[data-theme] .dark\:text-gray-100,
+html[data-theme] h1,
+html[data-theme] h2,
+html[data-theme] h3 {
+	color: var(--text) !important;
+}
+
+html[data-theme] input,
+html[data-theme] textarea,
+html[data-theme] select,
+html[data-theme] #chat-input {
+	background: var(--bg-input) !important;
+	border-color: var(--border) !important;
+	color: var(--text) !important;
+	border-radius: var(--radius) !important;
+}
+
+html[data-theme] button,
+html[data-theme] .rounded-lg,
+html[data-theme] .rounded-xl,
+html[data-theme] .rounded-2xl {
+	border-radius: var(--radius) !important;
+}
+
+html[data-theme] a,
+html[data-theme] button[aria-selected='true'],
+html[data-theme] .text-blue-600,
+html[data-theme] .dark\:text-blue-400 {
+	color: var(--primary) !important;
+}
+
+html[data-theme] .bg-black,
+html[data-theme] .dark\:bg-white,
+html[data-theme] .bg-blue-600,
+html[data-theme] .bg-emerald-600 {
+	background-color: var(--primary) !important;
+	color: #fff !important;
+}
+
+html[data-theme='v0'] .bg-black,
+html[data-theme='vercel-light'] .bg-black,
+html[data-theme='v0'] .dark\:bg-white,
+html[data-theme='vercel-light'] .dark\:bg-white {
+	color: var(--bg) !important;
+}
+
+html[data-theme] .border,
+html[data-theme] .border-gray-50,
+html[data-theme] .border-gray-100,
+html[data-theme] .dark\:border-gray-800,
+html[data-theme] .dark\:border-gray-850 {
+	border-color: var(--border) !important;
+}
+
+html[data-theme] pre,
+html[data-theme] code,
+html[data-theme] .hljs {
+	background: var(--code-bg) !important;
+	color: var(--text) !important;
+	border-color: var(--border) !important;
+}
+
+html[data-theme] ::selection {
+	background: var(--primary-dim);
+	color: var(--text);
+}
