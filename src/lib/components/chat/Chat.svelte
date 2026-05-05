@@ -96,6 +96,7 @@
 	import Banner from '../common/Banner.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
 	import Messages from '$lib/components/chat/Messages.svelte';
+	import MindMapMessages from '$lib/components/chat/MindMapMessages.svelte';
 	import Navbar from '$lib/components/chat/Navbar.svelte';
 	import ChatControls from './ChatControls.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
@@ -163,6 +164,8 @@
 		messages: {},
 		currentId: null
 	};
+	type ChatViewMode = 'linear' | 'mindmap';
+	let viewMode: ChatViewMode = 'linear';
 
 	let taskIds = null;
 
@@ -399,6 +402,35 @@
 		await tick();
 
 		saveChatHandler(_chatId, history);
+	};
+
+	const setChatViewMode = async (mode: ChatViewMode) => {
+		viewMode = mode;
+
+		if (mode === 'linear') {
+			await tick();
+			window.setTimeout(() => scrollToBottom(), 0);
+		}
+	};
+
+	const selectMindMapNode = async (messageId: string) => {
+		if (!messageId || !history?.messages?.[messageId]) {
+			return;
+		}
+
+		const _chatId = JSON.parse(JSON.stringify($chatId));
+		history.currentId = messageId;
+		history = history;
+
+		await tick();
+		await saveChatHandler(_chatId, history);
+	};
+
+	const updateLastReadAt = (id) => {
+		$socket?.emit('events:chat', {
+			chat_id: id,
+			data: { type: 'last_read_at' }
+		});
 	};
 
 	const terminalEventHandler = (type: string, data: any) => {
@@ -2762,6 +2794,8 @@
 						{initNewChat}
 						{archiveChatHandler}
 						{moveChatHandler}
+						{viewMode}
+						onViewModeChange={setChatViewMode}
 						onSaveTempChat={async () => {
 							try {
 								if (!history?.currentId || !Object.keys(history.messages).length) {
@@ -2804,38 +2838,49 @@
 					<div id="chat-pane" class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
 						{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
 							<div
-								class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
+								class="pb-2.5 flex flex-col justify-between w-full flex-auto h-0 max-w-full z-10 {viewMode ===
+								'mindmap'
+									? 'overflow-hidden'
+									: 'overflow-auto scrollbar-hidden'}"
 								id="messages-container"
 								bind:this={messagesContainerElement}
 								on:scroll={(e) => {
+									if (viewMode !== 'linear') {
+										return;
+									}
+
 									autoScroll =
 										messagesContainerElement.scrollHeight - messagesContainerElement.scrollTop <=
 										messagesContainerElement.clientHeight + 5;
 								}}
 							>
 								<div class=" h-full w-full flex flex-col">
-									<Messages
-										chatId={$chatId}
-										bind:history
-										bind:autoScroll
-										bind:prompt
-										setInputText={(text) => {
-											messageInput?.setText(text);
-										}}
-										{selectedModels}
-										{atSelectedModel}
-										{sendMessage}
-										{showMessage}
-										{submitMessage}
-										{continueResponse}
-										{regenerateResponse}
-										{mergeResponses}
-										{chatActionHandler}
-										{addMessages}
-										topPadding={true}
-										bottomPadding={files.length > 0}
-										{onSelect}
-									/>
+									{#if viewMode === 'linear'}
+										<Messages
+											chatId={$chatId}
+											bind:history
+											bind:autoScroll
+											bind:prompt
+											setInputText={(text) => {
+												messageInput?.setText(text);
+											}}
+											{selectedModels}
+											{atSelectedModel}
+											{sendMessage}
+											{showMessage}
+											{submitMessage}
+											{continueResponse}
+											{regenerateResponse}
+											{mergeResponses}
+											{chatActionHandler}
+											{addMessages}
+											topPadding={true}
+											bottomPadding={files.length > 0}
+											{onSelect}
+										/>
+									{:else}
+										<MindMapMessages bind:history onNodeSelect={selectMindMapNode} />
+									{/if}
 								</div>
 							</div>
 

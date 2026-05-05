@@ -35,6 +35,8 @@
 
 	import ChatBubbleDotted from '../icons/ChatBubbleDotted.svelte';
 	import ChatBubbleDottedChecked from '../icons/ChatBubbleDottedChecked.svelte';
+	import ListBullet from '../icons/ListBullet.svelte';
+	import Map from '../icons/Map.svelte';
 
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import ChatPlus from '../icons/ChatPlus.svelte';
@@ -54,6 +56,10 @@
 	export let selectedModels;
 	export let showModelSelector = true;
 
+	type ChatViewMode = 'linear' | 'mindmap';
+	export let viewMode: ChatViewMode = 'linear';
+	export let onViewModeChange: (mode: ChatViewMode) => void = (_mode) => {};
+
 	export let onSaveTempChat: () => {};
 	export let archiveChatHandler: (id: string) => void;
 	export let moveChatHandler: (id: string, folderId: string) => void;
@@ -62,6 +68,10 @@
 
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
+
+	const toggleViewMode = () => {
+		onViewModeChange(viewMode === 'linear' ? 'mindmap' : 'linear');
+	};
 </script>
 
 <ShareChatModal bind:show={showShareChatModal} chatId={$chatId} />
@@ -172,6 +182,33 @@
 								</button>
 							</Tooltip>
 						{/if}
+					{/if}
+
+					{#if history?.currentId}
+						<Tooltip
+							content={viewMode === 'linear'
+								? $i18n.t('Mind Map View')
+								: $i18n.t('Linear Chat View')}
+						>
+							<button
+								class="flex cursor-pointer px-2 py-2 rounded-xl transition {viewMode === 'mindmap'
+									? 'bg-gray-100 text-gray-900 dark:bg-gray-850 dark:text-white'
+									: 'hover:bg-gray-50 dark:hover:bg-gray-850'}"
+								on:click={toggleViewMode}
+								aria-label={viewMode === 'linear'
+									? $i18n.t('Mind Map View')
+									: $i18n.t('Linear Chat View')}
+								aria-pressed={viewMode === 'mindmap'}
+							>
+								<div class="m-auto self-center">
+									{#if viewMode === 'linear'}
+										<Map className="size-4.5" strokeWidth="1.5" />
+									{:else}
+										<ListBullet className="size-4.5" strokeWidth="1.5" />
+									{/if}
+								</div>
+							</button>
+						</Tooltip>
 					{/if}
 
 					{#if $mobile && !$temporaryChatEnabled && chat && chat.id}
