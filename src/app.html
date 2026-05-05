@@ -41,39 +41,74 @@
 		</script>
 
 		<script>
-			// On page load or when changing themes, best to add inline in `head` to avoid FOUC
 			(() => {
+				const PREFS_KEY = 'proxmoxai_prefs';
+				const DEFAULT_PREFS = {
+					theme: 'midnight',
+					color_scheme: 'system',
+					locale: 'vi',
+					density: 'comfortable',
+					reduced_motion: false,
+					sidebar_collapsed: false
+				};
+				const LIGHT_VARIANTS = { anthropic: 'anthropic-light', v0: 'vercel-light', 'github-dim': 'github-light' };
+				const LIGHT_THEMES = new Set([
+					'light', 'sakura', 'sepia', 'paper', 'arctic', 'pastel-dream', 'porcelain', 'platinum',
+					'spring', 'summer', 'minimal-light', 'stripe', 'notion', 'vercel-light', 'github-light', 'anthropic-light'
+				]);
 				const metaThemeColorTag = document.querySelector('meta[name="theme-color"]');
-				const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const systemPrefersLight = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
 
-				if (!localStorage?.theme) {
-					localStorage.theme = 'system';
+				function loadPrefs() {
+					try {
+						const raw = localStorage.getItem(PREFS_KEY);
+						if (raw) return Object.assign({}, DEFAULT_PREFS, JSON.parse(raw));
+						const legacy = localStorage.getItem('theme');
+						if (legacy === 'light') return Object.assign({}, DEFAULT_PREFS, { theme: 'light', color_scheme: 'light' });
+						if (legacy === 'system') return Object.assign({}, DEFAULT_PREFS, { theme: 'system', color_scheme: 'system' });
+						if (legacy === 'her') return Object.assign({}, DEFAULT_PREFS, { theme: 'rosepine', color_scheme: 'dark' });
+						if (legacy === 'oled-dark') return Object.assign({}, DEFAULT_PREFS, { theme: 'terminal', color_scheme: 'dark' });
+					} catch (_) {}
+					return Object.assign({}, DEFAULT_PREFS);
 				}
 
-				if (localStorage.theme === 'system') {
-					document.documentElement.classList.add(prefersDarkTheme ? 'dark' : 'light');
-					metaThemeColorTag.setAttribute('content', prefersDarkTheme ? '#171717' : '#ffffff');
-				} else if (localStorage.theme === 'oled-dark') {
-					document.documentElement.style.setProperty('--color-gray-800', '#101010');
-					document.documentElement.style.setProperty('--color-gray-850', '#050505');
-					document.documentElement.style.setProperty('--color-gray-900', '#000000');
-					document.documentElement.style.setProperty('--color-gray-950', '#000000');
-					document.documentElement.classList.add('dark');
-					metaThemeColorTag.setAttribute('content', '#000000');
-				} else if (localStorage.theme === 'light') {
-					document.documentElement.classList.add('light');
-					metaThemeColorTag.setAttribute('content', '#ffffff');
-				} else if (localStorage.theme === 'her') {
-					document.documentElement.classList.add('her');
-					metaThemeColorTag.setAttribute('content', '#983724');
-				} else {
-					document.documentElement.classList.add('dark');
-					metaThemeColorTag.setAttribute('content', '#171717');
+				function resolveTheme(prefs) {
+					let theme = prefs.theme || DEFAULT_PREFS.theme;
+					const rawScheme = prefs.color_scheme || DEFAULT_PREFS.color_scheme;
+					const scheme = rawScheme === 'system' ? (systemPrefersLight() ? 'light' : 'dark') : rawScheme;
+					if (theme === 'system') theme = systemPrefersLight() ? 'light' : 'midnight';
+					if (scheme === 'light' && LIGHT_VARIANTS[theme]) theme = LIGHT_VARIANTS[theme];
+					return theme;
 				}
 
-				const preloadHref = document.documentElement.classList.contains('dark')
-					? '/static/splash-dark.png'
-					: '/static/splash.png';
+				function applyPrefs(prefs, persist) {
+					const root = document.documentElement;
+					const theme = resolveTheme(prefs);
+					const isLight = LIGHT_THEMES.has(theme);
+					root.setAttribute('data-theme', theme);
+					root.setAttribute('data-density', prefs.density || DEFAULT_PREFS.density);
+					root.lang = prefs.locale || DEFAULT_PREFS.locale;
+					if (prefs.reduced_motion) root.setAttribute('data-motion', 'reduced');
+					else root.removeAttribute('data-motion');
+					root.classList.toggle('light-mode', isLight);
+					root.classList.toggle('light', isLight);
+					root.classList.toggle('dark', !isLight);
+					root.classList.remove('her');
+					try { localStorage.setItem('theme', isLight ? 'light' : 'dark'); } catch (_) {}
+					if (persist) {
+						try { localStorage.setItem(PREFS_KEY, JSON.stringify(Object.assign({}, DEFAULT_PREFS, prefs))); } catch (_) {}
+					}
+					if (metaThemeColorTag) metaThemeColorTag.setAttribute('content', isLight ? '#ffffff' : '#171717');
+					return { theme, isLight };
+				}
+
+				let prefs = loadPrefs();
+				const resolved = applyPrefs(prefs, false);
+				window.__setTheme = (id) => { prefs = Object.assign({}, prefs, { theme: id || 'midnight' }); applyPrefs(prefs, true); };
+				window.__setColorScheme = (scheme) => { prefs = Object.assign({}, prefs, { color_scheme: scheme || 'system' }); applyPrefs(prefs, true); };
+				window.__setLocale = (locale) => { prefs = Object.assign({}, prefs, { locale: locale || 'vi' }); applyPrefs(prefs, true); };
+
+				const preloadHref = resolved.isLight ? '/static/splash.png' : '/static/splash-dark.png';
 				const preload = document.createElement('link');
 				preload.rel = 'preload';
 				preload.as = 'image';
@@ -81,20 +116,16 @@
 				preload.setAttribute('fetchpriority', 'high');
 				document.head.appendChild(preload);
 
-				window.matchMedia('(prefers-color-scheme: dark)').addListener((e) => {
-					if (localStorage.theme === 'system') {
-						if (e.matches) {
-							document.documentElement.classList.add('dark');
-							document.documentElement.classList.remove('light');
-							metaThemeColorTag.setAttribute('content', '#171717');
-						} else {
-							document.documentElement.classList.add('light');
-							document.documentElement.classList.remove('dark');
-							metaThemeColorTag.setAttribute('content', '#ffffff');
-						}
-					}
-				});
-				const isDarkMode = document.documentElement.classList.contains('dark');
+				if (window.matchMedia) {
+					const media = window.matchMedia('(prefers-color-scheme: dark)');
+					const onSystemChange = () => {
+						if (prefs.theme === 'system' || prefs.color_scheme === 'system') applyPrefs(prefs, false);
+					};
+					if (media.addEventListener) media.addEventListener('change', onSystemChange);
+					else if (media.addListener) media.addListener(onSystemChange);
+				}
+
+				const isDarkMode = !resolved.isLight;
 
 				const logo = document.createElement('img');
 				logo.id = 'logo';
