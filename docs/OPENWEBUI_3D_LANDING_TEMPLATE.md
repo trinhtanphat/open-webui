@@ -4,7 +4,7 @@
 
 Template nay dung de tao landing GitHub Pages kieu cinematic cho Open WebUI: hero thien nhien co chieu sau, scroll di vao khung canh, sau do moi reveal noi dung san pham va UI workspace.
 
-Huong chon trong landing hien tai la CSS 3D parallax + requestAnimationFrame scroll engine. Day la huong thuc dung nhat cho GitHub Pages: dep, nhe hon Three.js, de deploy tinh, va van tao duoc cam giac camera-depth.
+Huong chon trong landing hien tai la scroll-driven canvas world + CSS 3D parallax + requestAnimationFrame scroll engine. Canvas dong vai tro nhu image sequence nhe: scroll dieu khien frame/camera, con HTML/UI la overlay that nam tren scene.
 
 ## Cau truc file
 
@@ -13,15 +13,16 @@ Huong chon trong landing hien tai la CSS 3D parallax + requestAnimationFrame scr
 - `docs/assets/favicon.ico`: favicon dang PNG data nhung dung duoc qua link icon.
 - External visual assets: Unsplash images + Pexels MP4.
 - External icon library: Lucide UMD CDN.
+- Procedural canvas world: khong can export 100-300 frame anh nhu Adaline, nhung van cho cam giac timeline/camera lien tuc.
 
 ## Concept scroll
 
 Landing duoc chia thanh cac phase:
 
 1. Intro nature view: viewport dau tien gan nhu khong co chu, chi co logo va canh nui/rung/may.
-2. Depth entry: khi scroll, camera di sau vao landscape, cac layer di chuyen khac toc do.
+2. Depth entry: khi scroll, camera zoom-out tu gan sang xa, canvas world va CSS layers cung di chuyen.
 3. Product reveal: title, CTA, proof row va command deck bat dau xuat hien sau khoang 1 viewport.
-4. Product storytelling: moi section co depth-shape rieng de tao cam giac full-page parallax.
+4. Product storytelling: canvas world chay xuyen suot, moi section co depth-shape rieng lam checkpoint.
 5. Landing close: CTA va footer giam motion de user ha canh.
 
 ## CSS core
@@ -32,6 +33,13 @@ Landing duoc chia thanh cac phase:
   inset: -12vh -8vw;
   perspective: 1600px;
   transform-style: preserve-3d;
+}
+
+.world-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .depth-stage {
@@ -65,11 +73,40 @@ window.addEventListener('scroll', requestUpdate, { passive: true });
 window.addEventListener('resize', requestUpdate);
 ```
 
+## Canvas world timeline
+
+Canvas la lop full-page lien tuc giong Adaline-style nhung nhe hon image sequence. Thay vi load 280 frames, landing ve procedural scene moi frame:
+
+- sky gradient
+- mountain ridges
+- depth tunnel lines
+- fog ellipses
+- floating UI panels
+- vignette
+
+Core mapping:
+
+```js
+const pageProgress = scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+const heroProgress = clamp((scrollY - journey.offsetTop) / (journey.offsetHeight - window.innerHeight));
+const frame = Math.round(pageProgress * 220);
+renderWorld(scrollY, pageProgress, heroProgress);
+```
+
+Reverse depth / zoom-out:
+
+```js
+const zoomOut = easeOutCubic(heroProgress / 0.52);
+const cameraScale = 1.72 - zoomOut * 0.64;
+```
+
+Top page bat dau rat gan camera. Khi scroll, scale giam dan, tao cam giac scene nho lai va lui ra xa.
+
 ## Hero depth mapping
 
 Hero nen dung nhieu layer:
 
-- Poster/background mountain: di cham, scale lon dan.
+- Poster/background mountain: bat dau scale lon, scroll xuong thi scale giam dan de tao zoom-out.
 - Video fog/mountain: opacity vua phai de khong de mat anh nen.
 - Mountain ridge: translateY cham hon foreground.
 - Valley/forest: translateY nhanh hon de tao depth.

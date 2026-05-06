@@ -106,22 +106,34 @@
       background: #06110d;
     }
 
+    .world-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.94;
+      filter: saturate(1.08) contrast(1.04);
+      will-change: transform, opacity;
+    }
+
     .global-layer {
       position: absolute;
       inset: 0;
+      z-index: 1;
       background-size: cover;
       background-position: center;
       will-change: transform, opacity, filter;
     }
 
     .global-layer.sky {
-      opacity: 0.34;
+      opacity: 0.18;
       background-image: linear-gradient(180deg, rgba(6, 17, 13, 0.06), rgba(6, 17, 13, 0.84)), url("https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=2400&q=84");
       filter: saturate(1.04) contrast(1.02);
     }
 
     .global-layer.fog {
-      opacity: 0.42;
+      opacity: 0.32;
       background:
         radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.22), transparent 26%),
         radial-gradient(circle at 72% 58%, rgba(123, 216, 70, 0.13), transparent 30%),
@@ -130,7 +142,7 @@
     }
 
     .global-layer.grid {
-      opacity: 0.16;
+      opacity: 0.12;
       background-image:
         linear-gradient(90deg, rgba(123, 216, 70, 0.16) 1px, transparent 1px),
         linear-gradient(180deg, rgba(84, 199, 255, 0.13) 1px, transparent 1px);
@@ -1412,6 +1424,7 @@
   <div class="progress" id="progressBar" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
   <div class="global-scene" aria-hidden="true">
+    <canvas class="world-canvas" id="worldCanvas"></canvas>
     <div class="global-layer sky" data-global-depth="0.08"></div>
     <div class="global-layer fog" data-global-depth="0.18"></div>
     <div class="global-layer grid" data-global-depth="0.34"></div>
@@ -1661,6 +1674,8 @@
     const progressBar = document.querySelector('#progressBar');
     const nav = document.querySelector('#siteNav');
     const journey = document.querySelector('#journey');
+    const worldCanvas = document.querySelector('#worldCanvas');
+    const worldCtx = worldCanvas.getContext('2d', { alpha: true });
     const cinematicIntro = document.querySelector('#cinematicIntro');
     const heroCopy = document.querySelector('#heroCopy');
     const aiDeck = document.querySelector('#aiDeck');
@@ -1679,7 +1694,177 @@
     };
 
     const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+    const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
     let ticking = false;
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let canvasDpr = 1;
+
+    function resizeWorldCanvas() {
+      canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const sceneRect = worldCanvas.parentElement.getBoundingClientRect();
+      canvasWidth = Math.ceil(Math.max(sceneRect.width, document.documentElement.clientWidth, window.innerWidth, 320));
+      canvasHeight = Math.ceil(Math.max(sceneRect.height, document.documentElement.clientHeight, window.innerHeight, 640));
+      worldCanvas.width = Math.ceil(canvasWidth * canvasDpr);
+      worldCanvas.height = Math.ceil(canvasHeight * canvasDpr);
+      worldCanvas.style.width = '100%';
+      worldCanvas.style.height = '100%';
+      worldCtx.setTransform(canvasDpr, 0, 0, canvasDpr, 0, 0);
+    }
+
+    function drawRidge(points, color, baseY, amplitude, phase, alpha = 1) {
+      worldCtx.save();
+      worldCtx.globalAlpha = alpha;
+      worldCtx.fillStyle = color;
+      worldCtx.beginPath();
+      worldCtx.moveTo(-80, canvasHeight + 80);
+      worldCtx.lineTo(-80, baseY);
+      for (let index = 0; index <= points; index += 1) {
+        const x = (canvasWidth + 160) * (index / points) - 80;
+        const wave = Math.sin(index * 0.86 + phase) * amplitude + Math.sin(index * 1.7 + phase * 0.54) * amplitude * 0.36;
+        const y = baseY + wave;
+        worldCtx.lineTo(x, y);
+      }
+      worldCtx.lineTo(canvasWidth + 80, canvasHeight + 80);
+      worldCtx.closePath();
+      worldCtx.fill();
+      worldCtx.restore();
+    }
+
+    function roundRectPath(x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      worldCtx.beginPath();
+      worldCtx.moveTo(x + r, y);
+      worldCtx.arcTo(x + width, y, x + width, y + height, r);
+      worldCtx.arcTo(x + width, y + height, x, y + height, r);
+      worldCtx.arcTo(x, y + height, x, y, r);
+      worldCtx.arcTo(x, y, x + width, y, r);
+      worldCtx.closePath();
+    }
+
+    function drawPanel(x, y, width, height, label, alpha, accent) {
+      worldCtx.save();
+      worldCtx.globalAlpha = alpha;
+      worldCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+      worldCtx.shadowBlur = 34;
+      roundRectPath(x, y, width, height, 12);
+      worldCtx.fillStyle = 'rgba(248, 252, 249, 0.11)';
+      worldCtx.strokeStyle = 'rgba(248, 252, 249, 0.24)';
+      worldCtx.lineWidth = 1;
+      worldCtx.fill();
+      worldCtx.stroke();
+      worldCtx.shadowBlur = 0;
+
+      worldCtx.fillStyle = accent;
+      roundRectPath(x + 16, y + 16, 48, 8, 4);
+      worldCtx.fill();
+      worldCtx.fillStyle = 'rgba(248, 252, 249, 0.82)';
+      worldCtx.font = '700 13px Inter, system-ui, sans-serif';
+      worldCtx.fillText(label, x + 16, y + 50);
+      worldCtx.strokeStyle = 'rgba(248, 252, 249, 0.15)';
+      for (let row = 0; row < 3; row += 1) {
+        worldCtx.beginPath();
+        worldCtx.moveTo(x + 16, y + 78 + row * 21);
+        worldCtx.lineTo(x + width - 16, y + 78 + row * 21);
+        worldCtx.stroke();
+      }
+      worldCtx.restore();
+    }
+
+    function renderWorld(scrollY, pageProgress, heroProgress) {
+      if (!canvasWidth || !canvasHeight) resizeWorldCanvas();
+      const width = canvasWidth;
+      const height = canvasHeight;
+      const zoomOut = easeOutCubic(heroProgress / 0.52);
+      const frame = Math.round(pageProgress * 220);
+      const cameraScale = 1.72 - zoomOut * 0.64 + Math.sin(pageProgress * Math.PI) * 0.04;
+      const cameraY = -height * 0.08 * zoomOut - pageProgress * height * 0.12;
+      const phase = frame * 0.032 + scrollY * 0.0006;
+      worldCanvas.dataset.frame = String(frame);
+
+      worldCtx.clearRect(0, 0, width, height);
+      const sky = worldCtx.createLinearGradient(0, 0, 0, height);
+      sky.addColorStop(0, '#082018');
+      sky.addColorStop(0.34, '#12382f');
+      sky.addColorStop(0.68, '#0d241d');
+      sky.addColorStop(1, '#06110d');
+      worldCtx.fillStyle = sky;
+      worldCtx.fillRect(0, 0, width, height);
+
+      worldCtx.save();
+      worldCtx.translate(width / 2, height / 2 + cameraY);
+      worldCtx.scale(cameraScale, cameraScale);
+      worldCtx.translate(-width / 2, -height / 2);
+
+      const sunGlow = worldCtx.createRadialGradient(width * 0.66, height * 0.22, 0, width * 0.66, height * 0.22, width * 0.48);
+      sunGlow.addColorStop(0, 'rgba(181, 255, 141, 0.28)');
+      sunGlow.addColorStop(0.42, 'rgba(44, 136, 217, 0.11)');
+      sunGlow.addColorStop(1, 'rgba(6, 17, 13, 0)');
+      worldCtx.fillStyle = sunGlow;
+      worldCtx.fillRect(0, 0, width, height);
+
+      drawRidge(16, 'rgba(180, 215, 205, 0.22)', height * (0.42 + pageProgress * 0.04), height * 0.035, phase * 0.8, 0.9);
+      drawRidge(18, 'rgba(84, 112, 103, 0.34)', height * (0.5 + pageProgress * 0.05), height * 0.052, phase * 1.1, 1);
+      drawRidge(20, 'rgba(26, 62, 47, 0.74)', height * (0.61 + pageProgress * 0.04), height * 0.07, phase * 1.6, 1);
+      drawRidge(22, 'rgba(6, 22, 16, 0.94)', height * (0.74 + pageProgress * 0.025), height * 0.095, phase * 2.1, 1);
+
+      const tunnel = clamp((pageProgress - 0.08) / 0.38);
+      worldCtx.save();
+      worldCtx.globalAlpha = 0.18 * tunnel;
+      worldCtx.strokeStyle = 'rgba(123, 216, 70, 0.55)';
+      worldCtx.lineWidth = 1;
+      const centerX = width * 0.5;
+      const centerY = height * (0.48 - zoomOut * 0.12);
+      for (let index = 0; index < 18; index += 1) {
+        const angle = (Math.PI * 2 * index) / 18 + phase * 0.35;
+        worldCtx.beginPath();
+        worldCtx.moveTo(centerX, centerY);
+        worldCtx.lineTo(centerX + Math.cos(angle) * width, centerY + Math.sin(angle) * height);
+        worldCtx.stroke();
+      }
+      for (let index = 0; index < 6; index += 1) {
+        const radius = (index + 1) * width * 0.095 + pageProgress * width * 0.04;
+        worldCtx.beginPath();
+        worldCtx.ellipse(centerX, centerY, radius, radius * 0.36, 0, 0, Math.PI * 2);
+        worldCtx.stroke();
+      }
+      worldCtx.restore();
+
+      const panelProgress = [0.22, 0.4, 0.58, 0.76];
+      const labels = ['Models', 'Knowledge', 'Agents', 'HA Control'];
+      panelProgress.forEach((anchor, index) => {
+        const visibility = clamp(1 - Math.abs(pageProgress - anchor) / 0.2);
+        const depthScale = 1 + visibility * 0.18 - index * 0.035;
+        const x = width * (0.18 + (index % 2) * 0.52) + Math.sin(pageProgress * 7 + index) * 28;
+        const y = height * (0.22 + index * 0.12) - pageProgress * height * 0.32;
+        worldCtx.save();
+        worldCtx.translate(x, y);
+        worldCtx.rotate((index % 2 === 0 ? -1 : 1) * (0.05 + visibility * 0.035));
+        worldCtx.scale(depthScale, depthScale);
+        drawPanel(-110, -52, 220, 122, labels[index], visibility * 0.82, index % 2 ? 'rgba(84, 199, 255, 0.9)' : 'rgba(123, 216, 70, 0.9)');
+        worldCtx.restore();
+      });
+
+      worldCtx.restore();
+
+      worldCtx.save();
+      worldCtx.globalAlpha = 0.38;
+      worldCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      for (let index = 0; index < 9; index += 1) {
+        const x = ((index * 191 + scrollY * 0.035) % (width + 180)) - 90;
+        const y = height * (0.18 + (index % 4) * 0.16) + Math.sin(phase + index) * 24;
+        worldCtx.beginPath();
+        worldCtx.ellipse(x, y, 120 + index * 8, 22 + (index % 3) * 8, 0, 0, Math.PI * 2);
+        worldCtx.fill();
+      }
+      worldCtx.restore();
+
+      const vignette = worldCtx.createRadialGradient(width * 0.5, height * 0.42, height * 0.1, width * 0.5, height * 0.42, width * 0.74);
+      vignette.addColorStop(0, 'rgba(6, 17, 13, 0)');
+      vignette.addColorStop(1, 'rgba(6, 17, 13, 0.68)');
+      worldCtx.fillStyle = vignette;
+      worldCtx.fillRect(0, 0, width, height);
+    }
 
     function setTheme(theme) {
       const nextTheme = ['dark', 'light', 'system'].includes(theme) ? theme : 'system';
@@ -1691,7 +1876,7 @@
     }
 
     function setScene(progress) {
-      const zoom = progress * progress;
+      const zoomOut = easeOutCubic(progress / 0.52);
       const contentIn = clamp((progress - 0.22) / 0.16);
       const contentOut = clamp((0.84 - progress) / 0.18);
       const contentVisibility = Math.min(contentIn, contentOut);
@@ -1699,19 +1884,19 @@
       const introVisibility = clamp(1 - progress / 0.18);
       const videoVisibility = clamp((progress - 0.08) / 0.18) * clamp((0.92 - progress) / 0.2);
 
-      scenePoster.style.transform = `translate3d(0, ${-135 * progress}px, 0) scale(${1.12 + zoom * 0.34})`;
-      sceneVideo.style.transform = `translate3d(0, ${-150 * progress}px, 0) scale(${1.12 + zoom * 0.36})`;
+      scenePoster.style.transform = `translate3d(0, ${-96 * progress}px, 0) scale(${1.74 - zoomOut * 0.56})`;
+      sceneVideo.style.transform = `translate3d(0, ${-112 * progress}px, 0) scale(${1.68 - zoomOut * 0.5})`;
       sceneVideo.style.opacity = String(0.5 * videoVisibility);
       scenePoster.style.opacity = String(1 - videoVisibility * 0.12);
-      sceneLayers.mountains.style.transform = `translate3d(0, ${-220 * progress}px, -120px) scale(${1.05 + progress * 0.36})`;
+      sceneLayers.mountains.style.transform = `translate3d(0, ${-190 * progress}px, -120px) scale(${1.48 - zoomOut * 0.28})`;
       sceneLayers.mountains.style.opacity = String(0.78 * videoVisibility);
-      sceneLayers.valley.style.transform = `translate3d(0, ${-360 * progress}px, 70px) scale(${1.04 + progress * 0.62})`;
+      sceneLayers.valley.style.transform = `translate3d(0, ${-310 * progress}px, 70px) scale(${1.74 - zoomOut * 0.46})`;
       sceneLayers.valley.style.opacity = String(0.68 * videoVisibility);
-      sceneLayers.grid.style.transform = `translate3d(0, ${-95 * progress}px, 180px) scale(${1 + progress * 0.42}) rotateX(${progress * 14}deg)`;
+      sceneLayers.grid.style.transform = `translate3d(0, ${-95 * progress}px, 180px) scale(${1.42 - zoomOut * 0.22}) rotateX(${progress * 14}deg)`;
       sceneLayers.grid.style.opacity = String(0.1 + 0.24 * videoVisibility);
-      sceneLayers.clouds.style.transform = `translate3d(${36 * progress}px, ${-190 * progress}px, 240px) scale(${1.04 + progress * 0.5})`;
+      sceneLayers.clouds.style.transform = `translate3d(${36 * progress}px, ${-190 * progress}px, 240px) scale(${1.58 - zoomOut * 0.38})`;
       sceneLayers.clouds.style.opacity = String(clamp(0.58 - progress * 0.26));
-      sceneLayers.forest.style.transform = `translate3d(0, ${-460 * progress}px, 310px) scale(${1.1 + progress * 0.72})`;
+      sceneLayers.forest.style.transform = `translate3d(0, ${-420 * progress}px, 310px) scale(${2.04 - zoomOut * 0.72})`;
       sceneLayers.forest.style.filter = `blur(${progress * 2.5}px)`;
 
       cinematicIntro.style.opacity = String(introVisibility);
@@ -1746,6 +1931,11 @@
         const depth = Number(layer.dataset.globalDepth);
         layer.style.transform = `translate3d(0, ${scrollY * depth * -0.22}px, ${depth * -220}px) scale(${1 + depth * 0.26})`;
       });
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const pageProgress = clamp(scrollY / maxScroll);
+      const journeyLength = journey.offsetHeight - window.innerHeight;
+      const heroProgress = clamp((scrollY - journey.offsetTop) / Math.max(1, journeyLength));
+      renderWorld(scrollY, pageProgress, heroProgress);
     }
 
     function updateSectionDepth() {
@@ -1783,11 +1973,15 @@
     }
 
     window.addEventListener('scroll', requestUpdate, { passive: true });
-    window.addEventListener('resize', requestUpdate);
+    window.addEventListener('resize', () => {
+      resizeWorldCanvas();
+      requestUpdate();
+    });
     themeButtons.forEach((button) => {
       button.addEventListener('click', () => setTheme(button.dataset.themeChoice));
     });
     setTheme(localStorage.getItem('openwebui-landing-theme') || 'dark');
+    resizeWorldCanvas();
     requestUpdate();
 
     const revealObserver = new IntersectionObserver((entries) => {
