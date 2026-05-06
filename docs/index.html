@@ -875,22 +875,31 @@
     .section {
       position: relative;
       padding: 110px 0;
-      background: rgba(247, 251, 248, 0.88);
+      background:
+        linear-gradient(180deg, rgba(247, 251, 248, 0.84), rgba(237, 247, 242, 0.72)),
+        radial-gradient(circle at 18% 12%, rgba(44, 136, 217, 0.12), transparent 34%),
+        radial-gradient(circle at 82% 88%, rgba(66, 165, 20, 0.1), transparent 32%);
       color: var(--ink);
       overflow: hidden;
       perspective: 1300px;
       transform-style: preserve-3d;
+      backdrop-filter: blur(3px);
     }
 
     .section.dark {
-      background: rgba(6, 17, 13, 0.9);
+      background:
+        linear-gradient(180deg, rgba(6, 17, 13, 0.84), rgba(6, 17, 13, 0.72)),
+        radial-gradient(circle at 16% 8%, rgba(123, 216, 70, 0.1), transparent 34%),
+        radial-gradient(circle at 84% 72%, rgba(84, 199, 255, 0.1), transparent 36%);
       color: var(--foreground);
       overflow: hidden;
     }
 
     html[data-theme="light"] .section.dark,
     html[data-theme="system"] .section.dark.theme-adaptive {
-      background: rgba(247, 251, 248, 0.9);
+      background:
+        linear-gradient(180deg, rgba(247, 251, 248, 0.86), rgba(237, 247, 242, 0.76)),
+        radial-gradient(circle at 12% 14%, rgba(44, 136, 217, 0.12), transparent 34%);
       color: var(--ink);
     }
 
@@ -919,7 +928,7 @@
       z-index: 0;
       pointer-events: none;
       transform-style: preserve-3d;
-      opacity: 0.82;
+      opacity: 0.96;
     }
 
     .depth-shape {
@@ -927,9 +936,25 @@
       display: block;
       border: 1px solid rgba(44, 136, 217, 0.18);
       border-radius: var(--radius);
-      background: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.22);
       box-shadow: 0 24px 90px rgba(11, 24, 18, 0.08);
       backdrop-filter: blur(12px);
+      will-change: transform, opacity;
+    }
+
+    .section-head,
+    .capability-grid,
+    .architecture-copy,
+    .stack-orbit,
+    .deploy-grid,
+    .security-panel,
+    .cta-box,
+    .capability-card,
+    .deploy-card,
+    .policy-item,
+    .metric,
+    .orbit-node {
+      transform-style: preserve-3d;
       will-change: transform, opacity;
     }
 
@@ -1682,6 +1707,8 @@
     const depthCards = [...document.querySelectorAll('[data-depth-card]')];
     const globalLayers = [...document.querySelectorAll('[data-global-depth]')];
     const sectionDepthLayers = [...document.querySelectorAll('[data-section-depth]')];
+    const storySurfaces = [...document.querySelectorAll('.section-head, .capability-grid, .architecture-copy, .stack-orbit, .deploy-grid, .security-panel, .cta-box')];
+    const storyCards = [...document.querySelectorAll('.capability-card, .deploy-card, .policy-item, .metric, .orbit-node')];
     const themeButtons = [...document.querySelectorAll('[data-theme-choice]')];
     const sceneVideo = document.querySelector('#sceneVideo');
     const scenePoster = document.querySelector('#scenePoster');
@@ -1830,8 +1857,8 @@
       }
       worldCtx.restore();
 
-      const panelProgress = [0.22, 0.4, 0.58, 0.76];
-      const labels = ['Models', 'Knowledge', 'Agents', 'HA Control'];
+      const panelProgress = [0.22, 0.4, 0.58, 0.76, 0.92];
+      const labels = ['Models', 'Knowledge', 'Agents', 'HA Control', 'Audit'];
       panelProgress.forEach((anchor, index) => {
         const visibility = clamp(1 - Math.abs(pageProgress - anchor) / 0.2);
         const depthScale = 1 + visibility * 0.18 - index * 0.035;
@@ -1950,6 +1977,28 @@
       });
     }
 
+    function updateStoryParallax() {
+      storySurfaces.forEach((surface, index) => {
+        const rect = surface.getBoundingClientRect();
+        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        const active = clamp(1 - Math.abs(centerOffset) / 1.35, 0, 1);
+        const depth = 0.06 + (index % 5) * 0.018;
+        const y = centerOffset * depth * -210;
+        const z = active * depth * 150;
+        surface.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 8}deg)`;
+      });
+
+      storyCards.forEach((card, index) => {
+        const rect = card.getBoundingClientRect();
+        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        const active = clamp(1 - Math.abs(centerOffset) / 1.2, 0, 1);
+        const depth = 0.035 + (index % 6) * 0.012;
+        const y = centerOffset * depth * -180;
+        const rotate = centerOffset * depth * (index % 2 === 0 ? -8 : 8);
+        card.style.transform = `translate3d(0, ${y}px, ${active * depth * 120}px) rotateY(${rotate}deg)`;
+      });
+    }
+
     function update() {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -1957,6 +2006,7 @@
       nav.classList.toggle('is-scrolled', scrollY > 24);
       updateGlobalScene(scrollY);
       updateSectionDepth();
+      updateStoryParallax();
 
       const journeyStart = journey.offsetTop;
       const journeyLength = journey.offsetHeight - window.innerHeight;

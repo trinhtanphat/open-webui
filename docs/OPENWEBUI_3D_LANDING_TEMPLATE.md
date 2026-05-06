@@ -1,31 +1,31 @@
 # Open WebUI 3D Landing Template
 
-## Muc tieu
+## Goal
 
-Template nay dung de tao landing GitHub Pages kieu cinematic cho Open WebUI: hero thien nhien co chieu sau, scroll di vao khung canh, sau do moi reveal noi dung san pham va UI workspace.
+This template describes the cinematic GitHub Pages landing page for Open WebUI: an immersive nature-led hero, a scroll-driven camera journey, then a product-focused workspace story with model routing, RAG, agents, governance, deployment, and HA messaging.
 
-Huong chon trong landing hien tai la scroll-driven canvas world + CSS 3D parallax + requestAnimationFrame scroll engine. Canvas dong vai tro nhu image sequence nhe: scroll dieu khien frame/camera, con HTML/UI la overlay that nam tren scene.
+The current implementation uses a scroll-driven procedural canvas world, CSS 3D parallax, and a `requestAnimationFrame` scroll engine. The canvas works like a lightweight image sequence: scroll maps to a frame/camera timeline, while the real HTML interface stays as an accessible overlay above the scene.
 
-## Cau truc file
+## File Structure
 
-- `docs/index.html`: standalone HTML/CSS/JS, khong can build pipeline.
-- `docs/assets/logo.png`: logo wordmark.
-- `docs/assets/favicon.ico`: favicon dang PNG data nhung dung duoc qua link icon.
-- External visual assets: Unsplash images + Pexels MP4.
+- `docs/index.html`: standalone HTML/CSS/JS with no build pipeline required for GitHub Pages.
+- `docs/assets/logo.png`: local wordmark asset.
+- `docs/assets/favicon.ico`: local favicon asset; the file contains PNG image data and is linked as an icon.
+- External visual assets: Unsplash still imagery and a Pexels MP4 for fog/mountain atmosphere.
 - External icon library: Lucide UMD CDN.
-- Procedural canvas world: khong can export 100-300 frame anh nhu Adaline, nhung van cho cam giac timeline/camera lien tuc.
+- Procedural canvas world: avoids shipping a large 100-300 frame image sequence while preserving a continuous timeline/camera feel.
 
-## Concept scroll
+## Scroll Concept
 
-Landing duoc chia thanh cac phase:
+The landing is split into five phases:
 
-1. Intro nature view: viewport dau tien gan nhu khong co chu, chi co logo va canh nui/rung/may.
-2. Depth entry: khi scroll, camera zoom-out tu gan sang xa, canvas world va CSS layers cung di chuyen.
-3. Product reveal: title, CTA, proof row va command deck bat dau xuat hien sau khoang 1 viewport.
-4. Product storytelling: canvas world chay xuyen suot, moi section co depth-shape rieng lam checkpoint.
-5. Landing close: CTA va footer giam motion de user ha canh.
+1. Intro nature view: the first viewport is almost text-free, showing brand, mountains, forest, fog, and motion cues.
+2. Depth entry: scroll moves the camera from close-up to farther away; the canvas world and CSS layers move together.
+3. Product reveal: headline, CTA, proof row, and command deck appear after the visual introduction.
+4. Product storytelling: the fixed canvas keeps moving across the whole page while each section adds its own parallax depth and product checkpoint.
+5. Landing close: the CTA and footer reduce motion so the user can land cleanly.
 
-## CSS core
+## CSS Core
 
 ```css
 .global-scene {
@@ -51,12 +51,14 @@ Landing duoc chia thanh cac phase:
 }
 
 .scene-layer,
-.depth-shape {
+.depth-shape,
+[data-story-surface],
+[data-story-card] {
   will-change: transform, opacity, filter;
 }
 ```
 
-## JavaScript core
+## JavaScript Core
 
 ```js
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -73,15 +75,15 @@ window.addEventListener('scroll', requestUpdate, { passive: true });
 window.addEventListener('resize', requestUpdate);
 ```
 
-## Canvas world timeline
+## Canvas World Timeline
 
-Canvas la lop full-page lien tuc giong Adaline-style nhung nhe hon image sequence. Thay vi load 280 frames, landing ve procedural scene moi frame:
+The canvas is a continuous full-page world inspired by scroll-driven image-sequence sites. Instead of loading hundreds of exported frames, the page draws a new procedural frame on each scroll update:
 
 - sky gradient
 - mountain ridges
 - depth tunnel lines
 - fog ellipses
-- floating UI panels
+- floating product UI panels
 - vignette
 
 Core mapping:
@@ -100,20 +102,20 @@ const zoomOut = easeOutCubic(heroProgress / 0.52);
 const cameraScale = 1.72 - zoomOut * 0.64;
 ```
 
-Top page bat dau rat gan camera. Khi scroll, scale giam dan, tao cam giac scene nho lai va lui ra xa.
+At the top, the camera starts close to the world. As the user scrolls, the scale decreases, making the scene feel smaller, farther away, and more map-like.
 
-## Hero depth mapping
+## Hero Depth Mapping
 
-Hero nen dung nhieu layer:
+The hero uses multiple layers:
 
-- Poster/background mountain: bat dau scale lon, scroll xuong thi scale giam dan de tao zoom-out.
-- Video fog/mountain: opacity vua phai de khong de mat anh nen.
-- Mountain ridge: translateY cham hon foreground.
-- Valley/forest: translateY nhanh hon de tao depth.
-- Cloud/fog overlay: blur + mix-blend-mode screen.
-- UI deck/text: reveal tre sau intro, translateZ tu sau ra truoc.
+- Poster/background mountain: starts large, then scales down while scrolling to create the zoom-out.
+- Video fog/mountain: moderate opacity so the still image remains readable.
+- Mountain ridge: slower vertical motion than the foreground.
+- Valley/forest: faster vertical motion for stronger depth.
+- Cloud/fog overlay: blur and screen blend for atmosphere.
+- UI deck/text: delayed reveal after the intro, moving from rear depth into the interface plane.
 
-Cong thuc dang dung:
+Current visibility mapping:
 
 ```js
 const contentIn = clamp((progress - 0.22) / 0.16);
@@ -121,11 +123,11 @@ const contentOut = clamp((0.84 - progress) / 0.18);
 const contentVisibility = Math.min(contentIn, contentOut);
 ```
 
-Nghia la chu khong hien ngay o top page. User scroll qua nature view truoc, sau do content moi vao.
+The headline is intentionally hidden at the very top. The user first moves through the visual scene, then the product message appears.
 
-## Full-page parallax sections
+## Full-Page Parallax Sections
 
-Moi section co block:
+Every product section includes depth geometry:
 
 ```html
 <div class="section-depth" aria-hidden="true">
@@ -135,41 +137,47 @@ Moi section co block:
 </div>
 ```
 
-Scroll engine tinh vi tri section theo viewport center:
+The lower page also uses surface/card transforms so the bottom sections do not feel flat:
 
 ```js
-const rect = layer.closest('section').getBoundingClientRect();
 const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
 const y = centerOffset * depth * -220;
 const z = depth * 280;
 layer.style.transform = `translate3d(0, ${y}px, ${z}px)`;
 ```
 
-## Theme mode
+For product cards and section surfaces, keep movement subtle. The goal is a full-page camera feel, not a distracting floating dashboard.
 
-Landing co 3 mode:
+## Theme Mode
+
+The landing has three modes:
 
 - `dark`: cinematic default.
-- `light`: phu hop enterprise/daytime.
-- `system`: theo OS.
+- `light`: enterprise/daytime presentation.
+- `system`: follows the OS color scheme.
 
-Hero van giu mood toi; cac section duoi dung CSS variables de sang/toi mem hon.
+The hero keeps a darker cinematic mood. Lower sections use CSS variables and translucent bands so the fixed canvas remains visible while text stays readable.
 
-## Nguyen tac UI/UX
+## UI/UX Rules
 
-- Viewport dau tien uu tien visual, khong nhieu text.
-- Text/product message reveal sau khi user da vao scene.
-- Dung parallax cho depth, khong lam moi element bay lung tung.
-- Luon co progress bar va nav de user khong bi lac.
-- Mobile phai tat bot deck phuc tap, giu hero nhe va khong overflow ngang.
-- Video chi la lop nang cap; poster/image fallback phai dep neu video khong load.
+- The first viewport prioritizes visual immersion and avoids heavy text.
+- Product messaging reveals only after the user has entered the scene.
+- Use parallax for depth, not random floating motion.
+- Keep the progress bar and navigation available so users understand page position.
+- On mobile, simplify the command deck and keep horizontal overflow at zero.
+- The video is an enhancement layer; the poster/fallback image must look complete without it.
+- Lower-page cards and panels should have subtle parallax, stable dimensions, and no text overlap.
 
-## Checklist truoc khi push
+## Validation Checklist
 
-- `docs/index.html` chi co mot document HTML.
-- Local assets `docs/assets/logo.png` va `docs/assets/favicon.ico` load OK.
-- Khong con file image/icon co hau to `(1)`.
-- Browser preview khong overflow ngang desktop/mobile.
-- Scroll depth lam thay doi transform cua hero va section layers.
-- Console khong co warning/error.
-- `npm run build` pass neu thay doi lien quan static/frontend.
+- `docs/index.html` contains a single complete HTML document.
+- `docs/assets/logo.png` and `docs/assets/favicon.ico` load locally.
+- No tracked image/icon files use the `(1)` suffix.
+- Top viewport has no visible hero headline copy.
+- Canvas pixel sampling is nonblank at top and changes after scrolling.
+- `#worldCanvas[data-frame]` increases with page scroll.
+- Hero poster scale starts near `1.74` and shrinks during scroll.
+- Lower product sections show visible parallax transforms, not only the hero.
+- Desktop and mobile preview have no horizontal overflow.
+- Browser console has no warnings/errors caused by the landing.
+- `npm run build` passes when frontend/static changes are part of the branch.
