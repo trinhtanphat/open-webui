@@ -127,13 +127,13 @@
     }
 
     .global-layer.sky {
-      opacity: 0.18;
+      opacity: 0.24;
       background-image: linear-gradient(180deg, rgba(6, 17, 13, 0.06), rgba(6, 17, 13, 0.84)), url("https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=2400&q=84");
       filter: saturate(1.04) contrast(1.02);
     }
 
     .global-layer.fog {
-      opacity: 0.32;
+      opacity: 0.44;
       background:
         radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.22), transparent 26%),
         radial-gradient(circle at 72% 58%, rgba(123, 216, 70, 0.13), transparent 30%),
@@ -142,7 +142,7 @@
     }
 
     .global-layer.grid {
-      opacity: 0.12;
+      opacity: 0.22;
       background-image:
         linear-gradient(90deg, rgba(123, 216, 70, 0.16) 1px, transparent 1px),
         linear-gradient(180deg, rgba(84, 199, 255, 0.13) 1px, transparent 1px);
@@ -915,6 +915,31 @@
       mask-image: radial-gradient(circle at 50% 0%, #000 0, transparent 72%);
     }
 
+    .section::after,
+    .cta::after {
+      content: "";
+      position: absolute;
+      inset: -36% -26%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: var(--section-glow, 0.44);
+      background:
+        radial-gradient(circle at 22% 36%, rgba(44, 136, 217, 0.26), transparent 34%),
+        radial-gradient(circle at 76% 58%, rgba(66, 165, 20, 0.24), transparent 36%),
+        linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.08));
+      transform: translate3d(var(--section-sway, 0px), var(--section-shift, 0px), -180px) rotateZ(var(--section-tilt, 0deg)) scale(var(--section-scale, 1.08));
+      transition: opacity 180ms linear;
+      will-change: transform, opacity;
+    }
+
+    .section.dark::after,
+    .cta::after {
+      background:
+        radial-gradient(circle at 22% 36%, rgba(123, 216, 70, 0.28), transparent 34%),
+        radial-gradient(circle at 76% 58%, rgba(84, 199, 255, 0.25), transparent 36%),
+        linear-gradient(180deg, transparent, rgba(6, 17, 13, 0.34));
+    }
+
     .container {
       position: relative;
       z-index: 1;
@@ -956,6 +981,12 @@
     .orbit-node {
       transform-style: preserve-3d;
       will-change: transform, opacity;
+    }
+
+    .section .container,
+    .cta .container {
+      transform-style: preserve-3d;
+      will-change: transform;
     }
 
     .dark .depth-shape {
@@ -1707,6 +1738,7 @@
     const depthCards = [...document.querySelectorAll('[data-depth-card]')];
     const globalLayers = [...document.querySelectorAll('[data-global-depth]')];
     const sectionDepthLayers = [...document.querySelectorAll('[data-section-depth]')];
+    const storySections = [...document.querySelectorAll('.section, .cta')];
     const storySurfaces = [...document.querySelectorAll('.section-head, .capability-grid, .architecture-copy, .stack-orbit, .deploy-grid, .security-panel, .cta-box')];
     const storyCards = [...document.querySelectorAll('.capability-card, .deploy-card, .policy-item, .metric, .orbit-node')];
     const themeButtons = [...document.querySelectorAll('[data-theme-choice]')];
@@ -1968,34 +2000,57 @@
     function updateSectionDepth() {
       sectionDepthLayers.forEach((layer) => {
         const depth = Number(layer.dataset.sectionDepth);
-        const rect = layer.closest('section').getBoundingClientRect();
+        const section = layer.closest('section');
+        const rect = section.getBoundingClientRect();
         const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
         const y = centerOffset * depth * -220;
         const z = depth * 280;
         layer.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 11}deg) rotateY(${centerOffset * depth * -13}deg)`;
         layer.style.opacity = String(clamp(0.92 - Math.abs(centerOffset) * 0.52, 0.18, 0.92));
+
+        section.style.setProperty('--section-shift', `${centerOffset * -190}px`);
+        section.style.setProperty('--section-sway', `${Math.sin(centerOffset * Math.PI) * 22}px`);
+        section.style.setProperty('--section-tilt', `${centerOffset * -2.8}deg`);
+        section.style.setProperty('--section-scale', `${1.06 + clamp(0.24 - Math.abs(centerOffset), 0, 0.24) * 1.05}`);
+        section.style.setProperty('--section-glow', `${clamp(0.66 - Math.abs(centerOffset) * 0.42, 0.24, 0.66)}`);
       });
     }
 
-    function updateStoryParallax() {
+    function updateStoryParallax(scrollY) {
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const pageProgress = clamp(scrollY / maxScroll);
+
+      storySections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        const active = clamp(1 - Math.abs(centerOffset) / 1.25, 0, 1);
+        const depth = 0.11 + (index % 4) * 0.032;
+        const sway = Math.sin(pageProgress * Math.PI * 2 + index * 0.8) * 34;
+        section.style.transform = `translate3d(0, ${centerOffset * depth * -360}px, ${active * depth * 320}px) rotateX(${centerOffset * depth * 13}deg)`;
+        section.style.setProperty('--section-shift', `${centerOffset * -250 + sway}px`);
+        section.style.setProperty('--section-sway', `${sway}px`);
+        section.style.setProperty('--section-tilt', `${centerOffset * depth * -20}deg`);
+      });
+
       storySurfaces.forEach((surface, index) => {
         const rect = surface.getBoundingClientRect();
         const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
-        const active = clamp(1 - Math.abs(centerOffset) / 1.35, 0, 1);
-        const depth = 0.06 + (index % 5) * 0.018;
-        const y = centerOffset * depth * -210;
-        const z = active * depth * 150;
-        surface.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 8}deg)`;
+        const active = clamp(1 - Math.abs(centerOffset) / 1.18, 0, 1);
+        const depth = 0.12 + (index % 5) * 0.028;
+        const y = centerOffset * depth * -440;
+        const z = active * depth * 360;
+        surface.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 13}deg) rotateY(${centerOffset * depth * -9}deg)`;
       });
 
       storyCards.forEach((card, index) => {
         const rect = card.getBoundingClientRect();
         const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
-        const active = clamp(1 - Math.abs(centerOffset) / 1.2, 0, 1);
-        const depth = 0.035 + (index % 6) * 0.012;
-        const y = centerOffset * depth * -180;
-        const rotate = centerOffset * depth * (index % 2 === 0 ? -8 : 8);
-        card.style.transform = `translate3d(0, ${y}px, ${active * depth * 120}px) rotateY(${rotate}deg)`;
+        const active = clamp(1 - Math.abs(centerOffset) / 1.05, 0, 1);
+        const depth = 0.09 + (index % 6) * 0.022;
+        const y = centerOffset * depth * -340;
+        const rotateY = centerOffset * depth * (index % 2 === 0 ? -18 : 18);
+        const rotateX = centerOffset * depth * (index % 3 === 0 ? 12 : -12);
+        card.style.transform = `translate3d(0, ${y}px, ${active * depth * 320}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
       });
     }
 
@@ -2006,7 +2061,7 @@
       nav.classList.toggle('is-scrolled', scrollY > 24);
       updateGlobalScene(scrollY);
       updateSectionDepth();
-      updateStoryParallax();
+      updateStoryParallax(scrollY);
 
       const journeyStart = journey.offsetTop;
       const journeyLength = journey.offsetHeight - window.innerHeight;
