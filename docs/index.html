@@ -150,6 +150,40 @@
       mask-image: radial-gradient(circle at 50% 28%, #000 0, transparent 70%);
     }
 
+    .freeze-prompt {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 80;
+      width: min(430px, calc(100vw - 36px));
+      border: 1px solid rgba(84, 199, 255, 0.26);
+      border-radius: 8px;
+      background: rgba(6, 17, 13, 0.78);
+      color: var(--foreground);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(18px);
+      font-family: var(--font-ui);
+    }
+
+    .freeze-prompt details { padding: 12px 14px; }
+
+    .freeze-prompt summary {
+      cursor: pointer;
+      list-style: none;
+      color: var(--blue-soft);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .freeze-prompt summary::-webkit-details-marker { display: none; }
+
+    .freeze-prompt p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     .page-shell {
       position: relative;
       z-index: 2;
@@ -1486,6 +1520,13 @@
     <div class="global-layer grid" data-global-depth="0.34"></div>
   </div>
 
+  <aside class="freeze-prompt" id="freezePrompt">
+    <details>
+      <summary>Pixverse Freeze Scene</summary>
+      <p>A chaotic urban scene freezes instantly mid-motion, people, debris, and particles suspended in air, opening on a slow dolly through frozen elements, camera weaving between floating glass shards and halted explosions, then a glowing pulse begins forming at the center, time slowly cracking like glass, camera pushing closer as fractures spread across reality, ending with a sudden release where everything resumes at once in an explosive burst of motion and energy.</p>
+    </details>
+  </aside>
+
   <header class="site-nav cinematic-nav" id="siteNav">
     <a class="brand" href="#top" aria-label="Open WebUI home">
       <img src="assets/logo.png" alt="" width="128" height="30" />
@@ -1739,8 +1780,8 @@
     const globalLayers = [...document.querySelectorAll('[data-global-depth]')];
     const sectionDepthLayers = [...document.querySelectorAll('[data-section-depth]')];
     const storySections = [...document.querySelectorAll('.section, .cta')];
-    const storySurfaces = [...document.querySelectorAll('.section-head, .capability-grid, .architecture-copy, .stack-orbit, .deploy-grid, .security-panel, .cta-box')];
-    const storyCards = [...document.querySelectorAll('.capability-card, .deploy-card, .policy-item, .metric, .orbit-node')];
+    const storySurfaces = [...document.querySelectorAll('.section-head, .capability-grid, .architecture-copy, .stack-orbit, .deploy-grid, .security-panel, .cta-box')].slice(0, 18);
+    const storyCards = [...document.querySelectorAll('.capability-card, .deploy-card, .policy-item, .metric, .orbit-node')].slice(0, 28);
     const themeButtons = [...document.querySelectorAll('[data-theme-choice]')];
     const sceneVideo = document.querySelector('#sceneVideo');
     const scenePoster = document.querySelector('#scenePoster');
@@ -1990,19 +2031,22 @@
         const depth = Number(layer.dataset.globalDepth);
         layer.style.transform = `translate3d(0, ${scrollY * depth * -0.22}px, ${depth * -220}px) scale(${1 + depth * 0.26})`;
       });
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 800);
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - viewportHeight);
       const pageProgress = clamp(scrollY / maxScroll);
-      const journeyLength = journey.offsetHeight - window.innerHeight;
+      const journeyLength = journey.offsetHeight - viewportHeight;
       const heroProgress = clamp((scrollY - journey.offsetTop) / Math.max(1, journeyLength));
       renderWorld(scrollY, pageProgress, heroProgress);
     }
 
     function updateSectionDepth() {
+      const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 800);
       sectionDepthLayers.forEach((layer) => {
         const depth = Number(layer.dataset.sectionDepth);
         const section = layer.closest('section');
         const rect = section.getBoundingClientRect();
-        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        if (rect.bottom < -180 || rect.top > viewportHeight + 180) return;
+        const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
         const y = centerOffset * depth * -220;
         const z = depth * 280;
         layer.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${centerOffset * depth * 11}deg) rotateY(${centerOffset * depth * -13}deg)`;
@@ -2017,12 +2061,14 @@
     }
 
     function updateStoryParallax(scrollY) {
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 800);
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - viewportHeight);
       const pageProgress = clamp(scrollY / maxScroll);
 
       storySections.forEach((section, index) => {
         const rect = section.getBoundingClientRect();
-        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        if (rect.bottom < -220 || rect.top > viewportHeight + 220) return;
+        const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
         const active = clamp(1 - Math.abs(centerOffset) / 1.25, 0, 1);
         const depth = 0.11 + (index % 4) * 0.032;
         const sway = Math.sin(pageProgress * Math.PI * 2 + index * 0.8) * 34;
@@ -2034,7 +2080,8 @@
 
       storySurfaces.forEach((surface, index) => {
         const rect = surface.getBoundingClientRect();
-        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        if (rect.bottom < -180 || rect.top > viewportHeight + 180) return;
+        const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
         const active = clamp(1 - Math.abs(centerOffset) / 1.18, 0, 1);
         const depth = 0.12 + (index % 5) * 0.028;
         const y = centerOffset * depth * -440;
@@ -2044,7 +2091,8 @@
 
       storyCards.forEach((card, index) => {
         const rect = card.getBoundingClientRect();
-        const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        if (rect.bottom < -160 || rect.top > viewportHeight + 160) return;
+        const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
         const active = clamp(1 - Math.abs(centerOffset) / 1.05, 0, 1);
         const depth = 0.09 + (index % 6) * 0.022;
         const y = centerOffset * depth * -340;
@@ -2056,7 +2104,8 @@
 
     function update() {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 800);
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - viewportHeight);
       progressBar.style.width = `${(scrollY / maxScroll) * 100}%`;
       nav.classList.toggle('is-scrolled', scrollY > 24);
       updateGlobalScene(scrollY);
@@ -2064,7 +2113,7 @@
       updateStoryParallax(scrollY);
 
       const journeyStart = journey.offsetTop;
-      const journeyLength = journey.offsetHeight - window.innerHeight;
+      const journeyLength = journey.offsetHeight - viewportHeight;
       const progress = clamp((scrollY - journeyStart) / Math.max(1, journeyLength));
       setScene(progress);
       ticking = false;
