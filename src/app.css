@@ -718,13 +718,13 @@ input[type='number'] {
 }
 
 body {
-	background: #fff;
-	color: #000;
+	background: var(--bg, #fff);
+	color: var(--text, #000);
 }
 
 .dark body {
-	background: #171717;
-	color: #eee;
+	background: var(--bg, #171717);
+	color: var(--text, #eee);
 }
 
 /* Position the handle relative to each LI */

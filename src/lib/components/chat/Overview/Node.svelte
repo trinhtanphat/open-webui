@@ -14,7 +14,11 @@
 </script>
 
 <div
-	class="px-4 py-3 shadow-md rounded-xl dark:bg-black bg-white border border-gray-100 dark:border-gray-900 w-60 h-20 group"
+	class="overview-chat-node group h-20 w-60 rounded-xl border px-4 py-3 shadow-md transition-colors {data?.isActive
+		? 'border-blue-500 ring-2 ring-blue-500/20 dark:border-blue-400'
+		: data?.isOnActiveBranch
+			? 'border-blue-300 dark:border-blue-700'
+			: 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-gray-900"
 >
 	<Tooltip
 		content={data?.message?.error ? data.message.error.content : data.message.content}
@@ -83,6 +87,18 @@
 			</div>
 		{/if}
 	</Tooltip>
-	<Handle type="target" position={Position.Top} class="w-2 rounded-full dark:bg-gray-900" />
-	<Handle type="source" position={Position.Bottom} class="w-2 rounded-full dark:bg-gray-900" />
+	<Handle type="target" position={Position.Top} class="!size-2 !border-0 !bg-gray-300 dark:!bg-gray-700" />
+	<Handle type="source" position={Position.Bottom} class="!size-2 !border-0 !bg-gray-300 dark:!bg-gray-700" />
 </div>
+
+<style>
+	:global(.overview-chat-node) {
+		background: var(--flow-node-bg, var(--card-bg, #ffffff));
+		border-color: var(--flow-node-border, var(--border, rgba(148, 163, 184, 0.24)));
+		color: var(--text, #0f172a);
+	}
+
+	:global(.svelte-flow__node-custom.selected .overview-chat-node) {
+		box-shadow: 0 0 0 2px var(--primary-glow, rgba(59, 130, 246, 0.32));
+	}
+</style>

@@ -101,7 +101,9 @@
 				data: {
 					user: $user,
 					message: history.messages[id],
-					model: $models.find((model) => model.id === history.messages[id].model)
+					model: $models.find((model) => model.id === history.messages[id].model),
+					isActive: history.currentId === id,
+					isOnActiveBranch: history.currentId === id || recurseCheckChild(id, history.currentId)
 				},
 				position: { x, y }
 			});
@@ -136,6 +138,12 @@
 	const setLayoutDirection = (direction) => {
 		layoutDirection = direction;
 		drawFlow(layoutDirection);
+	};
+
+	const resetLayout = async () => {
+		selectedMessageId = null;
+		await drawFlow(layoutDirection);
+		await focusNode();
 	};
 
 	onMount(() => {
@@ -178,6 +186,7 @@
 			{nodeTypes}
 			{edges}
 			{setLayoutDirection}
+			{resetLayout}
 			on:nodeclick={(e) => {
 				onNodeClick(e.detail);
 				selectedMessageId = e.detail.node.data.message.id;
