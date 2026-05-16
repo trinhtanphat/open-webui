@@ -30,6 +30,14 @@ html[data-theme] {
 	--shadow-card: 0 18px 44px rgba(0, 0, 0, 0.24);
 	--code-bg: #0f172a;
 	--text-dim: #cbd5e1;
+	--flow-canvas-bg: #0b1220;
+	--flow-node-bg: var(--card-bg);
+	--flow-node-border: var(--border);
+	--flow-control-bg: var(--bg-elev);
+	--flow-area-bg: rgba(15, 23, 42, 0.26);
+	--flow-area-fill: rgba(148, 163, 184, 0.08);
+	--flow-area-border: rgba(148, 163, 184, 0.22);
+	--flow-grid-color: rgba(148, 163, 184, 0.22);
 	color-scheme: dark;
 }
 
@@ -72,6 +80,14 @@ html[data-theme='anthropic-light'] {
 	--shadow-card: 0 14px 36px rgba(15, 23, 42, 0.09);
 	--code-bg: #eef2f7;
 	--text-dim: #374151;
+	--flow-canvas-bg: #f8fafc;
+	--flow-node-bg: var(--card-bg);
+	--flow-node-border: var(--border);
+	--flow-control-bg: var(--bg-elev);
+	--flow-area-bg: rgba(226, 232, 240, 0.42);
+	--flow-area-fill: rgba(37, 99, 235, 0.045);
+	--flow-area-border: rgba(100, 116, 139, 0.22);
+	--flow-grid-color: rgba(100, 116, 139, 0.2);
 	color-scheme: light;
 }
 
@@ -493,15 +509,24 @@ html[data-theme] .shadow-xl {
 html[data-theme] .svelte-flow,
 html[data-theme] .svelte-flow__pane,
 html[data-theme] .svelte-flow__viewport {
-	background: var(--bg) !important;
+	background: var(--flow-canvas-bg) !important;
+}
+
+html[data-theme] .svelte-flow__background pattern circle,
+html[data-theme] .svelte-flow__background pattern path {
+	fill: var(--flow-grid-color) !important;
+	stroke: var(--flow-grid-color) !important;
 }
 
 html[data-theme] .svelte-flow__controls {
+	background: var(--flow-control-bg) !important;
+	border: 1px solid var(--border) !important;
 	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24) !important;
+	overflow: hidden;
 }
 
 html[data-theme] .svelte-flow__controls-button {
-	background: var(--bg-elev) !important;
+	background: var(--flow-control-bg) !important;
 	border-color: var(--border) !important;
 	color: var(--text) !important;
 }
@@ -510,11 +535,65 @@ html[data-theme] .svelte-flow__controls-button:hover {
 	background: var(--bg-card-hov) !important;
 }
 
+html[data-theme] .svelte-flow__controls-button[aria-pressed='true'] {
+	background: var(--primary-dim) !important;
+	color: var(--primary) !important;
+}
+
+html[data-theme] .svelte-flow__minimap {
+	background: var(--bg-elev) !important;
+	border: 1px solid var(--border) !important;
+	box-shadow: var(--shadow-card) !important;
+}
+
+html[data-theme] .svelte-flow__minimap-mask {
+	fill: color-mix(in oklab, var(--bg) 72%, transparent) !important;
+	stroke: var(--border) !important;
+}
+
 html[data-theme] .mindmap-chat-node {
-	background: var(--card-bg) !important;
-	border-color: var(--border) !important;
+	background: var(--flow-node-bg) !important;
+	border-color: var(--flow-node-border) !important;
 	color: var(--text) !important;
 	box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+html[data-theme] .overview-chat-node {
+	background: var(--flow-node-bg) !important;
+	border-color: var(--flow-node-border) !important;
+	color: var(--text) !important;
+}
+
+html[data-theme] .mindmap-area-node {
+	background:
+		linear-gradient(var(--flow-area-fill), var(--flow-area-fill)),
+		var(--flow-area-bg) !important;
+	border-color: var(--flow-area-border) !important;
+	color: var(--text-muted) !important;
+}
+
+html[data-theme] .mindmap-area-node-active {
+	border-color: var(--primary) !important;
+	box-shadow: inset 0 0 0 1px var(--primary-glow) !important;
+}
+
+html[data-theme] .mindmap-area-node-count {
+	background: var(--bg-elev) !important;
+	color: var(--text) !important;
+}
+
+html[data-theme] .svelte-flow__handle {
+	background: var(--border-glow) !important;
+	border-color: var(--flow-node-bg) !important;
+}
+
+html[data-theme] .svelte-flow__resize-control.handle {
+	background: var(--primary) !important;
+	border-color: var(--bg-elev) !important;
+}
+
+html[data-theme] .svelte-flow__resize-control.line {
+	border-color: var(--primary-glow) !important;
 }
 
 html.light-mode .mindmap-chat-node {
